@@ -1,0 +1,519 @@
+{
+ "date": "2025-02-23",
+ "turnout": 82.51,
+ "registered": 60510631,
+ "valid": 49649512,
+ "totalSeats": 630,
+ "majority": 316,
+ "parties": {
+  "CDU/CSU": {
+   "votes": 14160402,
+   "pct": 28.521,
+   "pct1": 28.5,
+   "seats": 208,
+   "seatChange": 11
+  },
+  "AfD": {
+   "votes": 10328780,
+   "pct": 20.803,
+   "pct1": 20.8,
+   "seats": 152,
+   "seatChange": 69
+  },
+  "SPD": {
+   "votes": 8149124,
+   "pct": 16.413,
+   "pct1": 16.4,
+   "seats": 120,
+   "seatChange": -86
+  },
+  "Grüne": {
+   "votes": 5762380,
+   "pct": 11.606,
+   "pct1": 11.6,
+   "seats": 85,
+   "seatChange": -33
+  },
+  "Linke": {
+   "votes": 4356532,
+   "pct": 8.775,
+   "pct1": 8.8,
+   "seats": 64,
+   "seatChange": 25
+  },
+  "BSW": {
+   "votes": 2472947,
+   "pct": 4.981,
+   "pct1": 5.0,
+   "seats": 0,
+   "seatChange": null
+  },
+  "FDP": {
+   "votes": 2148757,
+   "pct": 4.328,
+   "pct1": 4.3,
+   "seats": 0,
+   "seatChange": -91
+  },
+  "Freie Wähler": {
+   "votes": 769279,
+   "pct": 1.549,
+   "pct1": 1.5,
+   "seats": 0,
+   "seatChange": null
+  },
+  "Sonstige": {
+   "votes": 1501311,
+   "pct": 3.024,
+   "pct1": 3.0,
+   "seats": 0,
+   "seatChange": 0
+  },
+  "SSW": {
+   "votes": 76138,
+   "pct": 0.153,
+   "pct1": 0.2,
+   "seats": 1,
+   "seatChange": 0
+  }
+ },
+ "states": {
+  "BW": {
+   "CDU/CSU": 31.6,
+   "AfD": 19.8,
+   "SPD": 14.2,
+   "Grüne": 13.6,
+   "Linke": 6.8,
+   "BSW": 4.1,
+   "FDP": 5.6,
+   "Sonstige": 4.3,
+   "turnout": 83.4
+  },
+  "BY": {
+   "CDU/CSU": 37.2,
+   "AfD": 19.0,
+   "SPD": 11.6,
+   "Grüne": 12.0,
+   "Linke": 5.7,
+   "BSW": 3.1,
+   "FDP": 4.2,
+   "Sonstige": 7.2,
+   "turnout": 84.5
+  },
+  "BE": {
+   "CDU/CSU": 18.3,
+   "AfD": 15.2,
+   "SPD": 15.1,
+   "Grüne": 16.8,
+   "Linke": 19.9,
+   "BSW": 6.6,
+   "FDP": 3.8,
+   "Sonstige": 4.2,
+   "turnout": 80.3
+  },
+  "BB": {
+   "CDU/CSU": 18.1,
+   "AfD": 32.5,
+   "SPD": 14.8,
+   "Grüne": 6.6,
+   "Linke": 10.7,
+   "BSW": 10.7,
+   "FDP": 3.2,
+   "Sonstige": 3.4,
+   "turnout": 81.5
+  },
+  "HB": {
+   "CDU/CSU": 20.5,
+   "AfD": 15.1,
+   "SPD": 23.1,
+   "Grüne": 15.6,
+   "Linke": 14.8,
+   "BSW": 4.3,
+   "FDP": 3.5,
+   "Sonstige": 3.0,
+   "turnout": 77.8
+  },
+  "HH": {
+   "CDU/CSU": 20.7,
+   "AfD": 10.9,
+   "SPD": 22.7,
+   "Grüne": 19.3,
+   "Linke": 14.4,
+   "BSW": 4.0,
+   "FDP": 4.5,
+   "Sonstige": 3.4,
+   "turnout": 80.8
+  },
+  "HE": {
+   "CDU/CSU": 28.9,
+   "AfD": 17.8,
+   "SPD": 18.4,
+   "Grüne": 12.6,
+   "Linke": 8.7,
+   "BSW": 4.4,
+   "FDP": 5.0,
+   "Sonstige": 4.2,
+   "turnout": 83.1
+  },
+  "NI": {
+   "CDU/CSU": 28.1,
+   "AfD": 17.8,
+   "SPD": 23.0,
+   "Grüne": 11.5,
+   "Linke": 8.1,
+   "BSW": 3.8,
+   "FDP": 4.1,
+   "Sonstige": 3.6,
+   "turnout": 83.4
+  },
+  "MV": {
+   "CDU/CSU": 17.8,
+   "AfD": 35.0,
+   "SPD": 12.4,
+   "Grüne": 5.4,
+   "Linke": 12.0,
+   "BSW": 10.6,
+   "FDP": 3.2,
+   "Sonstige": 3.6,
+   "turnout": 79.5
+  },
+  "NW": {
+   "CDU/CSU": 30.1,
+   "AfD": 16.8,
+   "SPD": 20.0,
+   "Grüne": 12.4,
+   "Linke": 8.3,
+   "BSW": 4.1,
+   "FDP": 4.4,
+   "Sonstige": 3.8,
+   "turnout": 82.2
+  },
+  "RP": {
+   "CDU/CSU": 30.6,
+   "AfD": 20.1,
+   "SPD": 18.6,
+   "Grüne": 10.4,
+   "Linke": 6.5,
+   "BSW": 4.2,
+   "FDP": 4.6,
+   "Sonstige": 4.9,
+   "turnout": 83.0
+  },
+  "SL": {
+   "CDU/CSU": 26.9,
+   "AfD": 21.6,
+   "SPD": 21.9,
+   "Grüne": 7.2,
+   "Linke": 7.3,
+   "BSW": 6.2,
+   "FDP": 4.3,
+   "Sonstige": 4.7,
+   "turnout": 82.4
+  },
+  "SN": {
+   "CDU/CSU": 19.7,
+   "AfD": 37.3,
+   "SPD": 8.5,
+   "Grüne": 6.5,
+   "Linke": 11.3,
+   "BSW": 9.0,
+   "FDP": 3.2,
+   "Sonstige": 4.4,
+   "turnout": 81.2
+  },
+  "ST": {
+   "CDU/CSU": 19.2,
+   "AfD": 37.1,
+   "SPD": 11.0,
+   "Grüne": 4.4,
+   "Linke": 10.8,
+   "BSW": 11.2,
+   "FDP": 3.1,
+   "Sonstige": 3.3,
+   "turnout": 77.7
+  },
+  "SH": {
+   "CDU/CSU": 27.6,
+   "AfD": 16.3,
+   "SPD": 18.8,
+   "Grüne": 14.9,
+   "Linke": 7.8,
+   "BSW": 3.4,
+   "FDP": 4.7,
+   "Sonstige": 6.5,
+   "turnout": 83.5
+  },
+  "TH": {
+   "CDU/CSU": 18.6,
+   "AfD": 38.6,
+   "SPD": 8.8,
+   "Grüne": 4.2,
+   "Linke": 15.2,
+   "BSW": 9.4,
+   "FDP": 2.8,
+   "Sonstige": 2.5,
+   "turnout": 80.7
+  }
+ },
+ "demographics": {
+  "source": "Infratest dimap exit poll (via Wikipedia)",
+  "total": {
+   "CDU/CSU": 29,
+   "AfD": 21,
+   "SPD": 16,
+   "Grüne": 12,
+   "Linke": 9,
+   "BSW": 5,
+   "FDP": 4,
+   "Sonstige": 4
+  },
+  "groups": [
+   {
+    "name": "Sex",
+    "rows": [
+     {
+      "label": "Men",
+      "v": {
+       "CDU/CSU": 30,
+       "AfD": 24,
+       "SPD": 15,
+       "Grüne": 11,
+       "Linke": 7,
+       "BSW": 4,
+       "FDP": 5,
+       "Sonstige": 4
+      }
+     },
+     {
+      "label": "Women",
+      "v": {
+       "CDU/CSU": 27,
+       "AfD": 18,
+       "SPD": 18,
+       "Grüne": 13,
+       "Linke": 11,
+       "BSW": 6,
+       "FDP": 4,
+       "Sonstige": 3
+      }
+     }
+    ]
+   },
+   {
+    "name": "Age",
+    "rows": [
+     {
+      "label": "18–24 years",
+      "v": {
+       "CDU/CSU": 13,
+       "AfD": 21,
+       "SPD": 12,
+       "Grüne": 10,
+       "Linke": 25,
+       "BSW": 6,
+       "FDP": 5,
+       "Sonstige": 8
+      }
+     },
+     {
+      "label": "25–34 years",
+      "v": {
+       "CDU/CSU": 17,
+       "AfD": 24,
+       "SPD": 12,
+       "Grüne": 14,
+       "Linke": 16,
+       "BSW": 6,
+       "FDP": 5,
+       "Sonstige": 6
+      }
+     },
+     {
+      "label": "35–44 years",
+      "v": {
+       "CDU/CSU": 24,
+       "AfD": 26,
+       "SPD": 13,
+       "Grüne": 14,
+       "Linke": 8,
+       "BSW": 6,
+       "FDP": 4,
+       "Sonstige": 5
+      }
+     },
+     {
+      "label": "45–59 years",
+      "v": {
+       "CDU/CSU": 33,
+       "AfD": 22,
+       "SPD": 15,
+       "Grüne": 12,
+       "Linke": 5,
+       "BSW": 5,
+       "FDP": 4,
+       "Sonstige": 4
+      }
+     },
+     {
+      "label": "60–69 years",
+      "v": {
+       "CDU/CSU": 33,
+       "AfD": 19,
+       "SPD": 21,
+       "Grüne": 11,
+       "Linke": 5,
+       "BSW": 5,
+       "FDP": 4,
+       "Sonstige": 2
+      }
+     },
+     {
+      "label": "70 or older",
+      "v": {
+       "CDU/CSU": 43,
+       "AfD": 10,
+       "SPD": 25,
+       "Grüne": 7,
+       "Linke": 5,
+       "BSW": 4,
+       "FDP": 5,
+       "Sonstige": 1
+      }
+     }
+    ]
+   },
+   {
+    "name": "Education",
+    "rows": [
+     {
+      "label": "Primary education",
+      "v": {
+       "CDU/CSU": 32,
+       "AfD": 29,
+       "SPD": 20,
+       "Grüne": 4,
+       "Linke": 5,
+       "BSW": 4,
+       "FDP": 3,
+       "Sonstige": 3
+      }
+     },
+     {
+      "label": "Secondary education",
+      "v": {
+       "CDU/CSU": 28,
+       "AfD": 28,
+       "SPD": 15,
+       "Grüne": 6,
+       "Linke": 7,
+       "BSW": 6,
+       "FDP": 3,
+       "Sonstige": 7
+      }
+     },
+     {
+      "label": "Higher education",
+      "v": {
+       "CDU/CSU": 27,
+       "AfD": 13,
+       "SPD": 16,
+       "Grüne": 18,
+       "Linke": 11,
+       "BSW": 5,
+       "FDP": 5,
+       "Sonstige": 5
+      }
+     }
+    ]
+   },
+   {
+    "name": "Occupation",
+    "rows": [
+     {
+      "label": "Blue-collar worker",
+      "v": {
+       "CDU/CSU": 22,
+       "AfD": 38,
+       "SPD": 12,
+       "Grüne": 5,
+       "Linke": 8,
+       "BSW": 5,
+       "FDP": 4,
+       "Sonstige": 6
+      }
+     },
+     {
+      "label": "White-collar worker",
+      "v": {
+       "CDU/CSU": 26,
+       "AfD": 21,
+       "SPD": 15,
+       "Grüne": 13,
+       "Linke": 9,
+       "BSW": 6,
+       "FDP": 4,
+       "Sonstige": 6
+      }
+     },
+     {
+      "label": "Self-employed",
+      "v": {
+       "CDU/CSU": 35,
+       "AfD": 21,
+       "SPD": 10,
+       "Grüne": 14,
+       "Linke": 7,
+       "BSW": 2,
+       "FDP": 9,
+       "Sonstige": 2
+      }
+     },
+     {
+      "label": "Retired",
+      "v": {
+       "CDU/CSU": 39,
+       "AfD": 13,
+       "SPD": 24,
+       "Grüne": 9,
+       "Linke": 5,
+       "BSW": 4,
+       "FDP": 4,
+       "Sonstige": 2
+      }
+     }
+    ]
+   },
+   {
+    "name": "Economic situation",
+    "rows": [
+     {
+      "label": "Good",
+      "v": {
+       "CDU/CSU": 31,
+       "AfD": 17,
+       "SPD": 17,
+       "Grüne": 13,
+       "Linke": 8,
+       "BSW": 5,
+       "FDP": 5,
+       "Sonstige": 4
+      }
+     },
+     {
+      "label": "Bad",
+      "v": {
+       "CDU/CSU": 17,
+       "AfD": 39,
+       "SPD": 12,
+       "Grüne": 6,
+       "Linke": 11,
+       "BSW": 7,
+       "FDP": 3,
+       "Sonstige": 5
+      }
+     }
+    ]
+   }
+  ]
+ }
+}

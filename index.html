@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Germany Polls</title>
+<meta name="description" content="German federal election polling average, Bundestag seat projection and government approval. Source: dawum.de">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="tabbar">
+  <span class="brand" id="site-title">Germany Polls</span>
+  <nav class="tabs" role="tablist">
+    <button class="tab-btn active" data-tab="overview" role="tab" type="button">Overview</button>
+    <button class="tab-btn" data-tab="polls" role="tab" type="button">Poll Average</button>
+    <button class="tab-btn" data-tab="parliament" role="tab" type="button">Bundestag Projection</button>
+    <button class="tab-btn" data-tab="election" role="tab" type="button">2025 Election</button>
+    <button class="tab-btn soon" type="button" aria-disabled="true" tabindex="-1">NEWS (SOON)</button>
+  </nav>
+  <div id="theme-zone">
+    <label class="switch" aria-label="Dark mode"><input type="checkbox" id="dark-toggle"><span class="slider"></span></label>
+    <span>Dark mode</span>
+  </div>
+</div>
+<main class="wrap">
+  <div id="error" class="error" hidden></div>
+
+  <section id="tab-overview" class="pane active"><div id="ov-fit">
+    <div class="ov-head"><h2>Germany at a glance</h2><div>
+    <div class="group-title">Current poll average</div>
+    <div id="ov-chips" class="latest"></div>
+    <div class="ov-grid ov-main">
+      <div class="chart-card flow ov-map"><div class="sec">
+        <div class="sec-top"><h3 id="map-title">Who leads in each state?</h3></div>
+        <p class="subl">Latest state polls</p>
+        <div id="map"></div><div class="pills" id="map-legend"></div><div class="note" id="map-note"></div>
+      </div></div>
+      <div class="ov-right">
+      <div class="chart-card flow clickable" data-go="polls" tabindex="0" role="link" aria-label="Open poll average"><div class="sec">
+        <div class="sec-top"><h3>Federal poll average</h3><span class="link">Poll average &rarr;</span></div>
+        <p class="subl">vs. 1 month ago</p><div id="ov-bars"></div>
+      </div></div>
+      <div class="ov-row">
+      <div class="chart-card flow clickable" data-go="polls" data-scroll="approval-card" tabindex="0" role="link" aria-label="Open government approval"><div class="sec">
+        <div class="sec-top"><h3>Government approval</h3><span class="link">Details &rarr;</span></div>
+        <div class="bignum" id="ov-appr-nums"></div><div id="ov-appr"></div>
+        <div class="chan-box"><img class="chan-pic" src="img/merz.png" alt="Chancellor" width="300" height="245"><div class="chan-info"><h4>Chancellor approval</h4><div class="bignum" id="ov-chan-nums"></div></div></div>
+      </div></div>
+      <div class="chart-card flow clickable" data-go="election" tabindex="0" role="link" aria-label="Open 2025 election"><div class="sec">
+        <div class="sec-top"><h3>2025 federal election</h3><span class="link">Details &rarr;</span></div>
+        <p class="subl" id="ov-elec-sub"></p><div id="ov-elec"></div>
+      </div></div>
+      </div>
+      </div>
+    </div>
+    <div class="foot ov-foot">Data: <a href="https://dawum.de">dawum.de</a>. This project is independent and not affiliated with dawum.de.</div>
+  </div></section>
+
+  <section id="tab-state" class="pane">
+    <div class="row"><button class="link" data-go="overview" type="button">&larr; Back to overview</button></div>
+    <div class="chart-card flow">
+      <div id="state-chart"></div>
+      <div class="filters" id="state-pick"></div>
+      <div class="sec"><h3>Latest polls</h3><div class="scroll" id="state-table"></div></div>
+    </div>
+  </section>
+
+  <section id="tab-polls" class="pane">
+    <div class="chart-card flow">
+      <div class="filter-row">
+        <div class="fgroup"><div class="ftitle">Filter by date</div><div class="filters" id="range-filters"></div></div>
+        <div class="fgroup fright"><div class="ftitle">Party visibility</div><div class="filters" id="party-filters"></div></div>
+      </div>
+      <div id="poll-chart"></div>
+      <details class="sec fold"><summary><h3>Latest polls</h3></summary><div class="scroll" id="poll-table"></div></details>
+    </div>
+    <div class="chart-card flow" id="approval-card"><div id="approval-chart"></div></div>
+    <div class="chart-card flow" id="chancellor-card"><div id="chancellor-chart"></div></div>
+    <div class="chart-card flow">
+      <div id="neg-chart"></div>
+      <div id="neg-trend"></div>
+      <div class="sec"><h3>All results</h3><div class="scroll" id="neg-table"></div></div>
+    </div>
+  </section>
+
+  <section id="tab-parliament" class="pane">
+    <div class="chart-card flow">
+      <div id="parl-chart"></div>
+      <div class="sec">
+        <h3>Build your own coalition</h3>
+                <div class="cust" id="cust"></div>
+        <h3 style="margin-top:22px">Possible coalitions</h3><div id="coalitions"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-election" class="pane">
+    <div class="ov-head"><h2>2025 federal election</h2><p id="el-sub"></p></div>
+    <div class="group-title">Final result</div>
+    <div id="el-chips" class="latest"></div>
+    <div class="ov-grid">
+      <div class="chart-card flow"><div class="sec">
+        <h3>Result &amp; seats</h3>
+        <p class="subl">vs. 2021 election</p>
+        <div id="el-bars"></div>
+      </div></div>
+      <div class="chart-card flow"><div class="sec">
+        <h3>The new Bundestag</h3>
+        <div id="el-parl"></div><div class="pills" id="el-parl-legend"></div>
+      </div></div>
+    </div>
+    <div class="chart-card flow"><div class="sec">
+      <h3>Who voted for whom?</h3>
+      <p class="subl">Vote share of each party within every group of voters</p>
+      <div class="filters" id="el-demo-cat" style="padding:0 0 6px"></div>
+      <div class="filters" id="el-demo-party" style="padding:0 0 14px"></div>
+      <div id="el-demo"></div><div class="pills" id="el-demo-legend"></div>
+      <div class="note" id="el-demo-note"></div>
+      <div class="note">Source: Infratest dimap exit poll for ARD (election day survey of voters, 23 Feb 2025).</div>
+    </div></div>
+    <div class="chart-card flow"><div id="el-poll-chart"></div></div>
+    <div class="chart-card flow">
+      <div class="sec">
+        <h3>Which pollster got it right?</h3>
+        <p class="subl">Every pollster's last poll before election day, compared with the result.</p>
+        <div class="filters" id="el-acc-pick" style="padding:0 0 4px"></div>
+      </div>
+      <div id="el-acc-chart"></div>
+      <div class="sec"><h3>Who under- and overestimated whom?</h3><p class="subl">Deviation = result minus last poll. <span class="under">Plus</span>: the pollster underestimated the party. <span class="over">Minus</span>: the pollster overestimated it.</p>
+        <div class="scroll" id="el-bias"></div>
+        <h3 style="margin-top:26px">All pollsters</h3><div class="scroll" id="el-acc-table"></div>
+      </div>
+    </div>
+    <div class="chart-card flow"><div class="sec">
+      <h3 id="el-map-title">Who won each state?</h3>
+      <p class="subl">Party-list votes by state</p>
+      <div class="filters" id="el-map-pick" style="padding:0 0 10px"></div>
+      <div id="el-map"></div><div class="pills" id="el-map-legend"></div>
+    </div></div>
+    <div class="foot">Results: Federal Returning Officer. Demographics: Infratest dimap exit poll, via Wikipedia. Polls: <a href="https://dawum.de">dawum.de</a>.</div>
+  </section>
+
+  <div class="foot">Data: <a href="https://dawum.de">dawum.de</a>. This project is independent and not affiliated with dawum.de.</div>
+</main>
+<div id="tip" class="tip" hidden></div>
+<script src="js/app.js?v=chancellor1"></script>
+</body>
+</html>

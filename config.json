@@ -1,0 +1,144 @@
+{
+  "siteTitle": "Germany Polls",
+  "sourceName": "dawum.de",
+  "sourceUrl": "https://dawum.de",
+  "pollsCsv": "data/germanpolls.csv",
+  "approvalCsv": "data/government_approval.csv",
+  "threshold": 5,
+  "seats": 630,
+  "hiddenParties": [],
+  "labels": {
+    "Grüne": "Greens",
+    "Linke": "Left",
+    "Sonstige": "Others",
+    "Freie Wähler": "FW"
+  },
+  "spectrum": [
+    "Linke",
+    "BSW",
+    "SPD",
+    "Grüne",
+    "FDP",
+    "Freie Wähler",
+    "CDU/CSU",
+    "Union",
+    "AfD"
+  ],
+  "colors": {
+    "CDU/CSU": "#151518",
+    "Union": "#151518",
+    "SPD": "#E3000F",
+    "Grüne": "#46962B",
+    "Linke": "#BE3075",
+    "AfD": "#009EE0",
+    "FDP": "#FFED00",
+    "BSW": "#7D3F98",
+    "Freie Wähler": "#F39200",
+    "Sonstige": "#9AA0AA"
+  },
+  "approvalColors": {
+    "approve": "#2E7D32",
+    "disapprove": "#C62828",
+    "net": "#1C4E9C"
+  },
+  "coalitions": [
+    [
+      "CDU/CSU",
+      "SPD"
+    ],
+    [
+      "CDU/CSU",
+      "AfD"
+    ],
+    [
+      "CDU/CSU",
+      "Grüne"
+    ],
+    [
+      "CDU/CSU",
+      "SPD",
+      "Grüne"
+    ],
+    [
+      "SPD",
+      "Grüne",
+      "Linke"
+    ],
+    [
+      "CDU/CSU",
+      "SPD",
+      "FDP"
+    ],
+    [
+      "CDU/CSU",
+      "Grüne",
+      "FDP"
+    ]
+  ],
+  "pollHeadline": "Election polls",
+  "pollSubline": "Federal election voting intention over time",
+  "parliamentHeadline": "Bundestag projection",
+  "parliamentSubline": "Based on latest polling",
+  "smoothingDays": 30,
+  "statesMap": "data/germany-states.json",
+  "approvalHeadline": "Government approval",
+  "approvalSubline": "Share of Germans satisfied and dissatisfied with the federal government",
+  "mapHeadline": "Who leads in each state?",
+  "stateFolder": "state_polls",
+  "stateFiles": {
+    "BW": "Baden-Wuerttemberg",
+    "BY": "Bayern",
+    "BE": "Berlin",
+    "BB": "Brandenburg",
+    "HB": "Bremen",
+    "HH": "Hamburg",
+    "HE": "Hessen",
+    "MV": "Mecklenburg-Vorpommern",
+    "NI": "Niedersachsen",
+    "NW": "Nordrhein-Westfalen",
+    "RP": "Rheinland-Pfalz",
+    "SL": "Saarland",
+    "SN": "Sachsen",
+    "ST": "Sachsen-Anhalt",
+    "SH": "Schleswig-Holstein",
+    "TH": "Thueringen"
+  },
+  "stateWindowDays": 60,
+  "barOrder": [
+    "CDU/CSU",
+    "AfD",
+    "SPD",
+    "Grüne",
+    "Linke",
+    "BSW",
+    "FDP",
+    "Sonstige"
+  ],
+  "electionYear": 2025,
+  "electionResults": {
+    "CDU/CSU": 28.5,
+    "AfD": 20.8,
+    "SPD": 16.4,
+    "Grüne": 11.6,
+    "Linke": 8.8,
+    "BSW": 4.98,
+    "FDP": 4.3,
+    "Sonstige": 4.6
+  },
+  "government": [
+    "CDU/CSU",
+    "SPD"
+  ],
+  "stateSmoothingDays": 60,
+  "negativeCsv": "data/negative_poll.csv",
+  "events": [
+    {"date": "2017-09-24", "label": "Federal election", "desc": "AfD enters the Bundestag as the third-largest party while Union and SPD both lose heavily"},
+    {"date": "2019-05-26", "label": "EU election", "desc": "Greens finish second after the Rezo video and the climate protests and gain about 6 points while Union and SPD lose"},
+    {"date": "2020-03-22", "label": "COVID-19", "desc": "The pandemic reaches Germany and the first nationwide contact ban takes effect while the Union rallies behind the government and gains about 8 points"},
+    {"date": "2021-09-26", "label": "Federal election", "desc": "SPD wins narrowly under Olaf Scholz and the Union records its worst federal result up to then at 24.1 percent"},
+    {"date": "2022-02-24", "label": "Ukraine invasion", "desc": "Russia invades Ukraine and Scholz announces the Zeitenwende with the Greens gaining while the Left and AfD lose"},
+    {"date": "2024-11-06", "label": "Ampel collapses", "desc": "Scholz dismisses finance minister Lindner and the coalition breaks apart which leads to the snap election"},
+    {"date": "2025-02-23", "label": "Federal election", "desc": "Union wins with 28.5 percent and the AfD doubles to 20.8 while FDP and BSW miss the threshold"},
+    {"date": "2026-09-06", "label": "AfD wins Saxony-Anhalt", "desc": "AfD wins 43.8 percent in Saxony-Anhalt, the strongest result for any party there since reunification, while the CDU falls to 17.2 and the Union slides to record lows nationally"}
+  ]
+}
