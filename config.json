@@ -1,5 +1,5 @@
 {
-  "siteTitle": "Germany Polls",
+  "siteTitle": "KanzlerCheck",
   "sourceName": "dawum.de",
   "sourceUrl": "https://dawum.de",
   "pollsCsv": "data/germanpolls.csv",
