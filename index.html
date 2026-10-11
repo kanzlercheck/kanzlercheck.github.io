@@ -26,13 +26,13 @@
 <meta name="twitter:description" content="German federal election polling average, Bundestag seat projection and government approval. Source: dawum.de">
 <meta name="twitter:image" content="https://kanzlercheck.github.io/img/og.png?v=2">
 <link rel="canonical" href="https://kanzlercheck.github.io/">
-<link rel="stylesheet" href="css/style.css?v=perf8">
+<link rel="stylesheet" href="css/style.css?v=perf9">
 </head>
 <body>
-<script>if(matchMedia("(prefers-color-scheme: dark)").matches)document.body.classList.add("dark")</script>
+<script>(function(){var s=null;try{s=localStorage.getItem("theme")}catch(e){}var d=s?s==="dark":matchMedia("(prefers-color-scheme: dark)").matches;if(d)document.body.classList.add("dark")})()</script>
 <div id="tabbar">
   <div class="brandbox">
-    <picture class="logo-pic"><source media="(prefers-color-scheme: dark)" srcset="img/logo-dark.png"><img class="logo" src="img/logo.png" alt="" width="74" height="30"></picture>
+    <img class="logo" id="logo" src="img/logo.png" alt="" width="74" height="30"><script>if(document.body.classList.contains("dark"))document.getElementById("logo").src="img/logo-dark.png"</script>
     <span class="brand" id="site-title">KanzlerCheck</span>
   </div>
   <nav class="tabs" role="tablist">
@@ -42,6 +42,10 @@
     <button class="tab-btn" data-tab="election" role="tab" type="button">2025 Election</button>
     <button class="tab-btn soon" type="button" aria-disabled="true" tabindex="-1">NEWS (SOON)</button>
   </nav>
+  <div id="theme-zone">
+    <label class="switch" aria-label="Dark mode"><input type="checkbox" id="dark-toggle"><span class="slider"></span></label>
+    <span>Dark mode</span>
+  </div>
 </div>
 <main class="wrap">
   <div id="error" class="error" hidden></div>
@@ -166,6 +170,6 @@
 </main>
 <div id="tip" class="tip" hidden></div>
 <script data-goatcounter="https://efefury.goatcounter.com/count" data-goatcounter-settings='{"no_onload":true}' async src="//gc.zgo.at/count.js"></script>
-<script src="js/app.js?v=perf7"></script>
+<script src="js/app.js?v=perf8"></script>
 </body>
 </html>

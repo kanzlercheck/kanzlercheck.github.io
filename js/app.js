@@ -13,11 +13,14 @@ const redraw=[];
 const CW=()=>matchMedia("(max-width:600px)").matches?500:1200; // chart canvas width: narrower on phones so text and lines render larger
 // zoom steps tried by fitOv (same sequence as before: 1.30, 1.28, ... down to ~0.45)
 const ZS=[];let ZEND=1.3;for(;ZEND>.45;ZEND-=.02)ZS.push(ZEND);
-function setDark(d){document.body.classList.toggle("dark",d);redraw.forEach(f=>f());}
-// theme follows the OS / browser setting only (no manual toggle); updates live if it changes
+function setDark(d){document.body.classList.toggle("dark",d);$("#dark-toggle").checked=d;const lg=$("#logo");if(lg)lg.src=d?"img/logo-dark.png":"img/logo.png";redraw.forEach(f=>f());}
+// default = system light/dark setting; the switch overrides it and the choice is remembered
 const schemeMQ=matchMedia("(prefers-color-scheme: dark)");
-setDark(schemeMQ.matches);
-(schemeMQ.addEventListener?schemeMQ.addEventListener("change",e=>setDark(e.matches)):schemeMQ.addListener(e=>setDark(e.matches)));
+let saved=null;try{saved=localStorage.getItem("theme");}catch(e){}
+setDark(saved?saved==="dark":schemeMQ.matches);
+$("#dark-toggle").onchange=e=>{setDark(e.target.checked);try{localStorage.setItem("theme",e.target.checked?"dark":"light");}catch(_){}};
+const onScheme=e=>{let s=null;try{s=localStorage.getItem("theme");}catch(_){}if(!s)setDark(e.matches);}; // follow system changes only until the switch is used
+(schemeMQ.addEventListener?schemeMQ.addEventListener("change",onScheme):schemeMQ.addListener(onScheme));
 
 // ---------- CSV ----------
 function parseCSV(text){
