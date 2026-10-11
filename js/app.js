@@ -13,10 +13,11 @@ const redraw=[];
 const CW=()=>matchMedia("(max-width:600px)").matches?500:1200; // chart canvas width: narrower on phones so text and lines render larger
 // zoom steps tried by fitOv (same sequence as before: 1.30, 1.28, ... down to ~0.45)
 const ZS=[];let ZEND=1.3;for(;ZEND>.45;ZEND-=.02)ZS.push(ZEND);
-function setDark(d){document.body.classList.toggle("dark",d);$("#dark-toggle").checked=d;try{localStorage.setItem("theme",d?"dark":"light");}catch(e){}redraw.forEach(f=>f());}
-let saved=null;try{saved=localStorage.getItem("theme");}catch(e){}
-setDark(saved==="dark");
-$("#dark-toggle").onchange=e=>setDark(e.target.checked);
+function setDark(d){document.body.classList.toggle("dark",d);redraw.forEach(f=>f());}
+// theme follows the OS / browser setting only (no manual toggle); updates live if it changes
+const schemeMQ=matchMedia("(prefers-color-scheme: dark)");
+setDark(schemeMQ.matches);
+(schemeMQ.addEventListener?schemeMQ.addEventListener("change",e=>setDark(e.matches)):schemeMQ.addListener(e=>setDark(e.matches)));
 
 // ---------- CSV ----------
 function parseCSV(text){
