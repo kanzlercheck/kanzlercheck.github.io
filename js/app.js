@@ -10,6 +10,8 @@ const META=/^(datum|date|institut|institute|pollster|befragungsmethode|method|be
 
 // ---------- theme ----------
 const redraw=[];
+// zoom steps tried by fitOv (same sequence as before: 1.30, 1.28, ... down to ~0.45)
+const ZS=[];let ZEND=1.3;for(;ZEND>.45;ZEND-=.02)ZS.push(ZEND);
 function setDark(d){document.body.classList.toggle("dark",d);$("#dark-toggle").checked=d;try{localStorage.setItem("theme",d?"dark":"light");}catch(e){}redraw.forEach(f=>f());}
 let saved=null;try{saved=localStorage.getItem("theme");}catch(e){}
 setDark(saved==="dark");
@@ -20,7 +22,10 @@ function parseCSV(text){
   text=text.replace(/^\uFEFF/,"").trim();
   const first=text.split(/\r?\n/)[0];
   const delim=(first.match(/;/g)||[]).length>(first.match(/,/g)||[]).length?";":",";
-  const rows=[];let row=[],cur="",q=false;
+  let rows=[];
+  if(text.indexOf('"')<0)rows=text.replace(/\r/g,"").split("\n").map(l=>l.split(delim));
+  else{
+  let row=[],cur="",q=false;
   for(let i=0;i<text.length;i++){
     const c=text[i];
     if(q){if(c=='"'){if(text[i+1]=='"'){cur+='"';i++;}else q=false;}else cur+=c;}
@@ -30,6 +35,7 @@ function parseCSV(text){
     else if(c!="\r")cur+=c;
   }
   row.push(cur);rows.push(row);
+  }
   const head=rows.shift().map(h=>h.trim());
   return rows.filter(r=>r.some(x=>x.trim())).map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||"").trim()])));
 }
@@ -40,7 +46,10 @@ function parseDate(v){
   const d=new Date(v);return isNaN(d)?null:d;
 }
 const findKey=(o,names)=>Object.keys(o).find(k=>names.includes(k.toLowerCase()));
-async function load(path){const r=await fetch(path+"?v="+Date.now());if(!r.ok)throw new Error("Could not load "+path+" ("+r.status+")");return parseCSV(await r.text());}
+// one shared request per URL; "no-cache" = always revalidate (fresh data, but a 304 when nothing changed)
+const rawCache=new Map();
+function fetchRaw(url){let p=rawCache.get(url);if(!p){p=fetch(url,{cache:"no-cache"}).then(async r=>({ok:r.ok,status:r.status,text:r.ok?await r.text():""}));rawCache.set(url,p);}return p;}
+async function load(path){const r=await fetchRaw(path);if(!r.ok)throw new Error("Could not load "+path+" ("+r.status+")");return parseCSV(r.text);}
 function showErr(m){const e=$("#error");e.hidden=false;e.textContent=m;}
 
 
@@ -50,6 +59,8 @@ try{
   if(!r.ok)throw new Error("HTTP "+r.status);
   cfg=await r.json();
 }catch(e){showErr("config.json could not be loaded ("+e.message+"). Serve the site over http(s) \u2014 opening index.html as a local file will not work \u2014 and make sure config.json sits next to index.html.");return;}
+[cfg.pollsCsv,cfg.approvalCsv,"data/chancellor_approval.csv",cfg.negativeCsv,cfg.statesMap,"data/election2025.json",
+  ...Object.values(cfg.stateFiles||{}).map(slug=>`${cfg.stateFolder}/${slug}.csv`)].forEach(u=>{if(u)fetchRaw(u).catch(()=>{});});
 document.title=cfg.siteTitle;$("#site-title").textContent=cfg.siteTitle;
 const lab=p=>(cfg.labels||{})[p]||p;
 const FALLBACK=["#1C4E9C","#C62828","#2E7D32","#F9A825","#6A1B9A","#00838F","#8D6E63","#546E7A"];
@@ -172,7 +183,8 @@ function lineChart(host,o){
     cv.width=Math.round(bw*S);cv.height=Math.round(bh*S);
     const c2=cv.getContext("2d"),dm=isDarkMode();c2.globalAlpha=.2;let last=null;
     o.dots.forEach(d=>{const col=dm&&dark(d.color)?"#7A808A":d.color;if(col!==last){c2.fillStyle=col;last=col;}c2.beginPath();c2.arc((x(d.t)-bx)*S,(y(d.v)-by)*S,2.1*S,0,6.2832);c2.fill();});
-    el("image",{href:cv.toDataURL("image/png"),x:bx,y:by,width:bw,height:bh,preserveAspectRatio:"none"},svg);
+    const im=el("image",{x:bx,y:by,width:bw,height:bh,preserveAspectRatio:"none"},svg);
+    cv.toBlob(b=>im.setAttribute("href",b?URL.createObjectURL(b):cv.toDataURL("image/png")),"image/png");
   }else(o.dots||[]).forEach(d=>el("circle",{class:dark(d.color)?"dk":"",cx:x(d.t).toFixed(2),cy:y(d.v).toFixed(2),r:2.1,fill:d.color,opacity:.2},svg));
   // notable events: dashed line + label + date above the plot (staggered so they do not overlap)
   const evs=o.events?EVENTS().filter(e=>e.t>=t0&&e.t<=t1):[];
@@ -626,7 +638,20 @@ function ovChancellor(){
   const {S,latest}=R,c=CHC(),col=[c.a,c.d],df=latest.length>1&&latest[0]!=null&&latest[1]!=null?latest[0]-latest[1]:null;
   $("#ov-chan-nums").innerHTML=S.map((s,i)=>`<div style="color:${col[i]}">${s.name}<b>${latest[i]!=null?fmt(latest[i])+"%":"\u2013"}</b></div>`).join("")+(df!=null?`<div style="color:${df>=0?c.a:c.d}">Net approval<b>${sgn(df)}</b></div>`:"");
 }
-try{const rows=await load("data/chancellor_approval.csv");chData=rows.map(r=>({t:+parseDate(r.Date),a:num(r.Approve),b:num(r.Disapprove)})).filter(r=>!isNaN(r.t)&&r.a!=null).sort((x,y)=>x.t-y.t);}catch(e){}
+try{const rows=await load("data/chancellor_approval.csv");chData=rows.map(r=>({t:+parseDate(r.Date),a:num(r.Approve),b:num(r.Disapprove),i:r.Pollster||""})).filter(r=>!isNaN(r.t)&&r.a!=null).sort((x,y)=>x.t-y.t);}catch(e){}
+// ---------- "Latest polls" tables under the approval charts ----------
+// same look as the federal table: header underlines in the chart colours (green = approve, red = disapprove)
+const CHAN_COLS={approve:"#7CB518",disapprove:"#F0556A"};
+function apprTableHtml(recs,withInst,cols){
+  const dm=isDarkMode(),ca=dm?lighten(cols.approve,.32):cols.approve,cd=dm?lighten(cols.disapprove,.32):cols.disapprove,R=withInst?"":"text-align:right;",pc=v=>v!=null?fmt(v,0)+"%":"\u2013";
+  return `<table><thead><tr><th>Date</th>${withInst?"<th>Pollster</th>":""}<th style="${R}border-bottom-color:${ca}">Approve</th><th style="border-bottom-color:${cd}">Disapprove</th></tr></thead><tbody>`+
+    recs.slice(-15).reverse().map(r=>`<tr><td>${fmtDate(r.t)}</td>${withInst?`<td>${r.i||""}</td>`:""}<td${R?` style="${R}"`:""}>${pc(r.a)}</td><td>${pc(r.b)}</td></tr>`).join("")+`</tbody></table>`;
+}
+function apprTables(){
+  if(apData.length)$("#approval-table").innerHTML=apprTableHtml(apData,false,AC);else $("#approval-fold").hidden=true;
+  if(chData.length)$("#chancellor-table").innerHTML=apprTableHtml(chData,true,CHAN_COLS);else $("#chancellor-fold").hidden=true;
+}
+apprTables();redraw.push(apprTables);
 ovBars();ovApproval();if(apData.length)redraw.push(ovApproval);
 if(chData.length){ovChancellor();redraw.push(ovChancellor);}
 function chancellorChart(){
@@ -634,7 +659,7 @@ function chancellorChart(){
   if(!host){const ac=$("#approval-card");if(!ac)return;const card=document.createElement("div");card.className="chart-card flow";card.id="chancellor-card";card.innerHTML='<div id="chancellor-chart"></div>';ac.insertAdjacentElement("afterend",card);host=$("#chancellor-chart");}
   if(!chData.length){host.innerHTML="";return;}
   const saved=apData;apData=chData;
-  try{approvalChart({host:"#chancellor-chart",headline:"Chancellor approval",subline:"Share of Germans satisfied and dissatisfied with the Chancellor",cols:{approve:"#7CB518",disapprove:"#F0556A"},img:"img/merz.png",source:"INSA, FG Wahlen, Infratest dimap"});}
+  try{approvalChart({host:"#chancellor-chart",headline:"Chancellor approval",subline:"Share of Germans satisfied and dissatisfied with the Chancellor",cols:{approve:"#7CB518",disapprove:"#F0556A"},img:"img/merz.png",source:"INSA, Forsa, FG Wahlen, Infratest dimap"});}
   finally{apData=saved;}
 }
 if(chData.length){chancellorChart();redraw.push(chancellorChart);}
@@ -660,12 +685,12 @@ $("#state-pick").onclick=e=>{const b=e.target.closest("[data-s]");if(b)openState
 // state map from state_polls/<State>.csv (written by update_data.cmd)
 async function ovMap(){
   const host=$("#map"),note=$("#map-note");
-  let geo;try{geo=await(await fetch(cfg.statesMap)).json();}catch(e){host.textContent="Map data missing.";return;}
+  let geo;try{geo=JSON.parse((await fetchRaw(cfg.statesMap)).text);}catch(e){host.textContent="Map data missing.";return;}
   const entries=Object.entries(cfg.stateFiles||{});
   const res=await Promise.all(entries.map(async([id,slug])=>{
     try{
-      const r=await fetch(`${cfg.stateFolder}/${slug}.csv?v=${Date.now()}`);if(!r.ok)return null;
-      const rows=parseCSV(await r.text());if(!rows.length)return null;
+      const r=await fetchRaw(`${cfg.stateFolder}/${slug}.csv`);if(!r.ok)return null;
+      const rows=parseCSV(r.text);if(!rows.length)return null;
       const kD=findKey(rows[0],["datum","date"]),kI=findKey(rows[0],["institut","institute","pollster"]);
       const ps=Object.keys(rows[0]).filter(k=>k&&!META.test(k));
       const rec=rows.map(x=>({t:+parseDate(x[kD]),i:kI?x[kI]:"",v:Object.fromEntries(ps.map(p=>[p,num(x[p])]))})).filter(x=>!isNaN(x.t)).sort((a,b)=>a.t-b.t);
@@ -732,7 +757,7 @@ await ovMap();
 // ---------- 2025 ELECTION TAB ----------
 async function drawElection(){
   let E;
-  try{const r=await fetch("data/election2025.json?v="+Date.now());if(!r.ok)throw new Error("HTTP "+r.status);E=await r.json();}
+  try{const r=await fetchRaw("data/election2025.json");if(!r.ok)throw new Error("HTTP "+r.status);E=JSON.parse(r.text);}
   catch(e){showErr("data/election2025.json could not be loaded ("+e.message+").");return;}
   const ET=+parseDate(E.date),EP=E.parties,D=E.demographics,thr5=cfg.threshold;
   const MAIN=["CDU/CSU","AfD","SPD","Grüne","Linke","BSW","FDP"],ACC=[...MAIN,"Freie Wähler"];
@@ -855,7 +880,7 @@ async function drawElection(){
     return `<tr><td style="color:var(--cink);font-weight:700">${pn(a.inst)}</td><td>${fmtDate(a.t)}</td>${ACC.map(p=>`<td class="${a.dev[p]==null?"":dc(a.dev[p])}">${a.dev[p]==null?"\u2013":sdev(a.dev[p])}</td>`).join("")}<td><b>${fmt(a.err)}</b></td><td style="text-align:left">${lab(bp)} <span class="${dc(a.dev[bp])}">${sdev(a.dev[bp])}</span> (${a.dev[bp]>0?"under":"over"}estimated)</td></tr>`;}).join("")+`</tbody></table>`;
 
   // state map
-  let geo=null;try{geo=await(await fetch(cfg.statesMap)).json();}catch(e){}
+  let geo=null;try{geo=JSON.parse((await fetchRaw(cfg.statesMap)).text);}catch(e){}
   let mp=null;
   function drawMapE(){
     const host=$("#el-map");
@@ -978,10 +1003,13 @@ function fitOv(){
   const tbw=$("#tabbar").getBoundingClientRect().width/document.documentElement.clientWidth;
   const k=g>1&&tbw<(1+1/g)/2?g:1;
   const top=f.getBoundingClientRect().top+scrollY/k,avail=innerHeight/k-top-14;
-  let z=1.3;for(;z>.45;z-=.02){f.style.zoom=z;if(f.getBoundingClientRect().height<=avail)break;}
-  f.style.zoom=z;
+  const fits=i=>{f.style.zoom=ZS[i];return f.getBoundingClientRect().height<=avail;};
+  let lo=0,hi=ZS.length;
+  while(lo<hi){const m=(lo+hi)>>1;if(fits(m))hi=m;else lo=m+1;}
+  while(lo>0&&lo<ZS.length&&fits(lo-1))lo--;
+  f.style.zoom=lo<ZS.length?ZS[lo]:ZEND;
 }
-addEventListener("resize",fitOv);
+let rzq=0;addEventListener("resize",()=>{cancelAnimationFrame(rzq);rzq=requestAnimationFrame(fitOv);});
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitOv);
 redraw.push(fitOv);
 fitOv();
@@ -992,8 +1020,8 @@ try{
   if("IntersectionObserver" in window&&!matchMedia("(prefers-reduced-motion: reduce)").matches){
     document.documentElement.classList.add("fx");
     const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}}),{threshold:.08,rootMargin:"0px 0px -4% 0px"});
-    const seen=new WeakSet(),scan=()=>document.querySelectorAll(".chart-card,.ov-head,.group-title,#ov-chips,.latest,.foot").forEach(n=>{if(seen.has(n))return;seen.add(n);n.classList.add("rv");io.observe(n);});
-    scan();new MutationObserver(scan).observe(document.querySelector("main"),{childList:true,subtree:true});
+    const seen=new WeakSet(),scan=()=>document.querySelectorAll(".chart-card,.ov-head,.group-title,#ov-chips,.latest,.foot:not(.ov-foot)").forEach(n=>{if(seen.has(n))return;seen.add(n);n.classList.add("rv");io.observe(n);});
+    let sq=0;scan();new MutationObserver(()=>{if(sq)return;sq=requestAnimationFrame(()=>{sq=0;scan();});}).observe(document.querySelector("main"),{childList:true,subtree:true});
   }
 }catch(e){}
 })();
