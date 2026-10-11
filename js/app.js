@@ -1025,3 +1025,14 @@ try{
   }
 }catch(e){}
 })();
+
+;(function(){
+  if(!("ontouchstart" in window))return;
+  let moved=false,sx=0,sy=0,tgt=null,active=false;
+  const fire=(type,t,el)=>{(el||document.elementFromPoint(t.clientX,t.clientY)||document.body).dispatchEvent(new MouseEvent(type,{bubbles:true,cancelable:true,clientX:t.clientX,clientY:t.clientY,view:window}));};
+  const isChart=el=>el&&el.closest&&el.closest(".chart-card svg, #map, #el-map, #el-demo");
+  document.addEventListener("touchstart",e=>{const t=e.touches[0];tgt=e.target;active=!!isChart(tgt);moved=false;sx=t.clientX;sy=t.clientY;if(active)fire("mousemove",t,tgt);},{passive:true});
+  document.addEventListener("touchmove",e=>{if(!active)return;const t=e.touches[0];if(Math.abs(t.clientY-sy)>14&&Math.abs(t.clientY-sy)>Math.abs(t.clientX-sx)){active=false;fire("mouseleave",t,tgt);return;}moved=true;fire("mousemove",t);},{passive:true});
+  document.addEventListener("touchend",e=>{if(!active)return;const t=e.changedTouches[0];setTimeout(()=>{fire("mouseup",t);fire("mouseleave",t,tgt);},1400);},{passive:true});
+  document.addEventListener("touchstart",e=>{if(!e.target.closest(".chart-card svg,#map,#el-map,#el-demo")&&typeof hideTip==="function")hideTip();},{passive:true});
+})();
