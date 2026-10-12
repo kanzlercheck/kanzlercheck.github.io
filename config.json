@@ -139,6 +139,60 @@
     {"date": "2022-02-24", "label": "Ukraine invasion", "desc": "Russia invades Ukraine and Scholz announces the Zeitenwende with the Greens gaining while the Left and AfD lose"},
     {"date": "2024-11-06", "label": "Ampel collapses", "desc": "Scholz dismisses finance minister Lindner and the coalition breaks apart which leads to the snap election"},
     {"date": "2025-02-23", "label": "Federal election", "desc": "Union wins with 28.5 percent and the AfD doubles to 20.8 while FDP and BSW miss the threshold"},
-    {"date": "2026-09-06", "label": "AfD wins Saxony-Anhalt", "desc": "AfD wins 43.8 percent in Saxony-Anhalt, the strongest result for any party there since reunification, while the CDU falls to 17.2 and the Union slides to record lows nationally"}
-  ]
+    {"date": "2026-09-06", "label": "AfD wins Saxony-Anhalt", "desc": "AfD wins 43.8 percent in Saxony-Anhalt, the strongest result for any party there since reunification, while the CDU falls to 17.2 and the Union slides to record lows nationally", "federalOnly": true}
+  ],
+  "stateEvents": {
+    "ST": [
+      {"date": "2021-06-06", "label": "State election", "desc": "CDU wins with 37.1 percent under Reiner Haseloff; AfD second with 20.8 percent"},
+      {"date": "2026-09-06", "label": "AfD wins Saxony-Anhalt", "desc": "AfD wins 43.8 percent in Saxony-Anhalt (preliminary result), more than double its 2021 result, while the CDU falls to 17.2 percent"}
+    ],
+    "SN": [
+      {"date": "2019-09-01", "label": "State election", "desc": "CDU stays strongest with 32.1 percent; AfD second with 27.5 percent"},
+      {"date": "2024-09-01", "label": "State election", "desc": "CDU narrowly stays strongest with 31.9 percent; AfD second with 30.6 percent"}
+    ],
+    "TH": [
+      {"date": "2019-10-27", "label": "State election", "desc": "Left wins under Bodo Ramelow; AfD takes second place with 23.4 percent"},
+      {"date": "2024-09-01", "label": "State election", "desc": "AfD becomes the strongest party with 32.8 percent (preliminary), its first time first in any state"}
+    ],
+    "BW": [
+      {"date": "2021-03-14", "label": "State election", "desc": "Greens win again under Winfried Kretschmann; CDU falls to 24.1 percent"},
+      {"date": "2026-03-08", "label": "State election", "desc": "Greens narrowly win with 30.2 percent under Cem Özdemir, ahead of the CDU at 29.7 percent; AfD third at 18.8 percent"}
+    ],
+    "BY": [
+      {"date": "2018-10-14", "label": "State election", "desc": "CSU loses its absolute majority; Greens move to second place and AfD enters the Landtag"},
+      {"date": "2023-10-08", "label": "State election", "desc": "CSU wins under Markus Söder; Free Voters take second place ahead of AfD"}
+    ],
+    "HB": [
+      {"date": "2019-05-26", "label": "State election", "desc": "SPD stays strongest; AfD enters the Bremen parliament"},
+      {"date": "2023-05-14", "label": "State election", "desc": "SPD stays strongest under Andreas Bovenschulte"}
+    ],
+    "HH": [
+      {"date": "2020-02-23", "label": "State election", "desc": "SPD stays strongest under Peter Tschentscher"},
+      {"date": "2025-03-02", "label": "State election", "desc": "SPD stays strongest under Peter Tschentscher"}
+    ],
+    "HE": [
+      {"date": "2018-10-28", "label": "State election", "desc": "CDU stays strongest; Greens move to second place and AfD enters the Landtag"},
+      {"date": "2023-10-08", "label": "State election", "desc": "CDU wins under Boris Rhein; AfD takes second place"}
+    ],
+    "NI": [
+      {"date": "2017-10-15", "label": "State election", "desc": "SPD narrowly wins under Stephan Weil, ahead of the CDU"},
+      {"date": "2022-10-09", "label": "State election", "desc": "SPD wins again under Stephan Weil"}
+    ],
+    "NW": [
+      {"date": "2017-05-14", "label": "State election", "desc": "CDU wins under Armin Laschet; SPD loses its government after the 2010 election"},
+      {"date": "2022-05-15", "label": "State election", "desc": "CDU wins under Hendrik Wüst"}
+    ],
+    "RP": [
+      {"date": "2021-03-14", "label": "State election", "desc": "SPD wins under Malu Dreyer; CDU at 27.7 percent"},
+      {"date": "2026-03-22", "label": "State election", "desc": "CDU wins with 31.0 percent and ends the SPD's 35 years in government; SPD falls to 25.9 percent, its worst result in the state"}
+    ],
+    "SL": [
+      {"date": "2017-03-26", "label": "State election", "desc": "CDU wins under Tobias Hans"},
+      {"date": "2022-03-27", "label": "State election", "desc": "SPD wins under Anke Rehlinger"}
+    ],
+    "SH": [
+      {"date": "2017-05-07", "label": "State election", "desc": "CDU wins under Daniel Günther"},
+      {"date": "2022-05-08", "label": "State election", "desc": "CDU wins again under Daniel Günther"}
+    ]
+  }
 }

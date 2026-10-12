@@ -153,6 +153,8 @@ function showTip(ev,html){
 }
 const hideTip=()=>{tip.hidden=true;};
 const dlt=n=>Math.abs(n)<.05?"0.0":sgn(n);
+// federal events plus the events of one state (config.json stateEvents), as fresh objects each call
+const EVENTS_FOR=id=>[...(cfg.events||[]).filter(e=>!e.federalOnly),...(((cfg.stateEvents||{})[id])||[])].map(e=>({label:e.label||"",desc:e.desc||"",date:e.date,t:Date.parse(e.date+"T00:00:00Z")})).filter(e=>!isNaN(e.t)).sort((a,b)=>a.t-b.t);
 const EVENTS=()=>(cfg.events||[]).map(e=>({label:e.label||"",desc:e.desc||"",date:e.date,t:Date.parse(e.date+"T00:00:00Z")})).filter(e=>!isNaN(e.t)).sort((a,b)=>a.t-b.t);
 const evDate=t=>new Date(t).toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit",timeZone:"UTC"});
 let selGid=0;
@@ -210,7 +212,7 @@ function lineChart(host,o){
     cv.toBlob(b=>im.setAttribute("href",b?URL.createObjectURL(b):cv.toDataURL("image/png")),"image/png");
   }else(o.dots||[]).forEach(d=>el("circle",{class:dark(d.color)?"dk":"",cx:x(d.t).toFixed(2),cy:y(d.v).toFixed(2),r:2.1,fill:d.color,opacity:.2},svg));
   // notable events: dashed line + label + date above the plot (staggered so they do not overlap)
-  const evs=o.events?EVENTS().filter(e=>e.t>=t0&&e.t<=t1):[];
+  const evs=o.events?(o.eventList||EVENTS()).filter(e=>e.t>=t0&&e.t<=t1):[];
   {const HALO="paint-order:stroke;stroke:var(--cbg);stroke-width:4px;stroke-linejoin:round",ivs=[[],[],[],[],[]];
     evs.forEach(e=>{
       e.ex=x(e.t);const w=Math.max(e.label.length*6.6,58)*(W<1000?1.15:1)+8;
@@ -689,7 +691,9 @@ function chancellorChart(){
 if(chData.length){chancellorChart();redraw.push(chancellorChart);}
 
 let stateData={},stateGeo={};
-function openState(id){
+// 2025 Bundestag result for one state (from data/election2025.json, cached by fetchRaw)
+async function stateResults(id){try{const r=await fetchRaw("data/election2025.json");if(!r.ok)return null;return (JSON.parse(r.text).states||{})[id]||null;}catch(e){return null;}}
+async function openState(id){
   const s=stateData[id];if(!s)return;
   document.querySelectorAll(".tab-btn").forEach(x=>x.classList.remove("active"));
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("active",p.id==="tab-state"));
@@ -701,8 +705,9 @@ function openState(id){
   const series=plist.map(p=>({name:lab(p),color:colorOf(p,parties.indexOf(p)),points:Array.from({length:N+1},(_,i)=>{const t=t0+(t1-t0)*i/N;return{t,v:smoothedValueAt(rec,p,t,bwS)};})}));
   const dots=[];plist.forEach(p=>rec.forEach(r=>{if(r.v[p]!=null)dots.push({t:r.t,v:r.v[p],color:colorOf(p,parties.indexOf(p))});}));
   const mx=Math.max(0,...dots.map(d=>d.v)),yMax=Math.ceil(Math.max(10,mx*1.12)/5)*5;let step=1;[1,2,5,10,20,25,50,100].forEach(q=>{if(q<=yMax/6*1.4)step=q;});
-  lineChart($("#state-chart"),{H:720,title:en+" poll average",sub:`State election voting intention \u00B7 ${rec.length} poll${rec.length>1?"s":""}, latest ${fmtDate(rec[rec.length-1].t)}`,source:"Source: "+cfg.sourceName,
-    series,dots,yMin:0,yMax,step,threshold:cfg.threshold,months:true,endLabel:(v,n)=>`${fmt(v)} % ${n}`});
+  const res=await stateResults(id),results=res?plist.filter(p=>res[p]!=null).map(p=>({v:res[p],color:colorOf(p,parties.indexOf(p))})):[];
+  lineChart($("#state-chart"),{H:720,title:en+" poll average",sub:`State election voting intention \u00B7 ${rec.length} poll${rec.length>1?"s":""}, latest ${fmtDate(rec[rec.length-1].t)}`+(results.length?" \u00B7 rings = 2025 Bundestag vote in this state":""),source:"Source: "+cfg.sourceName,
+    series,dots,yMin:0,yMax,step,threshold:cfg.threshold,months:true,events:true,eventList:EVENTS_FOR(id),results,endLabel:(v,n)=>`${fmt(v)} % ${n}`});
   $("#state-table").innerHTML=pollTableHtml(rec,plist);
   $("#state-pick").innerHTML=Object.keys(stateData).sort((a,b)=>stateGeo[a].en.localeCompare(stateGeo[b].en)).map(k=>`<button type="button" class="faction-chip ${k===id?"on":""}" data-s="${k}">${stateGeo[k].en}</button>`).join("");
 }
