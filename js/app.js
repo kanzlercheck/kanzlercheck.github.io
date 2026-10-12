@@ -67,9 +67,13 @@ try{
 [cfg.pollsCsv,cfg.approvalCsv,"data/chancellor_approval.csv",cfg.negativeCsv,cfg.statesMap,"data/election2025.json",
   ...Object.values(cfg.stateFiles||{}).map(slug=>`${cfg.stateFolder}/${slug}.csv`)].forEach(u=>{if(u)fetchRaw(u).catch(()=>{});});
 document.title=cfg.siteTitle;$("#site-title").textContent=cfg.siteTitle;
-const lab=p=>(cfg.labels||{})[p]||p;
+// faction keys look like "F:<id>" so they can stand in for a party key anywhere a party key is used
+let FAC=[];
+const isFac=p=>typeof p==="string"&&p.startsWith("F:");
+const facById=id=>FAC.find(f=>f.id===id);
+const lab=p=>{if(isFac(p)){const f=facById(p.slice(2));return f?f.name:p;}return (cfg.labels||{})[p]||p;};
 const FALLBACK=["#1C4E9C","#C62828","#2E7D32","#F9A825","#6A1B9A","#00838F","#8D6E63","#546E7A"];
-const colorOf=(p,i=0)=>cfg.colors[p]||cfg.colors[p==="Union"?"CDU/CSU":p]||FALLBACK[i%FALLBACK.length];
+const colorOf=(p,i=0)=>isFac(p)?((facById(p.slice(2))||{}).color||"#888888"):cfg.colors[p]||cfg.colors[p==="Union"?"CDU/CSU":p]||FALLBACK[i%FALLBACK.length];
 const lum=c=>{const n=parseInt(c.slice(1),16);return((n>>16)&255)*.299+((n>>8)&255)*.587+(n&255)*.114;};
 const dark=c=>/^#[0-9a-f]{6}$/i.test(c)&&lum(c)<60;
 const contrast=c=>/^#[0-9a-f]{6}$/i.test(c)&&lum(c)>=140?"#15181C":"#ffffff";
@@ -317,7 +321,7 @@ function sainteLague(pct,seats){
   for(let s=0;s<seats&&keys.length;s++){let best=null,bq=-1;keys.forEach(k=>{const q=pct[k]/(2*res[k]+1);if(q>bq){bq=q;best=k;}});res[best]++;}
   return res;
 }
-const SPEC=cfg.spectrum||[],spec=p=>{const i=SPEC.indexOf(p);return i<0?SPEC.length:i;};
+const SPEC=cfg.spectrum||[],spec=p=>{if(isFac(p)){const f=facById(p.slice(2));if(f&&f.id==="other")return SPEC.length;const v=f?f.members.map(m=>SPEC.indexOf(m)).filter(i=>i>=0):[];return v.length?v.reduce((a,b)=>a+b,0)/v.length:SPEC.length;}const i=SPEC.indexOf(p);return i<0?SPEC.length:i;};
 const pt=(cx,cy,r,deg)=>{const a=deg*Math.PI/180;return[cx+r*Math.cos(a),cy-r*Math.sin(a)];};
 
 // ---------- federal polls ----------
@@ -466,21 +470,120 @@ const RANGES=[["6m","6 months",6],["1y","1 year",12],["2y","2 years",24],["5y","
 let pollRange="all";
 function rangeStart(){if(pollRange==="all")return tMin;const m=RANGES.find(r=>r[0]===pollRange)[2],d=new Date(tMax);d.setUTCMonth(d.getUTCMonth()-m);return Math.max(tMin,+d);}
 const smoothCache=new Map(),viewCache=new Map();
-function smoothedPoints(p,ts,N){const k=pollRange+"|"+p;let pts=smoothCache.get(k);if(!pts){pts=Array.from({length:N+1},(_,i)=>{const t=ts+(tMax-ts)*i/N;return{t,v:smoothedValueAt(polls,p,t,BW)};});smoothCache.set(k,pts);}return pts;}
+function smoothedPoints(p,ts,N,src=polls,tag=""){const k=pollRange+"|"+tag+p;let pts=smoothCache.get(k);if(!pts){pts=Array.from({length:N+1},(_,i)=>{const t=ts+(tMax-ts)*i/N;return{t,v:smoothedValueAt(src,p,t,BW)};});smoothCache.set(k,pts);}return pts;}
+
+// ---------- factions (poll average + Bundestag projection; off by default, editable in the Polls tab) ----------
+const escF=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const facKey=id=>"F:"+id;
+const facOfParty=p=>FAC.find(f=>f.members.includes(p))||null;
+let faOn={poll:false,parl:false},facVer=0,activeF=new Set(),vpCache=null,vpVer=-1,PM=null,baseM=null;
+// the chart units: each faction (if it has members) plus every party not in a faction
+function unitsOf(){
+  const inF=new Set(FAC.flatMap(f=>f.members));
+  const fk=FAC.filter(f=>f.members.some(p=>parties.includes(p))).map(f=>facKey(f.id));
+  return [...fk,...parties.filter(p=>!inF.has(p))];
+}
+// the polls with one extra column per faction: the sum of its member parties in that poll
+function viewPolls(){
+  if(vpVer===facVer&&vpCache)return vpCache;
+  vpCache=polls.map(r=>{const v={...r.v};FAC.forEach(f=>{const xs=f.members.map(p=>r.v[p]).filter(x=>x!=null);v[facKey(f.id)]=xs.length?xs.reduce((a,b)=>a+b,0):null;});return{t:r.t,inst:r.inst,v};});
+  vpVer=facVer;return vpCache;
+}
+// projection model for the faction view (same method as the party model)
+function buildPM(){
+  if(!faOn.parl||!baseM){PM=baseM;return;}
+  const src=viewPolls(),order=[...unitsOf()].sort((a,b)=>spec(a)-spec(b)),pct={},seats={};
+  order.forEach(p=>pct[p]=smoothedValueAt(src,p,tMax,BW));
+  const elig=order.filter(p=>pct[p]!=null&&pct[p]>=thr&&!isOther(p));
+  const sl=sainteLague(Object.fromEntries(elig.map(p=>[p,pct[p]])),N);
+  order.forEach(p=>seats[p]=sl[p]||0);
+  PM={order,pct,seats,elig};
+}
+function defaultFactions(){
+  const L=["Grüne","Linke","SPD"].filter(p=>parties.includes(p)),R=["CDU/CSU","AfD","FDP","Freie Wähler"].filter(p=>parties.includes(p));
+  const used=new Set([...L,...R]);
+  return [
+    {id:"left",name:"Left-wing",color:"#C8102E",members:L},
+    {id:"right",name:"Right-wing",color:"#2B2B30",members:R},
+    {id:"other",name:"Others",color:"#C9A227",members:parties.filter(p=>!used.has(p))}
+  ];
+}
+function loadFac(){
+  let d=null;try{d=JSON.parse(localStorage.getItem("kc-factions")||"null");}catch(e){}
+  if(d&&Array.isArray(d.factions)){
+    const seen=new Set();
+    FAC=d.factions.map(f=>({id:String(f.id),name:String(f.name||"Faction"),color:/^#[0-9a-f]{6}$/i.test(f.color)?f.color:"#888888",members:(f.members||[]).filter(p=>parties.includes(p))}));
+    FAC.forEach(f=>{f.members=f.members.filter(p=>{if(seen.has(p))return false;seen.add(p);return true;});});
+    if(d.faOn)faOn={poll:!!d.faOn.poll,parl:!!d.faOn.parl};
+  }else FAC=defaultFactions();
+}
+function saveFac(){try{localStorage.setItem("kc-factions",JSON.stringify({factions:FAC,faOn}));}catch(e){}}
+function syncFacUI(){const a=$("#fac-poll"),b=$("#fac-parl");if(a)a.checked=faOn.poll;if(b)b.checked=faOn.parl;}
+function moveParty(p,fid){FAC.forEach(f=>f.members=f.members.filter(m=>m!==p));const t=fid?facById(fid):null;if(t)t.members.push(p);factionsChanged();}
+function renderFacEditor(){
+  const boxes=document.querySelectorAll(".fac-ed");if(!boxes.length)return;
+  const ps=[...parties].sort((x,y)=>spec(x)-spec(y));
+  const chip=p=>{const c=colorOf(p,parties.indexOf(p));return `<button type="button" class="faction-chip fac-pc${dark(c)?" dkb":""}" draggable="true" data-p="${escF(p)}" title="Drag to a faction, or tap to send it to the next one"><i style="background:${c}"></i>${escF(lab(p))}</button>`;};
+  const col=(f,i)=>`<div class="fac-col${dark(f.color)?" dkb":""}" data-f="${f.id}" style="--fc:${f.color}"><div class="fac-ch"><input type="color" value="${f.color}" data-i="${i}" data-role="color" aria-label="Faction colour"><input type="text" value="${escF(f.name)}" data-i="${i}" data-role="name" aria-label="Faction name"><button type="button" class="fac-x" data-i="${i}" data-role="del" title="Remove faction" aria-label="Remove faction">\u00D7</button></div><div class="fac-cb">${ps.filter(p=>facOfParty(p)===f).map(chip).join("")}</div></div>`;
+  const html=`<div class="fac-board">${FAC.map(col).join("")}<div class="fac-col fac-none" data-f=""><div class="fac-ch"><span class="fac-nt">Unassigned</span></div><div class="fac-cb">${ps.filter(p=>!facOfParty(p)).map(chip).join("")}</div></div></div><div class="fac-foot"><button type="button" class="link fac-add">+ Add faction</button><span class="fac-hint">Drag a party into a faction, or tap it to send it to the next one. Unassigned parties show on their own.</span></div>`;
+  boxes.forEach(b=>{b.innerHTML=html;});
+}
+function factionsChanged(){
+  facVer++;vpVer=-1;saveFac();
+  activeF=new Set(unitsOf());
+  renderFacEditor();
+  if(faOn.poll){drawPolls();renderChips();}
+  if(faOn.parl){sel.clear();buildPM();drawParl();renderCoalitions();}
+}
+function setFacMode(which,on){
+  faOn[which]=on;saveFac();
+  if(which==="poll"){activeF=new Set(unitsOf());drawPolls();renderChips();}
+  else{sel.clear();buildPM();drawParl();renderCoalitions();}
+}
+function bindFactions(){
+  $("#fac-poll").addEventListener("change",e=>setFacMode("poll",e.target.checked));
+  $("#fac-parl").addEventListener("change",e=>setFacMode("parl",e.target.checked));
+  const FED=[...document.querySelectorAll(".fac-ed")],on=(t,f)=>FED.forEach(x=>x.addEventListener(t,f));
+  let dragP=null;const ed={addEventListener:on};
+  ed.addEventListener("dragstart",e=>{const c=e.target.closest(".fac-pc");if(!c)return;dragP=c.dataset.p;e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",dragP);}catch(_){}});
+  ed.addEventListener("dragover",e=>{const col=e.target.closest(".fac-col");if(!col||dragP==null)return;e.preventDefault();col.classList.add("over");});
+  ed.addEventListener("dragleave",e=>{const col=e.target.closest(".fac-col");if(col&&!col.contains(e.relatedTarget))col.classList.remove("over");});
+  ed.addEventListener("drop",e=>{const col=e.target.closest(".fac-col");if(!col||dragP==null)return;e.preventDefault();const p=dragP;dragP=null;moveParty(p,col.dataset.f);});
+  ed.addEventListener("dragend",()=>{dragP=null;document.querySelectorAll(".fac-ed .over").forEach(x=>x.classList.remove("over"));});
+  [["#fac-edit-btn","#fac-panel"],["#fac-edit-btn-parl","#fac-panel-parl"]].forEach(([bs,ps])=>{const eb=$(bs),fp=$(ps);if(!eb||!fp)return;eb.addEventListener("click",()=>{const open=fp.hidden;fp.hidden=!open;eb.setAttribute("aria-expanded",String(open));});});
+  on("click",e=>{
+    if(e.target.closest(".fac-add")){FAC.push({id:"f"+Date.now().toString(36),name:"New faction",color:"#7A808A",members:[]});factionsChanged();return;}
+    const del=e.target.closest("[data-role=del]");
+    if(del){FAC.splice(+del.dataset.i,1);factionsChanged();return;}
+    const chip=e.target.closest(".fac-pc");
+    if(chip){const p=chip.dataset.p,cur=facOfParty(p),ids=[...FAC.map(f=>f.id),""],nx=ids[(ids.indexOf(cur?cur.id:"")+1)%ids.length];moveParty(p,nx);}
+  });
+  on("change",e=>{
+    const i=+e.target.dataset.i;if(!FAC[i])return;
+    if(e.target.dataset.role==="name")FAC[i].name=e.target.value.trim()||"Faction";
+    else if(e.target.dataset.role==="color")FAC[i].color=e.target.value;
+    else return;
+    factionsChanged();
+  });
+}
+if(polls.length){loadFac();activeF=new Set(unitsOf());bindFactions();renderFacEditor();syncFacUI();}
+
 function drawPolls(){
-  const N=220,host=$("#poll-chart"),ts=rangeStart();
-  const vis=parties.filter(p=>active.has(p));
-  const viewKey=pollRange+"|"+vis.join(",")+"|"+(isDarkMode()?"d":"l")+"|"+CW(),cachedView=viewCache.get(viewKey);
+  const N=220,host=$("#poll-chart"),ts=rangeStart(),fm=faOn.poll;
+  const src=fm?viewPolls():polls,tag=fm?"F"+facVer+"|":"";
+  const units=fm?unitsOf():parties,vset=fm?activeF:active;
+  const vis=units.filter(p=>vset.has(p));
+  const viewKey=tag+pollRange+"|"+vis.join(",")+"|"+(isDarkMode()?"d":"l")+"|"+CW(),cachedView=viewCache.get(viewKey);
   if(cachedView){viewCache.delete(viewKey);viewCache.set(viewKey,cachedView);host.replaceChildren(...cachedView);return;}
-  const series=vis.map(p=>({name:lab(p),color:colorOf(p,parties.indexOf(p)),points:smoothedPoints(p,ts,N)}));
-  const dots=[];vis.forEach(p=>polls.forEach(r=>{if(r.t>=ts&&r.v[p]!=null)dots.push({t:r.t,v:r.v[p],color:colorOf(p,parties.indexOf(p))});}));
+  const series=vis.map(p=>({name:lab(p),color:colorOf(p,parties.indexOf(p)),points:smoothedPoints(p,ts,N,src,tag)}));
+  const dots=[];vis.forEach(p=>src.forEach(r=>{if(r.t>=ts&&r.v[p]!=null)dots.push({t:r.t,v:r.v[p],color:colorOf(p,parties.indexOf(p))});}));
   const mx=Math.max(0,...dots.map(d=>d.v)),yMax=Math.ceil(Math.max(10,mx*1.12)/5)*5;
   let step=1;[1,2,5,10,20,25,50,100].forEach(s=>{if(s<=yMax/6*1.4)step=s;});
   lineChart(host,{H:720,rasterDots:true,events:true,months:pollRange==="6m"||pollRange==="1y"?[1,2,3,4,5,6,7,8,9,10,11]:pollRange==="2y"||undefined,title:cfg.pollHeadline,sub:cfg.pollSubline,source:"Source: "+cfg.sourceName,series,dots,yMin:0,yMax,step,threshold:cfg.threshold,endLabel:(v,n)=>`${fmt(v)} % ${n}`});
   viewCache.set(viewKey,Array.from(host.childNodes));if(viewCache.size>14)viewCache.delete(viewCache.keys().next().value);
 }
 function renderChips(){
-  $("#party-filters").innerHTML=parties.map(p=>{const c=colorOf(p,parties.indexOf(p)),on=active.has(p);return`<button type="button" class="faction-chip pc${dark(c)?" dkb":""} ${on?"on":""}" data-p="${p}" style="border-color:${c};${on?`background:${c};color:${contrast(c)}`:""}">${lab(p)}</button>`;}).join("")
+  $("#party-filters").innerHTML=(faOn.poll?unitsOf():parties).map(p=>{const c=colorOf(p,parties.indexOf(p)),on=(faOn.poll?activeF:active).has(p);return`<button type="button" class="faction-chip pc${dark(c)?" dkb":""} ${on?"on":""}" data-p="${p}" style="border-color:${c};${on?`background:${c};color:${contrast(c)}`:""}">${lab(p)}</button>`;}).join("")
 ;
   $("#range-filters").innerHTML=RANGES.map(r=>`<button type="button" class="faction-chip ${pollRange===r[0]?"on":""}" data-r="${r[0]}">${r[1]}</button>`).join("");
 }
@@ -490,8 +593,8 @@ if(polls.length){
     const b=e.target.closest(".faction-chip");if(!b)return;
     if(b.dataset.r){pollRange=b.dataset.r;drawPolls();renderChips();return;}
     if(!b.dataset.p)return;
-    const p=b.dataset.p;
-    if(active.has(p)){if(active.size>1)active.delete(p);}else active.add(p);
+    const p=b.dataset.p,vset=faOn.poll?activeF:active;
+    if(vset.has(p)){if(vset.size>1)vset.delete(p);}else vset.add(p);
     drawPolls();renderChips();
   };
   drawPolls();renderChips();redraw.push(drawPolls);
@@ -509,6 +612,7 @@ if(polls.length){
   const sl=sainteLague(Object.fromEntries(elig.map(p=>[p,pct[p]])),N);
   order.forEach(p=>seats[p]=sl[p]||0);
 }
+baseM={order,pct,seats,elig};PM=baseM;buildPM();
 function layoutSeats(cx,cy,rIn,rOut){
   let k=2;while(k<80){const pitch=(rOut-rIn)/(k-1),d=Math.PI*k*(rIn+rOut)/(2*N);if(d>=pitch)break;k++;}
   const pitch=(rOut-rIn)/(k-1),radii=Array.from({length:k},(_,i)=>rIn+i*pitch);
@@ -521,10 +625,10 @@ function layoutSeats(cx,cy,rIn,rOut){
   return{rowsData,slots,dotR:Math.max(2.4,pitch*.46)};
 }
 function drawSeats(svg,L,o){
-  const owner=[];order.forEach(p=>{for(let i=0;i<seats[p];i++)owner.push(p);});
+  const owner=[];PM.order.forEach(p=>{for(let i=0;i<PM.seats[p];i++)owner.push(p);});
   L.slots.forEach((s,i)=>{const p=owner[i];
     const c=el("circle",{class:"seat"+(p&&dark(colorOf(p))?" dk":""),cx:s.x.toFixed(2),cy:s.y.toFixed(2),r:L.dotR.toFixed(2),fill:p?colorOf(p,parties.indexOf(p)):"#D6D6D2",opacity:p&&o.dim&&o.dim(p)?.2:1},svg);
-    if(p){c.addEventListener("mousemove",e=>showTip(e,`<b>${lab(p)}</b>: ${seats[p]} seats (${fmt(pct[p])}%)`));c.addEventListener("mouseleave",hideTip);}
+    if(p){c.addEventListener("mousemove",e=>showTip(e,`<b>${lab(p)}</b>: ${PM.seats[p]} seats (${fmt(PM.pct[p])}%)`));c.addEventListener("mouseleave",hideTip);}
   });
   const bp=L.rowsData.map(row=>{const m=row.items.length;let s=0;while(s<m&&row.items[s].gi<maj)s++;
     const a=s<=0?180:s>=m?0:(row.items[s-1].angle+row.items[s].angle)/2;return pt(o.cx,o.cy,row.r,a);});
@@ -536,13 +640,13 @@ function drawSeats(svg,L,o){
   el("text",{class:"mut",x:o.cx,y:o.cy-18,"text-anchor":"middle","font-size":15},svg,"Seats");
   el("text",{class:"mut",x:o.cx,y:o.cy+20,"text-anchor":"middle","font-size":14,"font-weight":700,"letter-spacing":"0.02em"},svg,`${maj} needed for majority`);
 }
-const members=()=>[...sel].filter(p=>seats[p]>0).sort((a,b)=>spec(a)-spec(b));
+const members=()=>[...sel].filter(p=>PM.seats[p]>0).sort((a,b)=>spec(a)-spec(b));
 function drawParl(){
   const W=940,H=710,cx=W/2,cy=470,rOut=330,rIn=178;
   const svg=frame($("#parl-chart"),{W,H,title:cfg.parliamentHeadline,sub:cfg.parliamentSubline,source:cfg.sourceName,boldSource:true});
   const L=layoutSeats(cx,cy,rIn,rOut);
   drawSeats(svg,L,{cx,cy,rIn,rOut,dim:p=>sel.size>0&&!sel.has(p)});
-  const act=order.filter(p=>seats[p]>0),n=act.length,gp=8;
+  const act=PM.order.filter(p=>PM.seats[p]>0),n=act.length,gp=8;
   const bw=Math.max(28,Math.min(62,(W-52-(n-1)*gp)/n)),sx=cx-(n*bw+(n-1)*gp)/2,nf=Math.max(7.5,Math.min(11.5,bw/5.2));
   act.forEach((p,i)=>{
     const bx=sx+i*(bw+gp),c=colorOf(p,parties.indexOf(p)),name=lab(p),on=sel.has(p);
@@ -551,14 +655,14 @@ function drawParl(){
     if(on)el("rect",{class:"zl",x:(bx-3).toFixed(2),y:515,width:(bw+6).toFixed(2),height:38,rx:8,fill:"none","stroke-width":2.5,style:"stroke:var(--cink)"},g);
     const t=el("text",{x:(bx+bw/2).toFixed(2),y:(518+16+nf*.35).toFixed(2),"text-anchor":"middle","font-size":nf.toFixed(1),"font-weight":700,fill:contrast(c)},g,name);
     if(name.length*nf*.58>bw-8){t.setAttribute("textLength",(bw-8).toFixed(2));t.setAttribute("lengthAdjust","spacingAndGlyphs");}
-    el("text",{class:"ink",x:(bx+bw/2).toFixed(2),y:(518+32+15+6).toFixed(2),"text-anchor":"middle","font-size":15,"font-weight":700},g,String(seats[p]));
+    el("text",{class:"ink",x:(bx+bw/2).toFixed(2),y:(518+32+15+6).toFixed(2),"text-anchor":"middle","font-size":15,"font-weight":700},g,String(PM.seats[p]));
   });
   const bx0=26,bW=W-52,bY=582,bH=34;
   el("text",{class:"mut",x:bx0,y:bY-14,"font-size":11,"font-weight":700,"letter-spacing":"0.04em"},svg,"VOTE SHARE");
   el("rect",{x:bx0,y:bY,width:bW,height:bH,rx:4,style:"fill:var(--track)"},svg);
   let cur=bx0;
-  order.forEach(p=>{
-    const v=Math.round((pct[p]||0)*10)/10;if(v<=0)return;
+  PM.order.forEach(p=>{
+    const v=Math.round((PM.pct[p]||0)*10)/10;if(v<=0)return;
     const w=Math.min(bW-(cur-bx0),v/100*bW);if(w<=0)return;const c=colorOf(p,parties.indexOf(p));
     el("rect",{class:dark(c)?"dk":"",x:cur.toFixed(2),y:bY,width:w.toFixed(2),height:bH,fill:c},svg);
     if(w>22)el("text",{x:(cur+w/2).toFixed(2),y:(bY+bH/2+4).toFixed(2),"text-anchor":"middle","font-size":11,"font-weight":700,fill:contrast(c)},svg,v+"%");
@@ -573,23 +677,30 @@ function drawParl(){
   el("text",{class:"ink",x:mx,y:bY+bH+22,"text-anchor":"middle","font-size":11,"font-weight":700},svg,"50%+1 majority");
   renderCust();
 }
-const barHtml=m=>`<div class="bar"><div>${m.map(p=>`<i class="${dark(colorOf(p))?"dkb":""}" style="width:${seats[p]/N*100}%;background:${colorOf(p)}"></i>`).join("")}</div><u style="left:${maj/N*100}%"></u></div>`;
+const barHtml=m=>`<div class="bar"><div>${m.map(p=>`<i class="${dark(colorOf(p))?"dkb":""}" style="width:${PM.seats[p]/N*100}%;background:${colorOf(p)}"></i>`).join("")}</div><u style="left:${maj/N*100}%"></u></div>`;
 function renderCust(){
   const m=members(),box=$("#cust");
   if(!m.length){box.innerHTML=`<span class="no">No parties selected yet. Click parties in the legend above or choose a coalition below.</span>`;return;}
-  const s=m.reduce((a,p)=>a+seats[p],0),ok=s>=maj;
+  const s=m.reduce((a,p)=>a+PM.seats[p],0),ok=s>=maj;
   box.innerHTML=`<div class="sec-top"><b>${m.map(lab).join(" + ")}</b><button class="link" id="cust-clear" type="button">Clear</button></div>
     <div class="res ${ok?"yes":"no"}">${s} of ${N} seats \u2014 ${ok?`majority (${s-maj} above the ${maj} needed)`:`no majority (${maj-s} short of the ${maj} needed)`}</div>${barHtml(m)}`;
   $("#cust-clear").onclick=()=>{sel.clear();drawParl();};
 }
-if(polls.length){
-  drawParl();
-  const valid=cfg.coalitions.filter(c=>c.every(p=>seats[p]!=null));
+function renderCoalitions(){
+  const cmap=c=>[...new Set(c.map(p=>faOn.parl&&facOfParty(p)?facKey(facOfParty(p).id):p))];
+  const key=c=>c.slice().sort().join("|");
+  const valid=cfg.coalitions.map(cmap).filter(c=>c.every(p=>PM.seats[p]!=null))
+    .filter(c=>!faOn.parl||c.length>1)
+    .filter((c,i,a)=>!faOn.parl||a.findIndex(d=>key(d)===key(c))===i);
   $("#coalitions").innerHTML=valid.map((c,i)=>{
-    const s=c.reduce((a,p)=>a+seats[p],0),ok=s>=maj;
+    const s=c.reduce((a,p)=>a+PM.seats[p],0),ok=s>=maj;
     return `<div class="coal" data-c="${i}" title="Show in the coalition builder"><div class="nm">${c.map(lab).join(" + ")}</div><div>${s} seats</div><div class="${ok?"yes":"no"}">${ok?"Majority":"No majority"}</div>${barHtml(c)}</div>`;
   }).join("")||"<span class='no'>No coalitions in config.json match the parties in the CSV.</span>";
   $("#coalitions").onclick=e=>{const r=e.target.closest(".coal");if(!r)return;sel.clear();valid[+r.dataset.c].forEach(p=>sel.add(p));drawParl();$("#cust").scrollIntoView({block:"center",behavior:"smooth"});};
+}
+if(polls.length){
+  drawParl();
+  renderCoalitions();
 }
 
 // ---------- OVERVIEW ----------
