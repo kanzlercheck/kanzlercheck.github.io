@@ -26,10 +26,10 @@
 <meta name="twitter:description" content="German federal election polling average, Bundestag seat projection and government approval. Source: dawum.de">
 <meta name="twitter:image" content="https://kanzlercheck.github.io/img/og.png?v=2">
 <link rel="canonical" href="https://kanzlercheck.github.io/">
-<link rel="stylesheet" href="css/style.css?v=perf9">
+<link rel="stylesheet" href="css/style.css?v=perf12">
 </head>
 <body>
-<script>(function(){var s=null;try{s=localStorage.getItem("theme")}catch(e){}var d=s?s==="dark":matchMedia("(prefers-color-scheme: dark)").matches;if(d)document.body.classList.add("dark")})()</script>
+<script>(function(){var s=null;try{s=localStorage.getItem("theme")}catch(e){}var d=s?s==="dark":true;if(d)document.body.classList.add("dark")})()</script>
 <div id="tabbar">
   <div class="brandbox">
     <img class="logo" id="logo" src="img/logo.png" alt="" width="74" height="30"><script>if(document.body.classList.contains("dark"))document.getElementById("logo").src="img/logo-dark.png"</script>
@@ -84,6 +84,7 @@
   <section id="tab-state" class="pane">
     <div class="row"><button class="link" data-go="overview" type="button">&larr; Back to overview</button></div>
     <div class="chart-card flow">
+      <div class="filter-row"><div class="fgroup"><div class="ftitle">Filter by date</div><div class="filters" id="state-range"></div></div></div>
       <div id="state-chart"></div>
       <div class="filters" id="state-pick"></div>
       <div class="sec"><h3>Latest polls</h3><div class="scroll" id="state-table"></div></div>
@@ -110,10 +111,11 @@
     </div>
     <div class="chart-card flow" id="approval-card"><div id="approval-chart"></div><details class="sec fold" id="approval-fold"><summary><h3>Latest polls</h3></summary><div class="scroll" id="approval-table"></div></details></div>
     <div class="chart-card flow" id="chancellor-card"><div id="chancellor-chart"></div><details class="sec fold" id="chancellor-fold"><summary><h3>Latest polls</h3></summary><div class="scroll" id="chancellor-table"></div></details></div>
-    <div class="chart-card flow">
+    <div class="chart-card flow" id="neg-card">
+      <div class="seg-bar" id="neg-tabs" role="tablist" aria-label="Poll question"></div>
       <div id="neg-chart"></div>
       <div id="neg-trend"></div>
-      <div class="sec"><h3>All results</h3><div class="scroll" id="neg-table"></div></div>
+      <div class="sec" id="neg-sec"><h3>All results</h3><div class="scroll" id="neg-table"></div></div>
     </div>
   </section>
 
@@ -187,6 +189,6 @@
 </main>
 <div id="tip" class="tip" hidden></div>
 <script data-goatcounter="https://efefury.goatcounter.com/count" data-goatcounter-settings='{"no_onload":true}' async src="//gc.zgo.at/count.js"></script>
-<script src="js/app.js?v=perf10"></script>
+<script src="js/app.js?v=perf16"></script>
 </body>
 </html>

@@ -14,13 +14,11 @@ const CW=()=>matchMedia("(max-width:600px)").matches?500:1200; // chart canvas w
 // zoom steps tried by fitOv (same sequence as before: 1.30, 1.28, ... down to ~0.45)
 const ZS=[];let ZEND=1.3;for(;ZEND>.45;ZEND-=.02)ZS.push(ZEND);
 function setDark(d){document.body.classList.toggle("dark",d);$("#dark-toggle").checked=d;const lg=$("#logo");if(lg)lg.src=d?"img/logo-dark.png":"img/logo.png";redraw.forEach(f=>f());}
-// default = system light/dark setting; the switch overrides it and the choice is remembered
+// default = dark; the switch overrides it and the choice is remembered
 const schemeMQ=matchMedia("(prefers-color-scheme: dark)");
 let saved=null;try{saved=localStorage.getItem("theme");}catch(e){}
-setDark(saved?saved==="dark":schemeMQ.matches);
+setDark(saved?saved==="dark":true);
 $("#dark-toggle").onchange=e=>{setDark(e.target.checked);try{localStorage.setItem("theme",e.target.checked?"dark":"light");}catch(_){}};
-const onScheme=e=>{let s=null;try{s=localStorage.getItem("theme");}catch(_){}if(!s)setDark(e.matches);}; // follow system changes only until the switch is used
-(schemeMQ.addEventListener?schemeMQ.addEventListener("change",onScheme):schemeMQ.addListener(onScheme));
 
 // ---------- CSV ----------
 function parseCSV(text){
@@ -64,7 +62,7 @@ try{
   if(!r.ok)throw new Error("HTTP "+r.status);
   cfg=await r.json();
 }catch(e){showErr("config.json could not be loaded ("+e.message+"). Serve the site over http(s) \u2014 opening index.html as a local file will not work \u2014 and make sure config.json sits next to index.html.");return;}
-[cfg.pollsCsv,cfg.approvalCsv,"data/chancellor_approval.csv",cfg.negativeCsv,cfg.statesMap,"data/election2025.json",
+[cfg.pollsCsv,cfg.approvalCsv,"data/chancellor_approval.csv",cfg.negativeCsv,...(cfg.pollTabs||[]).map(t=>t.csv),cfg.statesMap,"data/election2025.json",
   ...Object.values(cfg.stateFiles||{}).map(slug=>`${cfg.stateFolder}/${slug}.csv`)].forEach(u=>{if(u)fetchRaw(u).catch(()=>{});});
 document.title=cfg.siteTitle;$("#site-title").textContent=cfg.siteTitle;
 // faction keys look like "F:<id>" so they can stand in for a party key anywhere a party key is used
@@ -237,7 +235,7 @@ function lineChart(host,o){
     let d="",drawing=false,last=null;
     s.points.forEach(p=>{if(p.v==null){drawing=false;return;}d+=(drawing?"L":"M")+x(p.t).toFixed(2)+" "+y(p.v).toFixed(2)+" ";drawing=true;last=p;});
     if(d)el("path",{class:dark(s.color)?"dk":"",d:d.trim(),fill:"none",stroke:s.color,"stroke-width":2.6,"stroke-linejoin":"round","stroke-linecap":"round"},svg);
-    if(last)ends.push({s,v:last.v,y:y(last.v)});
+    if(last)ends.push({s,v:last.v,y:y(last.v),ty:y(last.v),ex:x(last.t)});
   });
   evs.forEach(e=>o.series.forEach(s=>{const v=nearV(s,e.t);if(v==null)return;
     const cx=e.ex,cy=y(v),r=3.3,d=`M${(cx-r).toFixed(1)} ${(cy-r).toFixed(1)}L${(cx+r).toFixed(1)} ${(cy+r).toFixed(1)}M${(cx-r).toFixed(1)} ${(cy+r).toFixed(1)}L${(cx+r).toFixed(1)} ${(cy-r).toFixed(1)}`;
@@ -255,6 +253,11 @@ function lineChart(host,o){
   if(ends.length){const ov=ends[ends.length-1].y-(Y1+8);if(ov>0)ends.forEach(l=>l.y-=ov);}
   ends.forEach(l=>{
     const k=dark(l.s.color)?"dk":"";
+    // label pushed away from the real line end (to avoid overlaps): tie it back to the line with a thin curve + a dot on the true end
+    if(Math.abs(l.y-l.ty)>2&&l.ex>=X1-1){
+      el("path",{class:k,d:`M${X1.toFixed(2)} ${l.ty.toFixed(2)}C${(X1+8).toFixed(2)} ${l.ty.toFixed(2)},${X1.toFixed(2)} ${l.y.toFixed(2)},${(X1+8).toFixed(2)} ${l.y.toFixed(2)}`,fill:"none",stroke:l.s.color,"stroke-width":1.6,"stroke-linecap":"round",opacity:.6},svg);
+      el("circle",{class:k,cx:l.ex.toFixed(2),cy:l.ty.toFixed(2),r:3.4,fill:l.s.color,style:"stroke:var(--cbg)","stroke-width":1.5},svg);
+    }
     el("circle",{class:k,cx:(X1+8).toFixed(2),cy:l.y.toFixed(2),r:3.2,fill:l.s.color},svg);
     el("text",{class:k,x:(X1+18).toFixed(2),y:(l.y+4.5).toFixed(2),"font-size":F(13),"font-weight":700,fill:l.s.color},svg,o.endLabel(l.v,l.s.name));
   });
@@ -810,19 +813,31 @@ async function openState(id){
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("active",p.id==="tab-state"));
   history.replaceState(null,"","#state-"+id);scrollTo(0,0);
   track("/state/"+id,stateGeo[id].en+" polls");
+  curState=id;await drawState(id);
+}
+let curState=null,stateRange="all";
+async function drawState(id){
+  const s=stateData[id];if(!s)return;
   const en=stateGeo[id].en,rec=s.rec,plist=s.ps,bwS=cfg.stateSmoothingDays||60;
   let t0=rec[0].t,t1=rec[rec.length-1].t;if(t1-t0<30*DAY){t0-=15*DAY;t1+=15*DAY;}
+  // date filter (same ranges as the federal poll average, counted back from this state's latest poll)
+  if(stateRange!=="all"){const m=RANGES.find(r=>r[0]===stateRange)[2],d=new Date(t1);d.setUTCMonth(d.getUTCMonth()-m);t0=Math.max(t0,+d);}
+  const recR=rec.filter(r=>r.t>=t0);
   const N=160;
   const series=plist.map(p=>({name:lab(p),color:colorOf(p,parties.indexOf(p)),points:Array.from({length:N+1},(_,i)=>{const t=t0+(t1-t0)*i/N;return{t,v:smoothedValueAt(rec,p,t,bwS)};})}));
-  const dots=[];plist.forEach(p=>rec.forEach(r=>{if(r.v[p]!=null)dots.push({t:r.t,v:r.v[p],color:colorOf(p,parties.indexOf(p))});}));
+  // an event just after the last poll (e.g. the state election itself) still gets its marker: widen the x-range with an empty point
+  {const ev=EVENTS_FOR(id).filter(e=>e.t>t1&&e.t-t1<=45*DAY).pop();if(ev&&series.length)series[0].points.push({t:ev.t,v:null});}
+  const dots=[];plist.forEach(p=>rec.forEach(r=>{if(r.t>=t0&&r.v[p]!=null)dots.push({t:r.t,v:r.v[p],color:colorOf(p,parties.indexOf(p))});}));
   const mx=Math.max(0,...dots.map(d=>d.v)),yMax=Math.ceil(Math.max(10,mx*1.12)/5)*5;let step=1;[1,2,5,10,20,25,50,100].forEach(q=>{if(q<=yMax/6*1.4)step=q;});
   const res=await stateResults(id),results=res?plist.filter(p=>res[p]!=null).map(p=>({v:res[p],color:colorOf(p,parties.indexOf(p))})):[];
-  lineChart($("#state-chart"),{H:720,title:en+" poll average",sub:`State election voting intention \u00B7 ${rec.length} poll${rec.length>1?"s":""}, latest ${fmtDate(rec[rec.length-1].t)}`+(results.length?" \u00B7 rings = 2025 Bundestag vote in this state":""),source:"Source: "+cfg.sourceName,
-    series,dots,yMin:0,yMax,step,threshold:cfg.threshold,months:true,events:true,eventList:EVENTS_FOR(id),results,endLabel:(v,n)=>`${fmt(v)} % ${n}`});
+  lineChart($("#state-chart"),{H:720,title:en+" poll average",sub:`State election voting intention \u00B7 ${recR.length} poll${recR.length>1?"s":""}, latest ${fmtDate(rec[rec.length-1].t)}`+(results.length?" \u00B7 rings = 2025 Bundestag vote in this state":""),source:"Source: "+cfg.sourceName,
+    series,dots,yMin:0,yMax,step,threshold:cfg.threshold,months:stateRange==="6m"||stateRange==="1y"?[1,2,3,4,5,6,7,8,9,10,11]:true,events:true,eventList:EVENTS_FOR(id),results,endLabel:(v,n)=>`${fmt(v)} % ${n}`});
   $("#state-table").innerHTML=pollTableHtml(rec,plist);
+  $("#state-range").innerHTML=RANGES.map(r=>`<button type="button" class="faction-chip ${stateRange===r[0]?"on":""}" data-r="${r[0]}">${r[1]}</button>`).join("");
   $("#state-pick").innerHTML=Object.keys(stateData).sort((a,b)=>stateGeo[a].en.localeCompare(stateGeo[b].en)).map(k=>`<button type="button" class="faction-chip ${k===id?"on":""}" data-s="${k}">${stateGeo[k].en}</button>`).join("");
 }
 $("#state-pick").onclick=e=>{const b=e.target.closest("[data-s]");if(b)openState(b.dataset.s);};
+$("#state-range").onclick=e=>{const b=e.target.closest("[data-r]");if(!b||!curState)return;stateRange=b.dataset.r;drawState(curState);};
 // state map from state_polls/<State>.csv (written by update_data.cmd)
 async function ovMap(){
   const host=$("#map"),note=$("#map-note");
@@ -1079,52 +1094,86 @@ async function drawElection(){
 }
 try{await drawElection();}catch(e){console.error(e);showErr("2025 Election tab failed to load: "+e.message);}
 
-// ---------- NEGATIVE SONNTAGSFRAGE ----------
-let neg=[],negParties=[];
-try{
-  const rows=await load(cfg.negativeCsv);
-  if(rows.length){
-    const kD=findKey(rows[0],["datum","date"]),kI=findKey(rows[0],["institut","institute","pollster"]);
-    negParties=Object.keys(rows[0]).filter(k=>k&&!META.test(k)&&!isOther(k));
-    neg=rows.map(r=>({t:+parseDate(r[kD]),inst:kI?r[kI]:"",v:Object.fromEntries(negParties.map(p=>[p,num(r[p])]))})).filter(r=>!isNaN(r.t)).sort((a,b)=>a.t-b.t);
-  }
-}catch(e){showErr(e.message);}
+// ---------- POLL TABS (parties ruled out, maximum voter potential, ...) ----------
+// every tab = one entry in config.json "pollTabs" + one CSV (Datum,Institut,<party columns>). Add an entry to add a tab.
+// With several polls, the bars show the average of the last cfg.pollTabAverage polls (default 5).
+const NTABS=(cfg.pollTabs&&cfg.pollTabs.length?cfg.pollTabs:[{id:"ruledout",label:"Parties ruled out",csv:cfg.negativeCsv,title:"Parties voters rule out",sub:"Share of voters who could never imagine voting for each party"}]).map(t=>({...t,rows:[],parties:[]}));
+let negIdx=0;const negSmooth=new Map();
+for(const T of NTABS){
+  try{
+    const rows=await load(T.csv);
+    if(rows.length){
+      const kD=findKey(rows[0],["datum","date"]),kI=findKey(rows[0],["institut","institute","pollster"]);
+      T.parties=Object.keys(rows[0]).filter(k=>k&&!META.test(k)&&!isOther(k));
+      T.rows=rows.map(r=>({t:+parseDate(r[kD]),inst:kI?r[kI]:"",v:Object.fromEntries(T.parties.map(p=>[p,num(r[p])]))})).filter(r=>!isNaN(r.t)).sort((a,b)=>a.t-b.t);
+    }
+  }catch(e){/* a tab without data just shows its empty state */}
+}
+const NAVG=Math.max(1,cfg.pollTabAverage||5);
+// show one decimal when needed (36.5 stays 36.5, 36 stays 36); keep=true always shows one decimal (averages)
+const nf=(v,keep)=>keep||Math.abs(v-Math.round(v))>=.05?fmt(v,1):fmt(v,0);
+function negAgg(rows,parties){ // mean of every party over the given polls (ignoring polls that lack the party)
+  const v={};parties.forEach(p=>{const x=rows.map(r=>r.v[p]).filter(n=>n!=null);v[p]=x.length?x.reduce((s,n)=>s+n,0)/x.length:null;});
+  return {t:rows[rows.length-1].t,v,n:rows.length,inst:[...new Set(rows.map(r=>r.inst).filter(Boolean))].join(", ")};
+}
+function negTabs(){
+  const box=$("#neg-tabs");
+  box.innerHTML=NTABS.map((t,i)=>`<button type="button" role="tab" aria-selected="${i===negIdx}" class="seg-tab ${i===negIdx?"on":""}" data-i="${i}"><b>${t.label}</b>${t.sub?`<small>${t.sub}</small>`:""}</button>`).join("");
+  box.style.display=NTABS.length>1?"":"none";
+}
+$("#neg-tabs").onclick=e=>{const b=e.target.closest("[data-i]");if(!b)return;negIdx=+b.dataset.i;negTabs();negDraw();};
 function negChart(){
-  const host=$("#neg-chart");if(!neg.length){host.innerHTML="";return;}
-  const L=neg[neg.length-1],P=neg.length>1?neg[neg.length-2]:null,plist=negParties.filter(p=>L.v[p]!=null);
+  const T=NTABS[negIdx],neg=T.rows,negParties=T.parties,host=$("#neg-chart"),tr=$("#neg-trend");
+  if(!neg.length){host.innerHTML=`<div class="note" style="padding:28px 4px">No polls in this tab yet. Add rows to <b>${T.csv}</b>.</div>`;tr.innerHTML="";return;}
+  const L=negAgg(neg.slice(-NAVG),negParties),P=neg.length>1?negAgg(neg.slice(-NAVG-1,-1),negParties):null,plist=negParties.filter(p=>L.v[p]!=null);
+  const srcTxt=L.n>1?`Source: ${L.inst||cfg.sourceName} · average of the last ${L.n} polls, latest ${fmtDate(L.t)}`:"Source: "+(L.inst||cfg.sourceName);
+  // chart type per tab (config.json -> pollTabs[].chart, or pollTabChart): "bar", "line" or "both"; a line needs at least 2 polls
+  const mode=String(T.chart||cfg.pollTabChart||"both").toLowerCase(),showLine=neg.length>1&&mode!=="bar",showBar=mode!=="line"||!showLine;
+  const allMaxT=Math.max(...neg.flatMap(r=>negParties.map(p=>r.v[p]??0))),yMaxT=Math.ceil(Math.max(...plist.map(p=>L.v[p]),allMaxT*(neg.length>1?1:0))*1.12/10)*10;
+  if(!showBar)host.innerHTML="";
+  if(showBar){
   const W=CW(),H=720,X0=70,X1=W-40,Y0=170,Y1=H-120;
-  const svg=frame(host,{W,H,title:"Parties voters rule out",sub:"Share of voters who could never imagine voting for each party",source:"Source: "+(L.inst||cfg.sourceName)});
-  const yMax=Math.ceil(Math.max(...plist.map(p=>L.v[p]))*1.12/10)*10,y=v=>Y1-v/yMax*(Y1-Y0);
+  const svg=frame(host,{W,H,title:T.title,sub:T.sub,source:srcTxt});
+  const allMax=Math.max(...neg.flatMap(r=>negParties.map(p=>r.v[p]??0))),yMax=Math.ceil(Math.max(...plist.map(p=>L.v[p]),allMax*(neg.length>1?1:0))*1.12/10)*10,y=v=>Y1-v/yMax*(Y1-Y0);
   for(let v=0;v<=yMax;v+=10){el("line",{class:"gl",x1:X0,x2:X1,y1:y(v),y2:y(v),"stroke-width":1},svg);if(v>0)el("text",{class:"mut",x:X0-10,y:y(v)+4,"text-anchor":"end","font-size":W<1000?14:12},svg,v+"%");}
   const slot=(X1-X0)/plist.length,bw=Math.min(120,slot*.56);
   plist.forEach((p,i)=>{
     const v=L.v[p],c=colorOf(p,parties.indexOf(p)),cx=X0+slot*(i+.5),x=cx-bw/2,top=y(v),g=el("g",{},svg);
     el("rect",{class:dark(c)?"dk":"",x:x.toFixed(1),y:top.toFixed(1),width:bw.toFixed(1),height:(Y1-top).toFixed(1),rx:2,fill:c},g);
-    el("text",{class:"ink",x:cx.toFixed(1),y:(top-(P&&P.v[p]!=null?30:10)).toFixed(1),"text-anchor":"middle","font-size":W<1000?21:26,"font-weight":700},g,fmt(v,0)+"%");
-    if(P&&P.v[p]!=null){const d=v-P.v[p];el("text",{class:"mut",x:cx.toFixed(1),y:(top-9).toFixed(1),"text-anchor":"middle","font-size":15},g,d===0?"(=)":`(${d>0?"+":"\u2212"}${+Math.abs(d).toFixed(1)})`);}
+    el("text",{class:"ink",x:cx.toFixed(1),y:(top-(P&&P.v[p]!=null?30:10)).toFixed(1),"text-anchor":"middle","font-size":W<1000?21:26,"font-weight":700},g,nf(v,L.n>1)+"%");
+    if(P&&P.v[p]!=null){const d=v-P.v[p];el("text",{class:"mut",x:cx.toFixed(1),y:(top-9).toFixed(1),"text-anchor":"middle","font-size":15},g,Math.abs(d)<.05?"(=)":`(${d>0?"+":"−"}${fmt(Math.abs(d))})`);}
     const tint=lighten(c,.38);
     {const lw=W<1000?slot*.94:bw;el("rect",{x:(cx-lw/2).toFixed(1),y:Y1+12,width:lw.toFixed(1),height:36,rx:2,fill:tint},g);}
     el("text",{x:cx.toFixed(1),y:Y1+36,"text-anchor":"middle","font-size":W<1000?10.5:16,"font-weight":700,fill:contrast(tint)},g,lab(p));
     const hit=el("rect",{x:(cx-slot/2).toFixed(1),y:Y0-40,width:slot.toFixed(1),height:Y1-Y0+90,fill:"transparent"},g);
-    hit.addEventListener("mousemove",e=>showTip(e,`<b>${lab(p)}</b>: ${fmt(v,0)}%`+(P&&P.v[p]!=null?`<br>Previous (${fmtDate(P.t)}): ${fmt(P.v[p],0)}%`:"")+(L.inst?`<br>Pollster: ${L.inst}`:"")));
+    hit.addEventListener("mousemove",e=>showTip(e,`<b>${lab(p)}</b>: ${nf(v,L.n>1)}%`+(P&&P.v[p]!=null?`<br>${L.n>1?"Previous average":"Previous poll"} (${fmtDate(P.t)}): ${nf(P.v[p],L.n>1)}%`:"")+(L.n>1?`<br>Average of the last ${L.n} polls`:L.inst?`<br>Pollster: ${L.inst}`:"")));
     hit.addEventListener("mouseleave",hideTip);
   });
   el("line",{class:"zl",x1:X0,x2:X1,y1:Y1,y2:Y1,"stroke-width":2},svg);
-  // trend over time, once there is more than one result
-  const tr=$("#neg-trend");
-  if(neg.length>1){
-    const series=plist.map(p=>({name:lab(p),color:colorOf(p,parties.indexOf(p)),points:neg.map(r=>({t:r.t,v:r.v[p]}))}));
+  }
+  // line chart over time, once there is more than one result
+  if(showLine){
+    const sm=negSmooth.has(T.id)?negSmooth.get(T.id):!!(T.smooth??cfg.pollTabSmooth);
+    const t0=neg[0].t,t1=neg[neg.length-1].t,NS=220,bwN=cfg.pollTabSmoothingDays||cfg.smoothingDays||30;
+    const series=plist.map(p=>({name:lab(p),color:colorOf(p,parties.indexOf(p)),points:sm?Array.from({length:NS+1},(_,i)=>{const t=t0+(t1-t0)*i/NS;return{t,v:smoothedValueAt(neg,p,t,bwN)};}):neg.map(r=>({t:r.t,v:r.v[p]}))}));
     const dots=[];plist.forEach(p=>neg.forEach(r=>{if(r.v[p]!=null)dots.push({t:r.t,v:r.v[p],color:colorOf(p,parties.indexOf(p))});}));
-    lineChart(tr,{H:720,title:"Parties voters rule out over time",sub:"Share who could never imagine voting for each party",source:"Source: "+(L.inst||cfg.sourceName),series,dots,yMin:0,yMax,step:10,endLabel:(v,n)=>`${fmt(v,0)} % ${n}`});
+    lineChart(tr,{H:720,title:T.trendTitle||T.title+" over time",sub:T.sub,source:"Source: "+(L.inst||cfg.sourceName),series,dots,yMin:0,yMax:yMaxT,step:10,endLabel:(v,n)=>`${nf(v)} % ${n}`});
+    const tg=document.createElement("div");tg.className="neg-smooth";
+    tg.innerHTML=`<label class="switch" aria-label="Smooth the lines"><input type="checkbox"${sm?" checked":""}><span class="slider"></span></label><span>Smooth lines</span>`;
+    tg.querySelector("input").onchange=e=>{negSmooth.set(T.id,e.target.checked);negChart();};
+    tr.appendChild(tg);
   }else tr.innerHTML="";
 }
 function negTable(){
-  if(!neg.length)return;
+  const T=NTABS[negIdx],neg=T.rows,negParties=T.parties,sec=$("#neg-sec");
+  if(sec)sec.hidden=!neg.length;
+  if(!neg.length){$("#neg-table").innerHTML="";return;}
   const rec=neg.slice(-15).reverse();
   $("#neg-table").innerHTML=`<table><thead><tr><th>Date</th><th>Pollster</th>${negParties.map(p=>`<th class="${dark(colorOf(p))?"dk":""}" style="border-bottom-color:${colorOf(p,parties.indexOf(p))}">${lab(p)}</th>`).join("")}</tr></thead><tbody>`+
-    rec.map(r=>{const top=Math.max(...negParties.map(p=>r.v[p]??-1));return`<tr><td>${fmtDate(r.t)}</td><td>${r.inst||""}</td>${negParties.map(p=>`<td class="${r.v[p]===top?"lead":""}">${r.v[p]!=null?fmt(r.v[p],0)+"%":"\u2013"}</td>`).join("")}</tr>`;}).join("")+`</tbody></table>`;
+    rec.map(r=>{const top=Math.max(...negParties.map(p=>r.v[p]??-1));return`<tr><td>${fmtDate(r.t)}</td><td>${r.inst||""}</td>${negParties.map(p=>`<td class="${r.v[p]===top?"lead":""}">${r.v[p]!=null?nf(r.v[p])+"%":"–"}</td>`).join("")}</tr>`;}).join("")+`</tbody></table>`;
 }
-if(neg.length){negChart();negTable();redraw.push(negChart);}
+function negDraw(){negChart();negTable();}
+negTabs();negDraw();redraw.push(negChart);
 
 // ---------- overview: fit to one screen, no scrolling ----------
 // scale the whole page so it always has the same proportions as the 1440p design (layout viewport ~1620x911)

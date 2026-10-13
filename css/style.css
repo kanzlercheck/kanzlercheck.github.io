@@ -331,3 +331,29 @@ body.dark .fac-pc.dkb i{background:#7A808A!important}
 @media(max-width:600px){.fac-panel{margin:10px 26px 4px;padding:10px 10px 10px}.fac-board{grid-template-columns:repeat(2,1fr)}.fac-pc{min-height:28px;padding:3px 9px;font-size:12px;border-radius:14px}.fac-cb{gap:4px}}
 body.dark .fac-col.dkb input[type=color]{filter:brightness(2.6)}
 .sec .fac-panel{margin:0 0 16px}
+
+/* ---- poll question switcher (bottom card of Poll Average) ---- */
+.seg-bar{display:flex;gap:6px;padding:0 14px;background:color-mix(in srgb,var(--cink) 4%,var(--cbg));border-bottom:1px solid var(--cgrid);overflow-x:auto;scrollbar-width:none}
+.seg-bar::-webkit-scrollbar{display:none}
+.seg-tab{appearance:none;position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;font-family:inherit;color:var(--cmut);background:transparent;border:0;padding:16px 22px 15px;cursor:pointer;white-space:nowrap;transition:color .15s ease,background .15s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.seg-tab b{font-size:14px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+.seg-tab small{font-size:11.5px;line-height:1.3;color:var(--cmut);opacity:.85}
+.seg-tab::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;border-radius:2px 2px 0 0;background:var(--accent);transform:scaleX(0);transition:transform .2s ease}
+.seg-tab::before{content:"";position:absolute;inset:0;background:linear-gradient(to top,color-mix(in srgb,var(--accent) 12%,transparent),transparent 70%);opacity:0;transition:opacity .2s ease;pointer-events:none}
+.seg-tab:hover{color:var(--cink)}
+.seg-tab:hover::after{transform:scaleX(.25)}
+.seg-tab.on{color:var(--cink)}
+.seg-tab.on::after{transform:scaleX(1)}
+.seg-tab.on::before{opacity:1}
+.seg-tab:focus-visible{outline:2px solid var(--accent);outline-offset:-3px;border-radius:4px}
+@media(max-width:700px){
+  .seg-bar{padding:0 6px;gap:0}
+  .seg-tab{padding:12px 14px 11px}
+  .seg-tab small{display:none}
+  .seg-tab b{font-size:13px}
+}
+
+/* smoothing toggle on the poll-tab line chart (sits at the right of the chart title) */
+#neg-trend{position:relative}
+.neg-smooth{position:absolute;top:24px;right:26px;display:inline-flex;align-items:center;gap:9px;font-size:12.5px;color:var(--cink);z-index:2}
+@media(max-width:700px){.neg-smooth{top:18px;right:14px;font-size:12px}}

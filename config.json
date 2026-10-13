@@ -130,6 +130,12 @@
     "SPD"
   ],
   "stateSmoothingDays": 60,
+  "pollTabs": [
+    {"id": "potential", "label": "Maximum voter potential", "chart": "both", "csv": "data/voter_potential.csv", "title": "Maximum voter potential", "sub": "Share of voters who could imagine voting for each party", "trendTitle": "Maximum voter potential over time"},
+    {"id": "ruledout", "label": "Parties ruled out", "chart": "both", "csv": "data/negative_poll.csv", "title": "Parties voters rule out", "sub": "Share of voters who could never imagine voting for each party", "trendTitle": "Parties voters rule out over time"}
+  ],
+  "pollTabChart": "both",
+  "pollTabAverage": 5,
   "negativeCsv": "data/negative_poll.csv",
   "events": [
     {"date": "2017-09-24", "label": "Federal election", "desc": "AfD enters the Bundestag as the third-largest party while Union and SPD both lose heavily"},
@@ -142,6 +148,19 @@
     {"date": "2026-09-06", "label": "AfD wins Saxony-Anhalt", "desc": "AfD wins 43.8 percent in Saxony-Anhalt, the strongest result for any party there since reunification, while the CDU falls to 17.2 and the Union slides to record lows nationally", "federalOnly": true}
   ],
   "stateEvents": {
+    "BE": [
+      {"date": "2021-09-26", "label": "State election", "desc": "SPD wins under Franziska Giffey; the election is later annulled over organisational failures"},
+      {"date": "2023-02-12", "label": "State election", "desc": "Repeat election: CDU wins with 28.2 percent under Kai Wegner, ahead of SPD and Greens at 18.4 percent each"},
+      {"date": "2026-09-20", "label": "Left wins Berlin", "desc": "Die Linke wins with about 25.7 percent (preliminary), its first win in Berlin, ahead of the CDU at 18.8 and the AfD at 16.3; SPD falls to 12.1"}
+    ],
+    "BB": [
+      {"date": "2019-09-01", "label": "State election", "desc": "SPD stays strongest under Dietmar Woidke; AfD second with 23.5 percent"},
+      {"date": "2024-09-22", "label": "State election", "desc": "SPD narrowly stays strongest with 30.9 percent, ahead of the AfD at 29.2; Greens and Left miss out"}
+    ],
+    "MV": [
+      {"date": "2021-09-26", "label": "State election", "desc": "SPD wins with 39.6 percent under Manuela Schwesig; AfD second with 16.7 percent"},
+      {"date": "2026-09-20", "label": "AfD wins Mecklenburg-Vorpommern", "desc": "AfD wins with 38.2 percent (preliminary), ahead of the SPD at 35.5; the CDU falls below the threshold at 4.9 and leaves the Landtag"}
+    ],
     "ST": [
       {"date": "2021-06-06", "label": "State election", "desc": "CDU wins with 37.1 percent under Reiner Haseloff; AfD second with 20.8 percent"},
       {"date": "2026-09-06", "label": "AfD wins Saxony-Anhalt", "desc": "AfD wins 43.8 percent in Saxony-Anhalt (preliminary result), more than double its 2021 result, while the CDU falls to 17.2 percent"}
