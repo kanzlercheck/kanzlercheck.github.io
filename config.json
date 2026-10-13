@@ -131,7 +131,7 @@
   ],
   "stateSmoothingDays": 60,
   "pollTabs": [
-    {"id": "potential", "label": "Maximum voter potential", "chart": "both", "csv": "data/voter_potential.csv", "title": "Maximum voter potential", "sub": "Share of voters who could imagine voting for each party", "trendTitle": "Maximum voter potential over time"},
+    {"id": "potential", "label": "Maximum voter potential", "chart": "line", "csv": "data/voter_potential.csv", "title": "Maximum voter potential", "sub": "Share of voters who could imagine voting for each party", "trendTitle": "Maximum voter potential over time"},
     {"id": "ruledout", "label": "Parties ruled out", "chart": "both", "csv": "data/negative_poll.csv", "title": "Parties voters rule out", "sub": "Share of voters who could never imagine voting for each party", "trendTitle": "Parties voters rule out over time"}
   ],
   "pollTabChart": "both",

@@ -2,6 +2,10 @@
 "use strict";
 const $=s=>document.querySelector(s),NS="http://www.w3.org/2000/svg",DAY=864e5;
 const fmt=(n,d=1)=>(Math.round(n*10**d)/10**d).toFixed(d);
+// text measuring so labels can size their box to the text (no squeezed/stretched glyphs): shrink the font a little, then truncate with an ellipsis as a last resort
+const _mc=document.createElement("canvas").getContext("2d");
+const tw=(t,fs,w=700)=>{_mc.font=`${w} ${fs}px "IBM Plex Sans",-apple-system,"Segoe UI",Arial,sans-serif`;return _mc.measureText(t).width;};
+function fitLabel(t,fs,max,min=8.5){let f=fs;while(f>min&&tw(t,f)>max)f-=.5;let x=t;if(tw(x,f)>max){while(x.length>1&&tw(x+"\u2026",f)>max)x=x.slice(0,-1);x=x.trimEnd()+"\u2026";}return{t:x,fs:f};}
 const sgn=n=>(n>0?"+":n<0?"\u2212":"")+fmt(Math.abs(n));
 const fmtDate=t=>new Date(t).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"});
 const isOther=p=>/sonstige|others?|andere/i.test(p);
@@ -649,15 +653,19 @@ function drawParl(){
   const svg=frame($("#parl-chart"),{W,H,title:cfg.parliamentHeadline,sub:cfg.parliamentSubline,source:cfg.sourceName,boldSource:true});
   const L=layoutSeats(cx,cy,rIn,rOut);
   drawSeats(svg,L,{cx,cy,rIn,rOut,dim:p=>sel.size>0&&!sel.has(p)});
-  const act=PM.order.filter(p=>PM.seats[p]>0),n=act.length,gp=8;
-  const bw=Math.max(28,Math.min(62,(W-52-(n-1)*gp)/n)),sx=cx-(n*bw+(n-1)*gp)/2,nf=Math.max(7.5,Math.min(11.5,bw/5.2));
+  const act=PM.order.filter(p=>PM.seats[p]>0),n=act.length,gp=8,avail=W-52,PADX=18,MINW=44,MAXW=230,names=act.map(p=>lab(p));
+  // each box is as wide as its name (min/max limits); if they do not all fit, everything shrinks proportionally
+  let fs0=12,nat;const calc=f=>names.map(t=>Math.min(MAXW,Math.max(MINW,tw(t,f)+PADX)));
+  for(;;){nat=calc(fs0);if(nat.reduce((a,b)=>a+b,0)+(n-1)*gp<=avail||fs0<=8.5)break;fs0-=.5;}
+  const natSum=nat.reduce((a,b)=>a+b,0),sc=natSum+(n-1)*gp>avail?(avail-(n-1)*gp)/natSum:1,bws=nat.map(w=>w*sc);
+  let bxAcc=cx-(bws.reduce((a,b)=>a+b,0)+(n-1)*gp)/2;
   act.forEach((p,i)=>{
-    const bx=sx+i*(bw+gp),c=colorOf(p,parties.indexOf(p)),name=lab(p),on=sel.has(p);
+    const bw=bws[i],bx=bxAcc;bxAcc+=bw+gp;
+    const c=colorOf(p,parties.indexOf(p)),on=sel.has(p),ft=fitLabel(names[i],fs0,bw-12);
     const g=el("g",{style:"cursor:pointer"},svg);g.addEventListener("click",()=>{on?sel.delete(p):sel.add(p);drawParl();});
     el("rect",{class:dark(c)?"dk":"",x:bx.toFixed(2),y:518,width:bw.toFixed(2),height:32,rx:6,fill:c},g);
     if(on)el("rect",{class:"zl",x:(bx-3).toFixed(2),y:515,width:(bw+6).toFixed(2),height:38,rx:8,fill:"none","stroke-width":2.5,style:"stroke:var(--cink)"},g);
-    const t=el("text",{x:(bx+bw/2).toFixed(2),y:(518+16+nf*.35).toFixed(2),"text-anchor":"middle","font-size":nf.toFixed(1),"font-weight":700,fill:contrast(c)},g,name);
-    if(name.length*nf*.58>bw-8){t.setAttribute("textLength",(bw-8).toFixed(2));t.setAttribute("lengthAdjust","spacingAndGlyphs");}
+    el("text",{x:(bx+bw/2).toFixed(2),y:(518+16+ft.fs*.35).toFixed(2),"text-anchor":"middle","font-size":ft.fs.toFixed(1),"font-weight":700,fill:contrast(c)},g,ft.t);
     el("text",{class:"ink",x:(bx+bw/2).toFixed(2),y:(518+32+15+6).toFixed(2),"text-anchor":"middle","font-size":15,"font-weight":700},g,String(PM.seats[p]));
   });
   const bx0=26,bW=W-52,bY=582,bH=34;
@@ -729,7 +737,7 @@ function ovBars(){
     const tint=lighten(c,.38),name=lab(p),fs=M?12:14;
     el("rect",{x:x.toFixed(1),y:base+10,width:bw.toFixed(1),height:32,rx:2,fill:tint},g);
     const tx=el("text",{x:cx.toFixed(1),y:base+31,"text-anchor":"middle","font-size":fs,"font-weight":700,fill:contrast(tint)},g,name);
-    if(name.length*fs*.6>bw-6){tx.setAttribute("textLength",(bw-6).toFixed(1));tx.setAttribute("lengthAdjust","spacingAndGlyphs");}
+    {const ft=fitLabel(name,fs,bw-6);if(ft.fs!==fs||ft.t!==name){tx.setAttribute("font-size",ft.fs);tx.textContent=ft.t;}}
     if(gov.includes(p))el("text",{class:"neg",x:cx.toFixed(1),y:base+58,"text-anchor":"middle","font-size":M?12:13},g,"Gov't");
     const er=(cfg.electionResults||{})[p];
     if(er!=null)el("text",{class:"mut",x:cx.toFixed(1),y:base+78,"text-anchor":"middle","font-size":M?11.5:13,"font-weight":700},g,(i===0&&!M?cfg.electionYear+": ":"")+er+"%");
