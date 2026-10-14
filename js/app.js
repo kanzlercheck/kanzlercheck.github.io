@@ -1099,6 +1099,34 @@ async function drawElection(){
     showTip(e,`<b>${t.dataset.r}</b><br>${lab(t.dataset.p)}: ${row[t.dataset.p]}%`);};
   $("#el-demo").onmouseleave=hideTip;
   drawDemo();
+
+  // voter migration (Infratest dimap): net flows between parties, 2021 -> 2025
+  const MG=E.migration;
+  if(MG){
+    const NW="Nichtwähler",MN=[...MAIN,NW],mname=n=>n===NW?"Non-voters":lab(n),mcol=n=>n===NW?"#8A8F98":colorOf(n);
+    const num0=v=>v.toLocaleString("en-US");
+    const inn=n=>MG.flows.filter(f=>f.to===n),out=n=>MG.flows.filter(f=>f.from===n);
+    const sum=a=>a.reduce((s,f)=>s+f.v,0),mmax=Math.max(...MG.flows.map(f=>f.v));
+    let mg=null;
+    function drawMig(){
+      $("#el-mig-pick").innerHTML=`<button type="button" class="faction-chip ${mg==null?"on":""}" data-p="">Overview</button>`+MAIN.map(p=>`<button type="button" class="faction-chip ${mg===p?"on":""}" data-p="${p}">${lab(p)}</button>`).join("");
+      if(mg==null){
+        const rows=MN.map(n=>({n,g:sum(inn(n)),l:sum(out(n))})).map(r=>({...r,net:r.g-r.l})).sort((a,b)=>b.net-a.net),m=Math.max(...rows.map(r=>Math.max(r.g,r.l)));
+        $("#el-mig").innerHTML=`<div class="mg-key"><span></span><div><span>\u2190 Lost to other parties</span><span>Gained from other parties \u2192</span></div><span></span></div>`+rows.map(r=>`<div class="mg-row" data-n="${r.n}"><div class="mg-lab"><i style="background:${mcol(r.n)}"></i>${mname(r.n)}</div><div class="mg-div"><div class="mg-l"><b style="width:${r.l/m*100}%"></b></div><div class="mg-r"><b style="width:${r.g/m*100}%"></b></div></div><div class="mg-net ${r.net>0?"up":r.net<0?"dn":""}">${r.net>0?"+":r.net<0?"\u2212":""}${num0(Math.abs(r.net))}</div></div>`).join("");
+      }else{
+        const gi=inn(mg).sort((a,b)=>b.v-a.v),lo=out(mg).sort((a,b)=>b.v-a.v),G=sum(gi),L=sum(lo),net=G-L;
+        const list=(a,key,cls)=>a.length?a.map(f=>{const o=f[key],c=mcol(o);return `<div class="mg-item" data-n="${o}"><div class="mg-lab"><i style="background:${c}"></i>${mname(o)}</div><div class="mg-bar"><b class="${cls}" style="width:${f.v/mmax*100}%;background:${c}"></b></div><div class="mg-val">${num0(f.v)}</div></div>`;}).join(""):`<div class="note">None reported</div>`;
+        $("#el-mig").innerHTML=`<div class="mg-sum" style="--mc:${mcol(mg)}"><div><small>Gained</small><b class="up">+${num0(G)}</b></div><div><small>Lost</small><b class="dn">\u2212${num0(L)}</b></div><div><small>Balance</small><b class="${net>0?"up":net<0?"dn":""}">${net>0?"+":net<0?"\u2212":""}${num0(Math.abs(net))}</b></div></div>
+        <div class="mg-cols"><div><div class="mg-h">Gained from</div>${list(gi,"from","in")}</div><div><div class="mg-h">Lost to</div>${list(lo,"to","out")}</div></div>`;
+      }
+    }
+    $("#el-mig-pick").onclick=e=>{const b=e.target.closest("[data-p]");if(b){mg=b.dataset.p||null;drawMig();}};
+    $("#el-mig").onmousemove=e=>{const r=e.target.closest("[data-n]");if(!r||mg==null&&false){hideTip();return;}
+      const n=r.dataset.n;if(mg==null){showTip(e,`<b>${mname(n)}</b><br>Gained ${num0(sum(inn(n)))}<br>Lost ${num0(sum(out(n)))}`);}
+      else{const f=r.classList.contains("mg-item")&&(inn(mg).find(x=>x.from===n)||out(mg).find(x=>x.to===n));if(f)showTip(e,`<b>${mname(f.from)} \u2192 ${mname(f.to)}</b><br>${num0(f.v)} voters`);else hideTip();}};
+    $("#el-mig").onmouseleave=hideTip;
+    drawMig();
+  }
 }
 try{await drawElection();}catch(e){console.error(e);showErr("2025 Election tab failed to load: "+e.message);}
 

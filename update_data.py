@@ -165,6 +165,11 @@ def main():
             continue
         n, a, b = write_csv(os.path.join(STATE_DIR, slug + ".csv"), rows)
         print("  %-24s %4d polls (%s - %s)" % (slug + ".csv", n, a, b))
+    try:  # refresh the link-preview image (img/og.png) from the new polls
+        import make_og
+        make_og.main()
+    except Exception as e:
+        print("  (embed image not updated: %s - run: pip install pillow)" % e)
     print("Done. Data from dawum.de (ODC-ODbL).")
 
 if __name__ == "__main__":
