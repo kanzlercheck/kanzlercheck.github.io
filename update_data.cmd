@@ -13,8 +13,10 @@ if not defined PY (
   pause
   exit /b 1
 )
+echo Checking helper packages ^(numpy, pillow^) ...
+%PY% -m pip install --quiet --disable-pip-version-check numpy pillow
 echo.
-%PY% "%~dp0update_data.py" %*
+%PY% "%~dp0py\update_data.py" %*
 echo.
 if errorlevel 1 (echo Something went wrong - see the message above.) else (echo All data is up to date.)
 pause

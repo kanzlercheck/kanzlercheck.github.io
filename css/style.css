@@ -376,3 +376,90 @@ body.dark .fac-col.dkb input[type=color]{filter:brightness(2.6)}
 body.dark .mg-bar b[style*="#151518"],body.dark .mg-lab i[style*="#151518"]{background:#7A808A!important}
 .mg-val{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
 @media(max-width:700px){.mg-cols{grid-template-columns:1fr;gap:20px}.mg-row,.mg-key{grid-template-columns:96px 1fr 72px;gap:8px}.mg-item{grid-template-columns:84px 1fr 70px}.mg-sum b{font-size:15px}}
+/* constituencies */
+.co-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:24px;align-items:start;margin-bottom:24px}.co-grid .chart-card{margin:0}.co-grid.nomap{grid-template-columns:1fr}
+.co-tools{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:0 0 12px}
+/* map toolbar: segmented year switch (left), state picker (right, flush with the zoom buttons) */
+#co-mapcard .co-tools{justify-content:space-between;margin:0 0 12px}
+.co-left{display:flex;flex-wrap:wrap;gap:8px}
+#co-mapcard .co-tools select{margin-left:auto;margin-right:8px;min-width:0;width:auto}
+.co-seg{display:inline-flex;gap:2px;padding:3px;background:var(--paper);border:1px solid var(--line);border-radius:999px}
+.co-seg button{appearance:none;border:0;background:none;color:var(--muted);font:600 12.5px/1 inherit;font-family:inherit;padding:7px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s ease,color .15s ease,box-shadow .15s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.co-seg button:hover:not(.on){color:var(--ink);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.co-seg button.on{background:var(--accent);color:var(--on-accent);box-shadow:0 2px 8px color-mix(in srgb,var(--accent) 35%,transparent)}
+.co-seg button:disabled{opacity:.4;cursor:default}
+.co-seg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.co-tools select,.co-tools input{font:inherit;font-size:13px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:6px 10px;min-width:170px}
+#co-mapcard .co-tools select{appearance:none;-webkit-appearance:none;border-radius:999px;font-size:12.5px;font-weight:600;padding:7px 30px 7px 14px;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 15px) 50%,calc(100% - 10px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+#co-mapcard .co-tools select:hover{border-color:var(--accent)}
+#co-map svg{width:100%;height:auto;display:block;max-height:640px}
+.wk{fill-rule:evenodd;stroke:var(--cbg);stroke-width:.45px;vector-effect:non-scaling-stroke;cursor:pointer;transition:opacity .15s}.wk.dim{opacity:.22}.wk:hover{stroke:var(--ink);stroke-width:1.3px}.wk.sel{stroke:var(--ink);stroke-width:2px}
+#co-map svg,#ov-comap svg{width:100%;height:auto;display:block}#co-map{cursor:grab;user-select:none;-webkit-user-select:none;overflow:hidden;border-radius:8px}#co-map.grab{cursor:grabbing}
+#ov-comap{max-width:380px;margin:0 auto}
+.co-mapwrap{position:relative}.co-zoom{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.co-zoom button{appearance:none;border:0;width:32px;height:32px;font:600 17px/1 inherit;color:var(--ink);background:var(--paper);cursor:pointer;display:flex;align-items:center;justify-content:center}.co-zoom button:hover:not(:disabled){background:var(--bar-bg)}.co-zoom button:disabled{opacity:.35;cursor:default}
+/* about this constituency */
+.co-facts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.co-fact{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 12px 9px;min-width:0}
+.co-fact{cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.co-fact:hover{border-color:var(--accent)}
+.co-fact:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.co-fact.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 2px 10px color-mix(in srgb,var(--accent) 25%,transparent)}
+.co-fl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.co-fvr{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:3px 0 9px}
+.co-fv{font-size:21px;font-weight:700;line-height:1.1;color:var(--cink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.co-dl{font-size:11.5px;font-weight:700;padding:2px 7px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums;background:var(--track);color:var(--cmut)}
+.co-dl.up{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+.co-ft{position:relative;height:6px;border-radius:3px;background:var(--track);margin:0 6px 9px}
+.co-ft .fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:color-mix(in srgb,var(--accent) 38%,transparent)}
+.co-ft .tick,.co-fnote .tick{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;border-radius:1px;background:var(--cink);opacity:.55}
+.co-ft .dot,.co-fnote .dot{position:absolute;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--accent);border:2px solid var(--paper)}
+.co-ff{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--cmut);font-variant-numeric:tabular-nums}.co-ff span:last-child{white-space:nowrap}
+.co-h4y{color:var(--muted);font-weight:600}
+.co-fyear{font-size:12px;color:var(--cmut);margin:-2px 0 10px}
+.co-fnote{display:flex;align-items:center;gap:6px 16px;flex-wrap:wrap;font-size:11.5px;color:var(--cmut);margin:10px 0 0}
+.co-fnote .lg{display:inline-flex;align-items:center;gap:6px}
+.co-fnote .dot,.co-fnote .tick{position:static;display:inline-block;flex:none;margin:0}.co-fnote .dot{width:10px;height:10px;border:0}.co-fnote .tick{height:12px;width:2px}
+@media(max-width:380px){.co-facts{grid-template-columns:1fr}}
+.co-faint{color:var(--cmut)}
+.co-lead{border-left:6px solid #999;background:var(--paper);border-radius:6px;padding:8px 12px;margin:0 0 14px}.co-lead b{display:block;font-size:19px}.co-lead span{font-size:12.5px;color:var(--cmut)}
+.co-ph,.co-prow{display:grid;grid-template-columns:84px minmax(30px,1fr) 46px 40px 36px 36px;gap:8px;align-items:center}
+.co-ph.hq,.co-prow.hq{grid-template-columns:84px minmax(30px,1fr) 46px 40px 36px 36px 36px}
+.co-ph{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 6px}.co-ph span{text-align:right}
+.co-prow{margin:0 0 6px;font-size:13px;color:var(--cink)}
+.co-pn{display:flex;align-items:center;gap:7px;white-space:nowrap}.co-pn i{width:10px;height:10px;border-radius:3px;flex:none}
+.co-pb{height:18px;background:var(--track);border-radius:3px;overflow:hidden}.co-pb b{display:block;height:100%;border-radius:3px}
+.co-pv{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}.co-pd{text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--cmut)}.co-pd.up{color:var(--ok)}.co-pd.dn{color:var(--err)}
+.co-py{text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--cmut)}
+.gt-hint{font-weight:500;text-transform:none;letter-spacing:0;color:var(--cmut)}
+.co-h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:20px 0 8px}
+.co-drow{display:grid;grid-template-columns:1fr auto 108px;gap:10px;font-size:13px;padding:5px 0;border-bottom:1px solid var(--line);color:var(--cink)}.co-drow b{font-variant-numeric:tabular-nums}.co-drow em{font-style:normal;font-size:11.5px;color:var(--cmut);text-align:right;font-variant-numeric:tabular-nums}
+.co-list{max-height:470px;overflow:auto;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+.co-li{appearance:none;display:grid;grid-template-columns:38px 1fr auto 62px;gap:10px;align-items:center;width:100%;text-align:left;font:inherit;font-size:13px;color:var(--cink);background:none;border:0;border-bottom:1px solid var(--line);padding:8px 12px;cursor:pointer}
+.co-li:hover{background:var(--bar-bg)}.co-li.on{background:var(--bar-bg);box-shadow:inset 4px 0 0 var(--accent)}
+.co-n{color:var(--cmut);font-variant-numeric:tabular-nums}.co-nm small{display:block;font-size:11.5px;color:var(--cmut)}
+.co-ld{display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}.co-ld i{width:10px;height:10px;border-radius:3px}
+.co-pr{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}.co-pr.t{color:var(--err)}
+@media(max-width:900px){.co-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.co-pb,.co-ph span:nth-child(2){display:none}.co-ph,.co-prow{grid-template-columns:76px repeat(4,1fr)}.co-ph.hq,.co-prow.hq{grid-template-columns:76px repeat(5,1fr)}.co-li{grid-template-columns:30px 1fr 62px;}.co-ld{grid-column:2;grid-row:2}.co-pr{grid-column:3;grid-row:1 / span 2}.co-drow{grid-template-columns:1fr auto}.co-drow em{display:none}}
+
+/* bigger tooltip on the constituency map */
+.tip.big{min-width:270px;max-width:400px;font-size:15px;border-radius:14px;border-top-width:5px}
+.tip.big .th{font-size:17px;padding:13px 17px 10px;gap:18px}
+.tip.big .tbody{padding:11px 17px 14px;gap:9px}
+.tip.big .tv{font-size:15.5px}.tip.big .tk i{width:12px;height:12px}.tip.big .tb{height:5px}
+.tip.big .tn,.tip.big .tf{font-size:13px}.tip.big .tf{padding-top:10px}
+@media(max-width:600px){.tip.big{max-width:86vw;min-width:0;font-size:14px}.tip.big .th{font-size:15.5px}}
+.co-pr.rk{color:var(--muted);font-weight:600}
+
+/* ---- overview loading state: nothing is shown until the maps are drawn and the page is fitted to the screen ---- */
+#tab-overview{position:relative}
+#ov-loader{display:none}
+#tab-overview.loading{min-height:calc(100vh - 120px)}
+#tab-overview.loading #ov-fit{visibility:hidden}
+#tab-overview.loading #ov-loader{display:flex;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--muted);font-size:13px;font-weight:600}
+#tab-overview:not(.loading) #ov-fit{animation:kcfade .3s ease both}
+.spin{width:38px;height:38px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:kcspin .8s linear infinite}
+@keyframes kcspin{to{transform:rotate(360deg)}}
+@keyframes kcfade{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}#tab-overview:not(.loading) #ov-fit{animation:none}}

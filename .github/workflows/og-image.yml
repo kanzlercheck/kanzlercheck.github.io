@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install pillow && python make_og.py
+      - run: pip install pillow && python py/make_og.py
       - name: Commit if changed
         run: |
           git config user.name "github-actions"

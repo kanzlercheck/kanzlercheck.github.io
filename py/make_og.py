@@ -3,7 +3,7 @@
 "Federal poll average" chart from the overview, with the site logo at the top.
 
 It reads data/germanpolls.csv + config.json and uses the same smoothing as the website,
-so the numbers match the page.  Run automatically by update_data.py; or:  python make_og.py
+so the numbers match the page.  Run automatically by update_data.py; or:  python py/make_og.py
 Needs Pillow (pip install pillow).  Also bumps the ?v= cache-buster of the image in index.html
 so Discord / Twitter fetch the new picture.
 """
@@ -11,7 +11,7 @@ import csv, json, math, os, re
 from datetime import date, timedelta
 from PIL import Image, ImageDraw, ImageFont
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # repo root (this script lives in py/)
 META = {"datum", "institut", "befragungsmethode", "befragungsstart", "befragungsende", "befragtenanzahl"}
 S = 2  # supersampling for smooth edges
 W, H = 1200, 630
