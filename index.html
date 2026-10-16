@@ -26,9 +26,10 @@
 <meta name="twitter:description" content="German federal election polling average, Bundestag seat projection and government approval. Source: dawum.de">
 <meta name="twitter:image" content="https://kanzlercheck.github.io/img/og.png?v=20261013">
 <link rel="canonical" href="https://kanzlercheck.github.io/">
-<link rel="stylesheet" href="css/style.css?v=perf12">
+<link rel="stylesheet" href="css/style.css?v=perf21">
 </head>
 <body>
+<script>setTimeout(function(){var o=document.getElementById("tab-overview");if(o)o.classList.remove("loading")},12000)</script>
 <script>(function(){var s=null;try{s=localStorage.getItem("theme")}catch(e){}var d=s?s==="dark":true;if(d)document.body.classList.add("dark")})()</script>
 <div id="tabbar">
   <div class="brandbox">
@@ -37,6 +38,7 @@
   </div>
   <nav class="tabs" role="tablist">
     <button class="tab-btn active" data-tab="overview" role="tab" type="button">Overview</button>
+    <button class="tab-btn" data-tab="constituencies" role="tab" type="button">Battleground map</button>
     <button class="tab-btn" data-tab="polls" role="tab" type="button">Poll Average</button>
     <button class="tab-btn" data-tab="parliament" role="tab" type="button">Bundestag Projection</button>
     <button class="tab-btn" data-tab="election" role="tab" type="button">2025 Election</button>
@@ -50,15 +52,17 @@
 <main class="wrap">
   <div id="error" class="error" hidden></div>
 
-  <section id="tab-overview" class="pane active"><div id="ov-fit">
+  <section id="tab-overview" class="pane active loading"><div id="ov-loader" role="status" aria-live="polite"><div class="spin" aria-hidden="true"></div><span>Loading latest polls…</span></div><div id="ov-fit">
     <div class="ov-head"><h2>Germany at a glance</h2><div>
     <div class="group-title">Current poll average</div>
     <div id="ov-chips" class="latest"></div>
     <div class="ov-grid ov-main">
       <div class="chart-card flow ov-map"><div class="sec">
+        <div class="filters" id="ov-mapsw" style="padding:0 0 10px;display:none"><button type="button" class="faction-chip on" data-m="wk">Constituencies</button><button type="button" class="faction-chip" data-m="st">States</button></div>
         <div class="sec-top"><h3 id="map-title">Who leads in each state?</h3></div>
         <p class="subl">Latest state polls</p>
         <div id="map"></div><div class="pills" id="map-legend"></div><div class="note" id="map-note"></div>
+        <div id="ov-comap" style="display:none"></div><div class="pills" id="ov-co-legend" style="display:none"></div>
       </div></div>
       <div class="ov-right">
       <div class="chart-card flow clickable" data-go="polls" tabindex="0" role="link" aria-label="Open poll average"><div class="sec">
@@ -139,6 +143,33 @@
     </div>
   </section>
 
+  <section id="tab-constituencies" class="pane">
+    <div class="ov-head"><h2>299 races, one by one</h2><p id="co-sub"></p></div>
+    <div class="group-title">Constituencies led (second votes) <span class="gt-hint">· click a party to map where it is strongest</span></div>
+    <div id="co-chips" class="latest"></div>
+    <div class="co-grid" id="co-grid">
+      <div class="chart-card flow" id="co-mapcard"><div class="sec">
+        <h3 id="co-map-title">Who leads in each constituency?</h3>
+        <p class="subl" id="co-map-subl">Projected from the current poll average</p>
+        <div class="co-tools"><div class="co-seg" id="co-view" role="tablist" aria-label="Map type"></div></div>
+        <div class="co-tools"><div class="co-left"><div class="co-seg" id="co-year-filter" role="tablist" aria-label="Map data"></div></div><select id="co-state" aria-label="Zoom to a state"></select></div>
+        <div class="co-mapwrap"><div id="co-map"></div><div class="co-zoom" id="co-zoom"><button type="button" data-z="in" aria-label="Zoom in">+</button><button type="button" data-z="out" aria-label="Zoom out">&minus;</button><button type="button" data-z="reset" aria-label="Reset view">&#8634;</button></div></div><div class="pills" id="co-legend"></div>
+      </div></div>
+      <div class="chart-card flow"><div class="sec" id="co-detail"></div></div>
+    </div>
+    <div class="chart-card flow"><div class="sec">
+      <h3>All 299 constituencies</h3>
+      <p class="subl" id="co-list-sub">Select one to see its projection and demographics</p>
+      <div class="co-tools"><input type="search" id="co-search" placeholder="Search by name or number" aria-label="Search constituencies"><div class="filters" id="co-sort" style="padding:0"></div></div>
+      <div id="co-list" class="co-list"></div>
+    </div></div>
+    <div class="chart-card flow"><details class="sec fold" id="co-fold">
+      <summary><h3>How this projection works</h3></summary>
+      <div id="co-method" class="method"></div>
+    </details></div>
+    <div class="foot">Results and structural data: Die Bundeswahlleiterin (dl-de/by-2-0). Poll average: <a href="https://dawum.de">dawum.de</a>.</div>
+  </section>
+
   <section id="tab-election" class="pane">
     <div class="ov-head"><h2>2025 federal election</h2><p id="el-sub"></p></div>
     <div class="group-title">Final result</div>
@@ -196,6 +227,6 @@
 </main>
 <div id="tip" class="tip" hidden></div>
 <script data-goatcounter="https://efefury.goatcounter.com/count" data-goatcounter-settings='{"no_onload":true}' async src="//gc.zgo.at/count.js"></script>
-<script src="js/app.js?v=perf17"></script>
+<script src="js/app.js?v=perf32"></script>
 </body>
 </html>

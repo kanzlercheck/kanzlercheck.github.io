@@ -14,6 +14,7 @@ const META=/^(datum|date|institut|institute|pollster|befragungsmethode|method|be
 
 // ---------- theme ----------
 const redraw=[];
+let biasAdj={}; // Historical pollster bias to adjust 2025 projection in constituencies
 const CW=()=>matchMedia("(max-width:600px)").matches?500:1200; // chart canvas width: narrower on phones so text and lines render larger
 // zoom steps tried by fitOv (same sequence as before: 1.30, 1.28, ... down to ~0.45)
 const ZS=[];let ZEND=1.3;for(;ZEND>.45;ZEND-=.02)ZS.push(ZEND);
@@ -57,7 +58,7 @@ const findKey=(o,names)=>Object.keys(o).find(k=>names.includes(k.toLowerCase()))
 const rawCache=new Map();
 function fetchRaw(url){let p=rawCache.get(url);if(!p){p=fetch(url,{cache:"no-cache"}).then(async r=>({ok:r.ok,status:r.status,text:r.ok?await r.text():""}));rawCache.set(url,p);}return p;}
 async function load(path){const r=await fetchRaw(path);if(!r.ok)throw new Error("Could not load "+path+" ("+r.status+")");return parseCSV(r.text);}
-function showErr(m){const e=$("#error");e.hidden=false;e.textContent=m;}
+function showErr(m){const e=$("#error");e.hidden=false;e.textContent=m;const o=$("#tab-overview");if(o)o.classList.remove("loading");}
 
 
 let cfg;
@@ -123,7 +124,7 @@ function tipColor(n){
   return TIPC[n]||null;
 }
 const tipCol=c=>c?(isDarkMode()&&dark(c)?"#7A808A":c):null;
-function showTip(ev,html){
+function showTip(ev,html,big){
   const strip=x=>x.replace(/<[^>]*>/g,"").trim(),parts=html.split("<br>");
   let head=parts.shift()||"",hv="";
   const hm=head.match(/^<b>(.*?)<\/b>:\s*(.*)$/);
@@ -148,7 +149,7 @@ function showTip(ev,html){
     const d=lead[0].pct-lead[1].pct;
     body+=`<div class="tf"><b style="color:${tipCol(lead[0].c)}">${strip(lead[0].k)}</b> ${d<.05?"is level with":"leads"} ${strip(lead[1].k)}${d<.05?"":` by <b>${fmt(d)}</b> pts`}</div>`;
   }
-  tip.hidden=false;
+  tip.hidden=false;tip.classList.toggle("big",!!big);
   tip.style.setProperty("--tc",hc);
   tip.innerHTML=`<div class="th"><span>${head}</span>${hv?`<b class="thv">${hv}</b>`:""}</div>${body?`<div class="tbody">${body}</div>`:""}`;
   const w=tip.offsetWidth,h=tip.offsetHeight;
@@ -763,8 +764,8 @@ function ovApproval(){
   el("text",{class:"mut2",x:W-pr,y:H-4,"text-anchor":"end","font-size":M?13.5:11},svg,MON[b.getUTCMonth()]+" "+b.getUTCFullYear());
 }
 
-let mapParty=null,mapRedraw=null;
-function setMapParty(p){mapParty=mapParty===p?null:p;ovChips();if(mapRedraw)mapRedraw();}
+let mapParty=null,mapRedraw=null,ovView="st",ovCoRedraw=null;
+function setMapParty(p){mapParty=mapParty===p?null:p;ovChips();if(ovView==="wk"){if(ovCoRedraw)ovCoRedraw();}else if(mapRedraw)mapRedraw();}
 function ovChips(){
   if(!polls.length)return;
   const ord=[...parties].filter(p=>pct[p]!=null&&p!=="Freie Wähler").sort((a,b)=>(isOther(a)-isOther(b))||(pct[b]-pct[a]));
@@ -855,9 +856,9 @@ async function ovMap(){
     try{
       const r=await fetchRaw(`${cfg.stateFolder}/${slug}.csv`);if(!r.ok)return null;
       const rows=parseCSV(r.text);if(!rows.length)return null;
-      const kD=findKey(rows[0],["datum","date"]),kI=findKey(rows[0],["institut","institute","pollster"]);
+      const kD=findKey(rows[0],["datum","date"]),kI=findKey(rows[0],["institut","institute","pollster"]),kN=findKey(rows[0],["befragtenanzahl","sample size","samplesize"]);
       const ps=Object.keys(rows[0]).filter(k=>k&&!META.test(k));
-      const rec=rows.map(x=>({t:+parseDate(x[kD]),i:kI?x[kI]:"",v:Object.fromEntries(ps.map(p=>[p,num(x[p])]))})).filter(x=>!isNaN(x.t)).sort((a,b)=>a.t-b.t);
+      const rec=rows.map(x=>({t:+parseDate(x[kD]),i:kI?x[kI]:"",n:kN?num(x[kN]):null,v:Object.fromEntries(ps.map(p=>[p,num(x[p])]))})).filter(x=>!isNaN(x.t)).sort((a,b)=>a.t-b.t);
       if(!rec.length)return null;
       const last=rec[rec.length-1].t,win=rec.filter(x=>x.t>=last-cfg.stateWindowDays*DAY),avg={};
       ps.forEach(p=>{const v=win.map(x=>x.v[p]).filter(z=>z!=null);if(v.length)avg[p]=v.reduce((a,b)=>a+b)/v.length;});
@@ -876,7 +877,7 @@ async function ovMap(){
     let shade=()=>null;
     if(strength){
       const base=colorOf(P,parties.indexOf(P)),full=isDarkMode()&&dark(base)?"#7A808A":base,dm=isDarkMode();
-      shade=v=>{const t=mx>mn?.15+.85*(v-mn)/(mx-mn):1;return dm?mixHex(full,"#1B1E24",.75*(1-t)):mixHex(full,"#FFFFFF",.9*(1-t));};
+      shade=v=>{const t=mx>mn?.15+.85*(v-mn)/(mx-mn):1;return dm?mixHex(full,"#D5D8DE",.8*(1-t)):mixHex(full,"#FFFFFF",.9*(1-t));};
     }
     titleEl.textContent=strength?`How strong is ${lab(P)} in each state?`:title0;
     subEl.textContent=strength?`Latest state polls`:sub0;
@@ -914,7 +915,7 @@ async function ovMap(){
       note.textContent=Object.keys(data).length?"":`No state polls found yet \u2014 double-click update_data.cmd to import them into the ${cfg.stateFolder} folder.`;
     }
   }
-  mapRedraw=draw;redraw.push(()=>{if(mapParty)draw();});
+  mapRedraw=draw;redraw.push(()=>{if(ovView==="st"&&mapParty)draw();});
   draw();
 }
 await ovMap();
@@ -1034,6 +1035,8 @@ async function drawElection(){
   drawAcc();
   const bias=ACC.map(p=>{const v=acc.filter(a=>a.dev[p]!=null);if(!v.length)return null;
     return{p,n:v.length,mean:v.reduce((s,a)=>s+a.dev[p],0)/v.length,hi:v.reduce((a,b)=>b.dev[p]>a.dev[p]?b:a),lo:v.reduce((a,b)=>b.dev[p]<a.dev[p]?b:a)};}).filter(Boolean);
+  // Store bias for constituencies projection adjustment
+  biasAdj={};bias.forEach(b=>{biasAdj[b.p]=b.mean;});
   const dc=v=>v>0?"under":v<0?"over":"";
   $("#el-bias").innerHTML=`<table><thead><tr><th>Party</th><th>Result</th><th>Polls on average</th><th>Underestimated most by</th><th>Overestimated most by</th></tr></thead><tbody>`+bias.map(b=>{
     const c=ecol(b.p);
@@ -1053,7 +1056,7 @@ async function drawElection(){
     host.innerHTML="";const svg=el("svg",{viewBox:`0 0 ${geo.w} ${geo.h}`,role:"img"},host);
     const vals=mp?Object.values(E.states).map(d=>d[mp]):[],mn=Math.min(...vals),mx=Math.max(...vals);
     const dm=isDarkMode(),base=mp?ecol(mp):null,full=mp&&dm&&dark(base)?"#7A808A":base;
-    const shade=v=>{const t=mx>mn?.15+.85*(v-mn)/(mx-mn):1;return dm?mix(full,"#1B1E24",.75*(1-t)):mix(full,"#FFFFFF",.9*(1-t));};
+    const shade=v=>{const t=mx>mn?.15+.85*(v-mn)/(mx-mn):1;return dm?mix(full,"#D5D8DE",.8*(1-t)):mix(full,"#FFFFFF",.9*(1-t));};
     $("#el-map-title").textContent=mp?`How strong was ${lab(mp)} in each state?`:"Who won each state?";
     const wins={},labels=[];
     geo.states.forEach(s=>{
@@ -1129,6 +1132,374 @@ async function drawElection(){
   }
 }
 try{await drawElection();}catch(e){console.error(e);showErr("2025 Election tab failed to load: "+e.message);}
+
+// ---------- CONSTITUENCIES TAB: the 2025 result of every Wahlkreis, moved to today's poll average ----------
+// Method (data built by py/build_constituencies.py): ratio swing. Every party's 2025 share in each constituency is multiplied by one
+// party-specific factor, shares are re-normalised per constituency, and the factors are solved so that the national total equals the
+// current poll average. Win chances: 2000 simulations with a national and a local random error (sigmas in the data file).
+async function drawConstituencies(){
+  const mapHost=$("#co-map");
+  let C;try{const r=await fetchRaw("data/constituencies.json");if(!r.ok)throw new Error("HTTP "+r.status);C=JSON.parse(r.text);}
+  catch(e){showErr("data/constituencies.json could not be loaded ("+e.message+").");return;}
+  if(!polls.length){$("#co-sub").textContent="No polls loaded.";return;}
+  const K=["CDU/CSU","AfD","SPD","Grüne","Linke","BSW","FDP","Sonstige"],m=K.length,PI=C.parties,fwI=PI.indexOf("Freie Wähler");
+  const merge=a=>K.map(k=>k==="Sonstige"?a[PI.indexOf("Sonstige")]+(fwI>=0?a[fwI]:0):a[PI.indexOf(k)]); // Free Voters count as Others
+  const W=C.wk.map(w=>({...w,s25:merge(w.s),s21:merge(w.p)})),n=W.length,V=W.map(w=>w.v),Vt=V.reduce((a,b)=>a+b,0);
+  const nat25=K.map((k,j)=>W.reduce((a,w)=>a+w.v*w.s25[j],0)/Vt);
+  // national target = the site's current poll average (same smoothing as the Poll Average tab)
+  let T=K.map((k,j)=>k==="Sonstige"?((pct["Sonstige"]??null)==null&&(pct["Freie Wähler"]??null)==null?nat25[j]:(pct["Sonstige"]||0)+(pct["Freie Wähler"]||0)):(pct[k]!=null?pct[k]:nat25[j]));
+  const Ts=T.reduce((a,b)=>a+b,0);T=T.map(v=>v/Ts*100);
+  // Apply historical pollster bias: adjust shares by average underestimation/overestimation
+  T=T.map((v,j)=>{const bias=biasAdj[K[j]]||0;return Math.max(0.1,v+bias);});const TTs=T.reduce((a,b)=>a+b,0);T=T.map(v=>v/TTs*100);
+  // =====================================================================================================================================
+  // THE MODEL (numbers come from py/calibrate_model.py, which estimates them from the 2017, 2021 and 2025 results and polls and replays two past elections)
+  //  1. Start from the 2025 second-vote result of every constituency.
+  //  2. State polls: for each state and party, compare how the state's own polls moved since the 2025 election with how the national polls moved over the
+  //     same stretch (a "gap to the nation" measured on the same kind of poll then and now, so state-vs-federal level differences cancel out). Fresh polls only,
+  //     newer and bigger polls count more. The raw gap is then shrunk hard towards 0 (see stateSignal), so state polls tilt a state but never rule it.
+  //  3. Ratio swing: every party's share (times its state tilt) is multiplied by one party-wide factor and re-normalised per constituency, with the factors
+  //     solved so that the national total equals the national poll average. State polls therefore only move votes BETWEEN states; the national total stays pinned.
+  //  4. 2,000 simulated elections: one national shock per party + one shock per state and party (large where we know little, small where polls pin it down)
+  //     + one local shock per constituency and party. The share of runs a party wins a constituency is its win chance.
+  // =====================================================================================================================================
+  const MD=C.model||null,SP=MD?MD.settings:{widen:1,runs:2000};
+  const nz=t=>t.toLowerCase().replace(/ü/g,"ue").replace(/ö/g,"oe").replace(/ä/g,"ae").replace(/ß/g,"ss");
+  const stLands=[...new Set(W.map(w=>w.land))],idOf={};Object.entries(cfg.stateFiles||{}).forEach(([id,slug])=>idOf[nz(slug)]=id);
+  const U={},PV={},stInfo={},DAYMS=DAY,YR=365.25*DAY,today=tMax,ref=MD?+parseDate(MD.refDate):0;
+  function stateSignal(recs,j){ // -> {u: shrunk state tilt (log share), pv: variance left after the polls, n: polls used}
+    const v1=MD.stateVarPerYear[K[j]],prior=v1*(today-ref)/YR,kap=MD.stateMismatchVar;
+    const win=(c,span,oneSided)=>{const w=[];for(const r of recs){const age=(r.t-c)/DAYMS;if(oneSided?(age>0||age<-span):Math.abs(age)>span)continue;
+      const v=r.v[K[j]];if(v==null||v<SP.minSharePct)continue;const N=smoothedValueAt(polls,K[j],r.t,SP.natSmoothDays);if(N==null||N<SP.minSharePct)continue;
+      w.push({R:Math.pow(.5,Math.abs(age)/SP.halfLifeDays),n:Math.min(r.n||1000,2500),g:Math.log(v)-Math.log(N),sh:v,a:Math.abs(age)});}return w;};
+    const stat=w=>{if(!w.length)return null;let sR=0,sW=0,sG=0,sA=0,sR2=0,sR2n=0,sRa=0;
+      for(const x of w){const W_=x.R*x.n;sW+=W_;sG+=W_*x.g;sA+=W_*x.sh;sR+=x.R;sR2+=x.R*x.R;sR2n+=x.R*x.R*x.n;sRa+=x.R*x.a;}
+      const G=sG/sW,A=sA/sW,vp=SP.designEffect*A*(100-A)*sR2n/(sW*sW)+SP.houseSdPts*SP.houseSdPts*sR2/(sR*sR);return{G,v:vp/(A*A),age:sRa/sR/365.25,k:w.length};};
+    const a=stat(win(today,SP.maxAgeDays,true)),b=stat(win(ref,SP.refWindowDays,false));
+    if(!a||!b)return{u:0,pv:prior,n:0};
+    const vg=a.v+b.v+v1*(a.age+b.age)+kap,g=a.G-b.G;return{u:g*prior/(prior+vg),pv:prior*vg/(prior+vg),n:a.k};
+  }
+  stLands.forEach(land=>{const id=idOf[nz(land)],sd=id&&stateData[id],recs=sd?sd.rec:[];U[land]=new Array(m).fill(0);PV[land]=new Array(m).fill(0);
+    let used=0;for(let j=0;j<m-1;j++){if(MD){const r=stateSignal(recs,j);U[land][j]=r.u;PV[land][j]=r.pv;used=Math.max(used,r.n);}}
+    stInfo[land]={polls:used,last:recs.length?recs[recs.length-1].t:null};});
+  // ratio swing, solved iteratively (X0 = without state polls, X = with them; both hit the same national totals)
+  const L0=W.map(w=>w.s25.map(v=>Math.log(Math.max(v,.01)/100)));
+  function solve(useState){
+    const L=L0.map((r,i)=>r.map((v,j)=>v+(useState&&j<m-1?U[W[i].land][j]:0))),c=new Array(m).fill(0),Xo=W.map(()=>new Float64Array(m));
+    for(let it=0;it<200;it++){
+      const nat=new Float64Array(m);
+      for(let i=0;i<n;i++){let s=0;for(let j=0;j<m;j++){Xo[i][j]=Math.exp(L[i][j]+c[j]);s+=Xo[i][j];}for(let j=0;j<m;j++){Xo[i][j]/=s;nat[j]+=V[i]*Xo[i][j];}}
+      let err=0;for(let j=0;j<m;j++){const d=Math.log(T[j]/100/(nat[j]/Vt));c[j]+=.8*d;err=Math.max(err,Math.abs(d));}
+      if(err<1e-5)break;
+    }
+    return Xo;
+  }
+  const X0=solve(false),X=MD?solve(true):X0;
+  // average effect of the state polls on each state's vote shares, in points (for the explanation panel)
+  const stEff={};stLands.forEach(land=>{const idx=W.map((w,i)=>w.land===land?i:-1).filter(i=>i>=0),vt=idx.reduce((a,i)=>a+V[i],0);
+    stEff[land]=Array.from({length:m-1},(_,j)=>100*idx.reduce((a,i)=>a+V[i]*(X[i][j]-X0[i][j]),0)/vt);});
+  // win chances (seeded, so the map never changes between page loads)
+  const rnd=(a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;})(2029);
+  const gauss=()=>Math.sqrt(-2*Math.log(rnd()||1e-12))*Math.cos(2*Math.PI*rnd()),NS_=SP.runs||2000,wins=W.map(()=>new Float64Array(m)),fw=SP.widen||1;
+  const sdN=Array.from({length:m-1},(_,j)=>fw*(MD?Math.sqrt(MD.natA**2+(MD.natB/Math.max(T[j],1))**2):C.sigmaNational));
+  const sdL=Array.from({length:m-1},(_,j)=>fw*(MD?MD.localSd[K[j]]:C.sigmaLocal));
+  const sdS=stLands.map(l=>Array.from({length:m-1},(_,j)=>MD?fw*Math.sqrt(PV[l][j]):0)),sIdx=W.map(w=>stLands.indexOf(w.land));
+  const LX=X.map(r=>Array.from(r,v=>Math.log(Math.max(v,1e-9))));
+  for(let s=0;s<NS_;s++){
+    const nsh=sdN.map(sd=>sd*gauss()),ssh=sdS.map(r=>r.map(sd=>sd*gauss()));
+    for(let i=0;i<n;i++){const st=ssh[sIdx[i]];let b=-1,bv=-1e9;for(let j=0;j<m-1;j++){const v=LX[i][j]+nsh[j]+st[j]+sdL[j]*gauss();if(v>bv){bv=v;b=j;}}wins[i][b]++;}
+  }
+  const R=W.map((w,i)=>{const o=Array.from(X[i],(v,j)=>({j,v:v*100})).filter(q=>q.j<m-1).sort((a,b)=>b.v-a.v),pr=Array.from(wins[i],v=>v/NS_);
+    const lead=o[0].j;return{w,i,x:X[i].map(v=>v*100),lead,share:o[0].v,margin:o[0].v-o[1].v,second:o[1].j,prob:pr[lead],pr};});
+  const byN=Object.fromEntries(R.map(r=>[r.w.n,r]));
+  const expW=K.map((k,j)=>R.filter(r=>r.lead===j).length),tossups=R.filter(r=>r.prob<.6).length;
+  const dm=()=>isDarkMode(),pcol=j=>{const col=colorOf(K[j]);return dm()&&dark(col)?"#7A808A":col;};
+  const mixc=(h,t,a)=>{const f=x=>parseInt(x.replace("#",""),16),A=f(h),B=f(t),ch=sh=>Math.round(((A>>sh)&255)*(1-a)+((B>>sh)&255)*a).toString(16).padStart(2,"0");return"#"+ch(16)+ch(8)+ch(0);};
+  const cbg=()=>dm()?"#D5D8DE":"#F6F5F1",sg=v=>(v>0?"+":v<0?"−":"")+fmt(Math.abs(v));
+  $("#co-sub").textContent=`What the poll average of ${fmtDate(tMax)} would mean in each of the 299 constituencies (second votes). A projection from today’s polls, not a forecast for 2029.`;
+  // chips: constituencies led per party; click one to map where that party is strongest (click again to go back)
+  const coChips=()=>{$("#co-chips").innerHTML=[...K.keys()].filter(j=>expW[j]>0).sort((a,b)=>expW[b]-expW[a]).map(j=>{const col=colorOf(K[j]);
+    return `<div class="chip col${dark(col)?" dk":""}${mode===j?" sel":""}" data-p="${j}" tabindex="0" role="button" aria-pressed="${mode===j}" title="Show where ${lab(K[j])} is strongest" style="background:${col};border-color:${col};color:${contrast(col)}"><b>${expW[j]}</b><span>${lab(K[j])} · constituencies led</span></div>`;}).join("")
+    +`<div class="chip${certainty?" sel":""}" data-cert="1"${yearView===2025?"":" hidden"} tabindex="0" role="button" aria-pressed="${certainty}" title="Show how certain each constituency is" style="border-left-color:#999;cursor:pointer"><b>${tossups}</b><span>Toss-ups (lead under 60% likely)</span></div>`;};
+  const hasQ=W.some(q=>q.q),DV=C.demo.map((_,k)=>W.map(q=>q.d[k]).sort((a,b)=>a-b));
+  // state of the view
+  let mode=null,sel=[...R].sort((a,b)=>a.prob-b.prob)[0].w.n,stF="",sortBy="close",q="",yearView=2025,metric=null,certainty=true; // metric = index of the "About this constituency" figure the map is coloured by
+  const lands=[...new Set(W.map(w=>w.land))].sort((a,b)=>a.localeCompare(b,"de"));
+  $("#co-state").innerHTML=`<option value="">All states</option>`+lands.map(l=>`<option>${l}</option>`).join("");
+  // year selector buttons
+  const availableYears=[2025,...hasQ?[2021,...W.some(w=>w.q)?[2017]:[]]:[]];
+  const renderYearButtons=()=>{
+    $("#co-year-filter").innerHTML=availableYears.map(y=>`<button type="button" role="tab" aria-selected="${yearView===y}" class="${yearView===y?"on":""}" data-year="${y}">${y===2025?"Projection":y}</button>`).join("");
+  };
+  renderYearButtons();
+  const renderViewButtons=()=>{$("#co-view").innerHTML=[["lead","Leader"],["cert","Certainty"]].map(([k,t])=>{
+    const on=k==="cert"?certainty:!certainty&&mode==null&&metric==null,off=k==="cert"&&yearView!==2025;
+    return `<button type="button" role="tab" aria-selected="${on}" class="${on?"on":""}" data-v="${k}"${off?' disabled title="Only available for the projection"':""}>${t}</button>`;}).join("");};
+  renderViewButtons();
+  // get data for specific year: create array parallel to R with year-specific values
+  const getYearData=yr=>{
+    if(yr===2025) return R; // use the existing projection data
+    // for 2021 and 2017, create data from actual results
+    const sourceData=yr===2021?W.map(w=>w.s21):W.map(w=>w.q?merge(w.q):null);
+    return W.map((w,i)=>{
+      const x=sourceData[i];if(!x) return null;
+      const o=K.map((k,j)=>({j,v:x[j]})).filter(q=>q.j<m-1).sort((a,b)=>b.v-a.v);
+      return{w:w,i:i,x:x,lead:o[0].j,share:o[0].v,margin:o[0].v-o[1].v,second:o[1].j,prob:1.0,pr:new Array(m).fill(0)};
+    });
+  };
+  let yearData=getYearData(2025);
+  // geometry (optional file; without it the tab shows list + details only)
+  let geo=null;try{const r=await fetchRaw("data/wahlkreise.geojson");if(r.ok)geo=JSON.parse(r.text);}catch(e){}
+  const feats=geo&&geo.features?geo.features.filter(f=>byN[f.properties.n]):[];
+  const hasMap=feats.length>0;
+  $("#co-mapcard").hidden=!hasMap;$("#co-grid").classList.toggle("nomap",!hasMap);
+  let paths=null,bbox=null,stBox={};
+  if(hasMap){
+    const kx=Math.cos(51*Math.PI/180),ring=r=>r.map(p=>[p[0]*kx,-p[1]]);let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+    const polys=feats.map(f=>{const g=f.geometry,ps=g.type==="Polygon"?[g.coordinates]:g.coordinates;return ps.map(p=>p.map(ring));});
+    polys.forEach(ps=>ps.forEach(p=>p.forEach(r=>r.forEach(([x,y])=>{x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}))));
+    const sc=1000/(x1-x0);bbox=[0,0,1000,(y1-y0)*sc];
+    paths=feats.map((f,k)=>{const sb=[1e9,1e9,-1e9,-1e9];
+      const d=polys[k].map(p=>p.map(r=>"M"+r.map(([x,y])=>{const X_=(x-x0)*sc,Y_=(y-y0)*sc;sb[0]=Math.min(sb[0],X_);sb[1]=Math.min(sb[1],Y_);sb[2]=Math.max(sb[2],X_);sb[3]=Math.max(sb[3],Y_);return X_.toFixed(1)+" "+Y_.toFixed(1);}).join("L")+"Z").join("")).join("");
+      const land=byN[f.properties.n].w.land;stBox[land]=stBox[land]?[Math.min(stBox[land][0],sb[0]),Math.min(stBox[land][1],sb[1]),Math.max(stBox[land][2],sb[2]),Math.max(stBox[land][3],sb[3])]:sb;
+      const ri=R.findIndex(r=>r.w.n===f.properties.n);
+      return{n:f.properties.n,d,i:ri};});
+  }
+  // ---- shading: the darker / more solid, the stronger ----
+  // ---- map coloured by one "About this constituency" figure: darker = higher in the ranking (percentile of rank, so skewed figures like density stay readable) ----
+  const demoName=k=>C.demo[k].label.replace(/\s*%$/,"").replace(/\s*\(.*\)$/,"");
+  const demoFmt=(k,v)=>{const dd=C.demo[k],t=v.toLocaleString("en-US",{minimumFractionDigits:dd.dec,maximumFractionDigits:dd.dec});
+    return /income/i.test(dd.label)?"€"+t:/%$/.test(dd.label)?t+"%":/^Population/.test(dd.label)?t+"k":/^Density/.test(dd.label)?t+" /km²":t;};
+  const metricKeys=()=>yearView===2025?["d"]:yearView===2021?["d21"]:["d17","d21"]; // 2017: the few constituencies redrawn before 2021 use their 2021 figures
+  const mval=(w,k=metric)=>{if(yearView!==2025&&!yearData[byN[w.n].i])return null;for(const key of metricKeys())if(w[key])return w[key][k];return null;};
+  let miCache=null;
+  function metricInfo(){
+    const ck=metric+"|"+yearView;if(miCache&&miCache.ck===ck)return miCache;
+    const a=W.map(w=>({w,v:mval(w)})).filter(o=>o.v!=null).sort((x,y)=>y.v-x.v),pct=new Map(),rank=new Map();
+    a.forEach((o,i)=>{rank.set(o.w.n,a.filter(q=>q.v>o.v).length+1);pct.set(o.w.n,a.length>1?a.filter(q=>q.v<o.v).length/(a.length-1):1);});
+    return miCache={ck,a,n:a.length,pct,rank,hi:a[0],lo:a[a.length-1]};
+  }
+  const metricRamp=t=>dm()?mixc("#D5D8DE","#2F6FDB",t):mixc("#E3EAF6","#123B7A",t);
+  // ---- certainty map: chance that the projected leader really wins (100 % = darkest, toss-up = lightest) ----
+  const certT=p=>Math.max(0,Math.min(1,(p-.5)/.45)),certRamp=t=>dm()?mixc("#D5D8DE","#8B5CF6",t):mixc("#EEE9F8","#3C1F82",t);
+  const certBands=[[.95,"Safe (95%+)"],[.8,"Likely (80–95%)"],[.6,"Lean (60–80%)"],[0,"Toss-up (under 60%)"]];
+  // colour = projected leader, intensity = certainty: 100% = the party's full (darkest) colour, toss-up = palest tint
+  const certFill=d=>{const t=certT(d.prob),c=pcol(d.lead);return mixc(dm()?c:mixc(c,"#000000",.22*t),cbg(),.92*(1-t));};
+  const fillOf=(r,md=mode,met=metric,cert=certainty)=>{
+    if(cert){const d=yearData[r.i];return d?certFill(d):"#ccc";}
+    if(met!=null){const v=mval(r.w,met);return v==null?"#ccc":metricRamp(metricInfo().pct.get(r.w.n));}
+    const d=yearData[r.i];if(!d) return"#ccc";
+    if(md==null)return pcol(d.lead); // Leader view: flat party colour; confidence is shown in the Certainty view
+    return shade(d.x[md],md);
+  };
+  function shade(v,md=mode){const vals=yearData.map(d=>d?d.x[md]:null).filter(x=>x!=null),mn=Math.min(...vals),mx=Math.max(...vals),t=mx>mn?(v-mn)/(mx-mn):1,full=pcol(md);
+    // weakest = a faint tint, strongest = the party's full colour (deepened in light mode), so 20 % and 50 % are clearly different
+    return dm()?mixc(mixc(full,"#262A33",.88),full,Math.pow(t,.85)):mixc("#F3F1EC",mixc(full,"#000000",.28),.04+.96*Math.pow(t,.85));}
+  function legendHtml(md,met=metric,cert=certainty){
+    if(cert){const cnt=certBands.map(()=>0),pc={};yearData.forEach(d=>{if(d){const b=certBands.findIndex(x=>d.prob>=x[0]);cnt[b<0?cnt.length-1:b]++;pc[d.lead]=1;}});
+      return Object.keys(pc).map(Number).sort((a,b)=>expW[b]-expW[a]).map(j=>`<span>${lab(K[j])} <i style="width:70px;background:linear-gradient(to right,${certFill({lead:j,prob:.4})},${certFill({lead:j,prob:1})})"></i></span>`).join("")
+        +`<span style="flex-basis:100%;height:0;margin:-6px 0 0"></span>`+certBands.map((x,k)=>`<span>${x[1]} <b>${cnt[k]}</b></span>`).join("");}
+    if(met!=null){const mi=metricInfo(),miss=n-mi.n;
+      return `<span>Lowest <i style="width:110px;background:linear-gradient(to right,${metricRamp(0)},${metricRamp(1)})"></i> highest · darker = higher in the ranking</span>`
+        +`<span>Highest: <b>${mi.hi.w.name}</b> ${demoFmt(met,mi.hi.v)}</span><span>Lowest: <b>${mi.lo.w.name}</b> ${demoFmt(met,mi.lo.v)}</span>`
+        +(miss?`<span class="co-faint"><i style="background:#ccc"></i>No ${yearView===2025?2025:yearView} figures (redrawn) <b>${miss}</b></span>`:"");}
+    const data=yearData.filter(d=>d!=null);
+    if(md==null){const cnt={};data.forEach(d=>cnt[d.lead]=(cnt[d.lead]||0)+1);
+      return Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([j,k])=>`<span><i class="${dark(colorOf(K[j]))?"dk":""}" style="background:${colorOf(K[j])}"></i>${lab(K[j])} <b>${k}</b></span>`).join("")+(data.length<yearData.length?`<span class="co-faint"><i style="background:#ccc"></i>No ${yearView} result (redrawn in 2025) <b>${yearData.length-data.length}</b></span>`:"");}
+    const vals=data.map(d=>d.x[md]),mn=Math.min(...vals),mx=Math.max(...vals);
+    return `<span>${lab(K[md])} · weakest ${fmt(mn)}% <i style="width:110px;background:linear-gradient(to right,${shade(mn,md)},${shade(mx,md)})"></i> strongest ${fmt(mx)}%</span>`;}
+  const bigTip=(e,h)=>showTip(e,h,true);
+  function tipFor(e,r,met=metric,cert=certainty){
+    if(cert){const d=yearData[r.i];if(!d){bigTip(e,`<b>${r.w.name}</b><br>${r.w.land}`);return;}
+      const o=[...K.keys()].sort((a,b)=>d.x[b]-d.x[a]).slice(0,3);
+      bigTip(e,`<b>${r.w.name}</b>: ${Math.round(d.prob*100)}%<br>`+o.map(j=>`${lab(K[j])}: ${fmt(d.x[j])}%`).join("<br>")+`<br><span style="opacity:.7">${d.prob<.6?"Toss-up":"Chance for "+lab(K[d.lead])+" to lead"} · ${r.w.land}</span>`);return;}
+    if(met!=null){const v=mval(r.w,met),mi=metricInfo();
+      bigTip(e,`<b>${r.w.name}</b><br>${demoName(met)}: ${v==null?"no figures for this year":demoFmt(met,v)}`+(v==null?"":`<br><span style="opacity:.7">#${mi.rank.get(r.w.n)} of ${mi.n} · ${r.w.land}</span>`));return;}
+    const d=yearData[r.i];
+    if(!d){bigTip(e,`<b>${r.w.name}</b><br>No ${yearView} result for these boundaries<br><span style="opacity:.7">Redrawn in 2025 · ${r.w.land}</span>`);return;}
+    const o=[...K.keys()].sort((a,b)=>d.x[b]-d.x[a]).slice(0,5);
+    bigTip(e,`<b>${r.w.name}</b><br>`+o.map(j=>`${lab(K[j])}: ${fmt(d.x[j])}%`).join("<br>")+`<br><span style="opacity:.7">${d.prob<.6?"Toss-up":Math.round(d.prob*100)+"% chance for "+lab(K[d.lead])} · ${r.w.land}</span>`);
+  }
+  // ---- zoomable map: wheel / pinch to zoom, drag to pan, buttons, smooth jump to a state ----
+  const AR=hasMap?bbox[3]/bbox[2]:1,MAXZ=14;
+  let view=hasMap?[...bbox]:null,svgEl=null,anim=0,drag=null;
+  const vbStr=v=>v.map(n=>+n.toFixed(2)).join(" ");
+  const stView=l=>{if(!l||!stBox[l])return[...bbox];const b=stBox[l],w=Math.min(bbox[2],Math.max(b[2]-b[0],(b[3]-b[1])/AR)*1.14),h=w*AR;return[(b[0]+b[2])/2-w/2,(b[1]+b[3])/2-h/2,w,h];};
+  const clampV=v=>{const w=Math.min(bbox[2],Math.max(bbox[2]/MAXZ,v[2])),h=w*AR,mx_=bbox[2]*.05,my_=bbox[3]*.05;
+    const x=w>=bbox[2]-.01?bbox[0]:Math.min(Math.max(v[0],bbox[0]-mx_),bbox[0]+bbox[2]+mx_-w),y=h>=bbox[3]-.01?bbox[1]:Math.min(Math.max(v[1],bbox[1]-my_),bbox[1]+bbox[3]+my_-h);return[x,y,w,h];};
+  function setView(v){view=clampV(v);if(svgEl)svgEl.setAttribute("viewBox",vbStr(view));
+    const z=bbox[2]/view[2];mapHost.style.touchAction=z>1.05?"none":"pan-y";
+    const zi=$("#co-zoom [data-z=in]"),zo=$("#co-zoom [data-z=out]");if(zi)zi.disabled=z>=MAXZ-.05;if(zo)zo.disabled=z<=1.01;}
+  function animateTo(t){cancelAnimationFrame(anim);const f=[...view],T=clampV(t);
+    if(matchMedia("(prefers-reduced-motion:reduce)").matches){setView(T);return;}
+    const t0=performance.now(),D=420,step=now=>{const k=Math.min(1,(now-t0)/D),e=1-Math.pow(1-k,3);setView(f.map((v,i)=>v+(T[i]-v)*e));if(k<1)anim=requestAnimationFrame(step);};anim=requestAnimationFrame(step);}
+  function zoomAt(cx,cy,f){const nw=Math.min(bbox[2],Math.max(bbox[2]/MAXZ,view[2]/f));f=view[2]/nw;setView([cx-(cx-view[0])/f,cy-(cy-view[1])/f,nw,nw*AR]);}
+  const toMap=(x,y)=>{const r=svgEl.getBoundingClientRect();return[view[0]+(x-r.left)/r.width*view[2],view[1]+(y-r.top)/r.height*view[3]];};
+  if(hasMap){
+    const ptrs=new Map();let pinch=null;
+    mapHost.addEventListener("wheel",e=>{if(!svgEl)return;const dy=e.deltaMode===1?e.deltaY*16:e.deltaMode===2?e.deltaY*400:e.deltaY,f=Math.exp(-Math.max(-120,Math.min(120,dy))*(e.ctrlKey?.008:.0018));
+      if(f<1&&view[2]>=bbox[2]-.5)return; // fully zoomed out: let the page scroll
+      e.preventDefault();cancelAnimationFrame(anim);hideTip();const[cx,cy]=toMap(e.clientX,e.clientY);zoomAt(cx,cy,f);},{passive:false});
+    mapHost.addEventListener("pointerdown",e=>{if(!svgEl||(e.pointerType==="mouse"&&e.button!==0))return;cancelAnimationFrame(anim);ptrs.set(e.pointerId,[e.clientX,e.clientY]);drag={x:e.clientX,y:e.clientY,moved:false};
+      if(ptrs.size===2){const[a,b]=[...ptrs.values()];pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1])};drag.moved=true;}});
+    mapHost.addEventListener("pointermove",e=>{if(!ptrs.has(e.pointerId))return;
+      if(e.pointerType==="mouse"&&!(e.buttons&1)){ptrs.delete(e.pointerId);return;}
+      const prev=ptrs.get(e.pointerId);ptrs.set(e.pointerId,[e.clientX,e.clientY]);
+      if(ptrs.size===2&&pinch){const[a,b]=[...ptrs.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]),[cx,cy]=toMap((a[0]+b[0])/2,(a[1]+b[1])/2);zoomAt(cx,cy,d/pinch.d);pinch.d=d;hideTip();return;}
+      if(ptrs.size!==1||!drag)return;
+      if(!drag.moved){if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<5)return;drag.moved=true;try{mapHost.setPointerCapture(e.pointerId);}catch(_){}mapHost.classList.add("grab");}
+      hideTip();const r=svgEl.getBoundingClientRect();
+      setView([view[0]-(e.clientX-prev[0])/r.width*view[2],view[1]-(e.clientY-prev[1])/r.height*view[3],view[2],view[3]]);});
+    const up=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;if(!ptrs.size)mapHost.classList.remove("grab");};
+    mapHost.addEventListener("pointerup",up);mapHost.addEventListener("pointercancel",up);
+    $("#co-zoom").onclick=e=>{const b=e.target.closest("[data-z]");if(!b)return;const z=b.dataset.z;
+      if(z==="reset"){animateTo(stView(stF));return;}
+      const f=z==="in"?1.8:1/1.8,cx=view[0]+view[2]/2,cy=view[1]+view[3]/2,w=view[2]/f;animateTo([cx-w/2,cy-w*AR/2,w,w*AR]);};
+    setView(view);
+  }
+  function drawMap(){
+    if(!hasMap)return;
+    mapHost.innerHTML="";const svg=el("svg",{viewBox:vbStr(view),role:"img","aria-label":"Leading party per constituency"},mapHost);svgEl=svg;
+    let selEl=null;
+    paths.forEach(p=>{const r=byN[p.n],d=yearData[p.i],dim=stF&&r.w.land!==stF;
+      const e=el("path",{class:"wk"+(dim?" dim":"")+(p.n===sel?" sel":""),d:p.d,fill:fillOf({i:p.i,w:r.w,prob:d?d.prob:1,lead:d?d.lead:0}),"data-n":p.n},svg);
+      if(p.n===sel)selEl=e;
+      e.addEventListener("mousemove",ev=>{if(!drag||!drag.moved)tipFor(ev,{i:p.i,w:r.w});});e.addEventListener("mouseleave",hideTip);
+      e.addEventListener("click",()=>{if(drag&&drag.moved)return;hideTip();select(p.n);});});
+    if(selEl)svg.appendChild(selEl);
+    $("#co-legend").innerHTML=legendHtml(mode);
+    if(certainty)$("#co-map-title").textContent="How certain is each constituency?";
+    else if(metric!=null)$("#co-map-title").textContent=`${demoName(metric)} by constituency`;
+    else $("#co-map-title").textContent=mode==null?"Who leads in each constituency?":`How strong is ${lab(K[mode])} in each constituency?`;
+    const subl=$("#co-map-subl");if(subl)subl.textContent=yearView===2025?"Projected from the current poll average":`Actual election result, ${yearView}`;
+    if(certainty&&subl)subl.textContent="Colour = projected leader · darker = more certain (100% = darkest shade of that party) · paler = closer to a toss-up";
+    if(metric!=null&&subl)subl.textContent=`Darker = higher in the ranking · ${yearView===2025?"2025 structure data":yearView+" election structure data"}`;
+  }
+  // ---- the same map on the Overview tab (follows the party chips there, click opens the constituency) ----
+  const ovHost=$("#ov-comap"),ovSw=$("#ov-mapsw");
+  function paintOv(){
+    if(!hasMap||!ovHost)return;const j=mapParty?K.indexOf(mapParty):-1,md=j>=0&&j<m-1?j:null,cert=md==null&&yearView===2025; // no party chip selected = certainty view
+    ovHost.innerHTML="";const svg=el("svg",{viewBox:bbox.join(" "),role:"img","aria-label":"Leading party per constituency"},ovHost);
+    paths.forEach(p=>{const r=byN[p.n],d=yearData[p.i],e=el("path",{class:"wk",d:p.d,fill:fillOf({i:p.i,w:r.w,prob:d?d.prob:1,lead:d?d.lead:0},md,null,cert),"data-n":p.n},svg);
+      e.addEventListener("mousemove",ev=>tipFor(ev,{i:p.i,w:r.w},null,cert));e.addEventListener("mouseleave",hideTip);
+      e.addEventListener("click",()=>{hideTip();select(p.n);goTab("constituencies");});});
+    $("#ov-co-legend").innerHTML=cert?(()=>{const cnt=certBands.map(()=>0);yearData.forEach(d=>{if(d){const b=certBands.findIndex(x=>d.prob>=x[0]);cnt[b<0?cnt.length-1:b]++;}});
+      return certBands.map((x,k)=>`<span>${x[1]} <b>${cnt[k]}</b></span>`).join("");})():legendHtml(md,null,false);
+    $("#map-title").textContent=cert?"How certain is each constituency?":md==null?"Who leads in each constituency?":`${lab(K[md])} strength by constituency`;
+    const sb=document.querySelector(".ov-map .subl");if(sb)sb.textContent=cert?"Projected from the current poll average \u00b7 darker = more certain":yearView===2025?"Projected from the current poll average":`Election result, ${yearView}`;
+  }
+  if(hasMap&&ovHost&&ovSw){
+    ovSw.style.display="";ovCoRedraw=paintOv;
+    const setV=v=>{ovView=v;const wk=v==="wk";ovSw.querySelectorAll("[data-m]").forEach(b=>b.classList.toggle("on",b.dataset.m===v));
+      [$("#map"),$("#map-legend"),$("#map-note")].forEach(x=>{if(x)x.style.display=wk?"none":"";});
+      ovHost.style.display=wk?"":"none";$("#ov-co-legend").style.display=wk?"":"none";
+      if(wk)paintOv();else if(mapRedraw)mapRedraw();
+      if(typeof fitOv==="function")fitOv();};
+    ovSw.onclick=e=>{const b=e.target.closest("[data-m]");if(b&&b.dataset.m!==ovView)setV(b.dataset.m);};
+    redraw.push(()=>{if(ovView==="wk")paintOv();});
+    setV("wk"); // the constituency map is the main view; states stay one click away (and are the fallback when no constituency map exists)
+  }
+  function detail(){
+    const r=byN[sel],w=r.w,col=j=>colorOf(K[j]);
+    // right-hand panel follows the map: Projection = poll-average projection vs the 2025 result; 2021 / 2017 = that election's actual result,
+    // Δ = change vs the election before (2021 vs 2017; for 2017 there is no earlier result, and no result at all in the ~5 % of constituencies redrawn in 2025)
+    const isY=yearView!==2025,yd=isY?yearData[r.i]:null,X=isY?(yd?yd.x:null):r.x,mx=X?Math.max(...X):1;
+    const toss=r.prob<.6,pop=W.reduce((a,q)=>a+q.d[0],0);
+    const hq=hasQ,yv=(arr,j)=>arr&&!(j===5)?fmt(arr[j]):"–"; // BSW did not exist before 2024
+    const s21=merge(w.p),s17=w.q?merge(w.q):null;
+    const base=isY?(yearView===2021?s17:null):w.s25,src=X||w.s25;
+    const rows=[...K.keys()].sort((a,b)=>src[b]-src[a]).map(j=>{
+      const none=!X||(isY&&j===5),nb=!X||!base||(isY&&j===5),d=nb?0:X[j]-base[j],c=pcol(j); // BSW did not exist in 2021 / 2017
+      return `<div class="co-prow${hq?" hq":""}"><div class="co-pn"><i style="background:${c}"></i>${lab(K[j])}</div><div class="co-pb"><b style="width:${none?0:X[j]/mx*100}%;background:${c}"></b></div><div class="co-pv">${none?"–":fmt(X[j])+"%"}</div><div class="co-pd ${nb||Math.abs(d)<.05?"":d>0?"up":"dn"}">${nb?"–":Math.abs(d)<.05?"=":sg(d)}</div><div class="co-py">${yv(w.s25,j)}</div><div class="co-py">${yv(s21,j)}</div>${hq?`<div class="co-py">${yv(s17,j)}</div>`:""}</div>`;}).join("");
+    // "About this constituency" follows the map: 2025 = current structure data, 2021 / 2017 = that election's structure data (d21 / d17).
+    // The structure data only counts where the area is unchanged: 2017 results of constituencies redrawn between 2017 and 2021 are given on the 2021
+    // boundaries, so those use the 2021 figures; ~5 % were redrawn in 2025 (no earlier result) and show the 2025 figures with a notice.
+    const chain=yearView===2025||(isY&&!yd)?["d"]:yearView===2021?["d21","d"]:["d17","d21","d"];
+    const key=chain.find(k=>w[k])||"d",pool=W.filter(q=>q[key]),np_=pool.length;
+    const keyYear=key==="d"?2025:key==="d21"?2021:2017,popT=pool.reduce((a,q)=>a+q[key][0],0);
+    const yrNote=yearView===2025||keyYear===yearView?"":key==="d"?`<p class="co-fyear">This constituency was redrawn in 2025, so there are no comparable ${yearView} figures. Showing 2025 figures.</p>`
+      :`<p class="co-fyear">The 2017 boundaries of this constituency changed before 2021, so the figures are from the 2021 data.</p>`;
+    const demo=C.demo.map((dd,k)=>{
+      const arr=pool.map(q=>q[key][k]).sort((a,b)=>a-b),v=w[key][k];
+      const nat=k===0?popT/np_:pool.reduce((a,q)=>a+q[key][0]*q[key][k],0)/popT;
+      const f=x=>x.toLocaleString("en-US",{minimumFractionDigits:dd.dec,maximumFractionDigits:dd.dec}),pctU=/%$/.test(dd.label);
+      let name=dd.label.replace(/\s*%$/,"").replace(/\s*\(.*\)$/,""),pre="",suf="";
+      if(pctU)suf="%";else if(/^Population/.test(dd.label))suf="k";else if(/^Density/.test(dd.label))suf=" /km²";else if(/income/i.test(dd.label))pre="€";
+      const rank=arr.filter(x=>x>v).length+1,pos=arr.filter(x=>x<v).length/(np_-1),pn=arr.filter(x=>x<nat).length/(np_-1);
+      const diff=pctU?v-nat:(v/nat-1)*100,dz=Math.abs(diff)<(pctU?.05:.5),dtxt=dz?"≈ average":(diff>0?"▲ ":"▼ ")+Math.abs(diff).toLocaleString("en-US",{maximumFractionDigits:pctU?1:0})+(pctU?" pts":"%");
+      return `<div class="co-fact${metric===k?" on":""}" data-k="${k}" role="button" tabindex="0" aria-pressed="${metric===k}" title="${metric===k?"Click to go back to the party map":"Click to colour the map by this figure"}"><div class="co-fl">${name}</div>
+        <div class="co-fvr"><span class="co-fv">${pre}${f(v)}${suf}</span><span class="co-dl ${dz?"eq":diff>0?"up":"dn"}">${dtxt}</span></div>
+        <div class="co-ft"><span class="fill" style="width:${(pos*100).toFixed(1)}%"></span><span class="tick" style="left:${(pn*100).toFixed(1)}%"></span><span class="dot" style="left:${(pos*100).toFixed(1)}%"></span></div>
+        <div class="co-ff"><span>${k===0?"Avg. constituency":"Germany"} ${pre}${f(nat)}${suf}</span><span>#${rank} of ${np_}</span></div></div>`;}).join("");
+    $("#co-detail").innerHTML=`<h3>${w.name}</h3><p class="subl">${w.land} · Constituency ${w.n}</p>
+      ${isY?(yd?`<div class="co-lead" style="border-left-color:${pcol(yd.lead)}"><b>${lab(K[yd.lead])} led</b><span>${fmt(yd.margin)} pts ahead of ${lab(K[yd.second])} · ${yearView} second votes</span></div>`
+        :`<div class="co-lead" style="border-left-color:var(--line)"><b>No ${yearView} result</b><span>Redrawn in 2025, so there is no comparable ${yearView} result</span></div>`)
+      :`<div class="co-lead" style="border-left-color:${pcol(r.lead)}"><b>${toss?"Toss-up":lab(K[r.lead])+" ahead"}</b><span>${toss?`${lab(K[r.lead])} ${fmt(r.margin)} pts ahead of ${lab(K[r.second])} · ${Math.round(r.prob*100)}% chance`:`${fmt(r.margin)} pts ahead of ${lab(K[r.second])} · ${Math.round(r.prob*100)}% chance`}</span></div>`}
+      <div class="co-ph${hq?" hq":""}"><span></span><span></span><span>${isY?yearView:"Proj."}</span><span title="${isY?(yearView===2021?"Change vs 2017":""):"Projection minus 2025 result"}">Δ</span><span>2025</span><span>2021</span>${hq?"<span>2017</span>":""}</div>${rows}
+      <h4 class="co-h4">About this constituency${yearView===2025?"":` <span class="co-h4y">· ${keyYear}</span>`}</h4><p class="co-fyear">${metric==null?"Click a figure to colour the map by it (darker = higher in the ranking).":"Map coloured by "+demoName(metric).toLowerCase()+". Click it again to go back."}</p>${yrNote}<div class="co-facts">${demo}</div>
+      <p class="co-fnote"><span class="lg"><span class="dot"></span>This constituency</span><span class="lg"><span class="tick"></span>Germany overall</span><span>Bar = rank among all ${np_}</span></p>
+      <div class="note">${isY?`${yearView} election result (second votes) within the 2025 constituency boundaries. ${yearView===2021?"Δ = change vs the 2017 result.":"Δ is empty because there is no earlier result to compare with."} The 2025, 2021${hq?" and 2017":""} columns are second-vote shares (%).`
+        :`Projection from the poll average of ${fmtDate(tMax)}. Δ = projected share minus the 2025 second-vote result. 2025, 2021${hq?" and 2017":""} are second-vote shares (%). 2025 projection includes historical pollster bias adjustment.`}</div>`;
+  }
+  // The list at the bottom follows the map: leader map = closest races; certainty map = ranked by certainty; party map = by that party's share; figure map = by that figure.
+  function list(){
+    const view=certainty?"cert":metric!=null?"metric":mode!=null?"party":"lead";
+    const opts={lead:[["close","Closest races first"],["n","By number"]],cert:[["close","Toss-ups first"],["safe","Safest first"],["n","By number"]],
+      party:[["high","Strongest first"],["low","Weakest first"],["n","By number"]],metric:[["high","Highest first"],["low","Lowest first"],["n","By number"]]}[view];
+    if(list.last!==view||!opts.some(o=>o[0]===sortBy))sortBy=opts[0][0]; // a new map type starts with its natural order
+    list.last=view;
+    const yrTxt=yearView===2025?"projection":yearView+" result";
+    const val=r=>view==="party"?(yearData[r.i]?yearData[r.i].x[mode]:null):view==="metric"?mval(r.w):null;
+    let rank=null;if(val&&(view==="party"||view==="metric")){const all=R.map(val).filter(v=>v!=null).sort((a,b)=>b-a);rank=v=>all.filter(x=>x>v).length+1;}
+    const cmp={n:(a,b)=>a.w.n-b.w.n,close:(a,b)=>a.prob-b.prob||a.margin-b.margin,safe:(a,b)=>b.prob-a.prob||b.margin-a.margin,
+      high:(a,b)=>(val(b)??-1e9)-(val(a)??-1e9),low:(a,b)=>(val(a)??1e9)-(val(b)??1e9)}[sortBy];
+    const rows=R.filter(r=>(!stF||r.w.land===stF)&&(!q||(r.w.name+" "+r.w.land+" "+r.w.n).toLowerCase().includes(q))).sort(cmp);
+    $("#co-list-sub").textContent={lead:"Select one to see its projection and demographics",cert:"Ranked by how certain the projected leader is · select one to see its projection",
+      party:`Ranked by ${lab(K[mode])} share (${yrTxt}) · select one for details`,metric:`Ranked by ${(metric!=null?demoName(metric):"").toLowerCase()} (${yearView===2025?"2025":yearView} data) · select one for details`}[view];
+    $("#co-sort").innerHTML=opts.map(([k,t])=>`<button type="button" class="faction-chip ${sortBy===k?"on":""}" data-k="${k}">${t}</button>`).join("");
+    $("#co-list").innerHTML=rows.map(r=>{
+      let ld=`<i style="background:${pcol(r.lead)}"></i>${lab(K[r.lead])} ${fmt(r.share)}%`,pr=`<span class="co-pr${r.prob<.6?" t":""}">${r.prob<.6?"Toss-up":Math.round(r.prob*100)+"%"}</span>`;
+      if(view==="party"||view==="metric"){const v=val(r);
+        ld=view==="party"?`<i style="background:${pcol(mode)}"></i>${lab(K[mode])} ${v==null?"–":fmt(v)+"%"}`:`<i style="background:var(--accent)"></i>${v==null?"–":demoFmt(metric,v)}`;
+        pr=`<span class="co-pr rk">${v==null?"–":"#"+rank(v)}</span>`;}
+      return `<button type="button" class="co-li${r.w.n===sel?" on":""}" data-n="${r.w.n}"><span class="co-n">${r.w.n}</span><span class="co-nm">${r.w.name}<small>${r.w.land}</small></span><span class="co-ld">${ld}</span>${pr}</button>`;}).join("")||`<div class="note">No constituency found.</div>`;
+  }
+  function select(num,scroll){sel=num;detail();drawMap();list();if(scroll){const e=$("#co-list .on");if(e)e.scrollIntoView({block:"nearest"});}}
+  const setYear=y=>{yearView=+y;yearData=getYearData(yearView);if(yearView!==2025)certainty=false;renderYearButtons();renderViewButtons();coChips();drawMap();detail();list();};
+  $("#co-year-filter").onclick=e=>{const b=e.target.closest("[data-year]");if(b)setYear(b.dataset.year);};
+  const setMode=j=>{mode=mode===j?null:j;if(mode!=null){metric=null;certainty=false;}coChips();renderViewButtons();drawMap();detail();list();};
+  const setCert=on=>{certainty=on;if(on){mode=null;metric=null;}coChips();renderViewButtons();drawMap();detail();list();};
+  $("#co-view").onclick=e=>{const b=e.target.closest("[data-v]");if(b&&!b.disabled){if(b.dataset.v==="cert")setCert(!certainty);else{mode=null;metric=null;certainty=false;coChips();renderViewButtons();drawMap();detail();list();}}};
+  $("#co-chips").addEventListener("click",e=>{if(e.target.closest(".chip[data-cert]"))setCert(!certainty);});
+  $("#co-chips").addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.closest(".chip[data-cert]")){e.preventDefault();setCert(!certainty);const c=$("#co-chips .chip[data-cert]");if(c)c.focus();}});
+  const setMetric=k=>{metric=metric===k?null:k;if(metric!=null){mode=null;certainty=false;coChips();}renderViewButtons();drawMap();detail();list();};
+  $("#co-detail").onclick=e=>{const c=e.target.closest(".co-fact[data-k]");if(c)setMetric(+c.dataset.k);};
+  $("#co-detail").onkeydown=e=>{if(e.key!=="Enter"&&e.key!==" ")return;const c=e.target.closest(".co-fact[data-k]");if(c){e.preventDefault();setMetric(+c.dataset.k);const k=$(`#co-detail .co-fact[data-k="${c.dataset.k}"]`);if(k)k.focus();}};
+  $("#co-chips").onclick=e=>{const c=e.target.closest(".chip[data-p]");if(c)setMode(+c.dataset.p);};
+  $("#co-chips").onkeydown=e=>{if(e.key!=="Enter"&&e.key!==" ")return;const c=e.target.closest(".chip[data-p]");if(c){e.preventDefault();setMode(+c.dataset.p);const n=$(`#co-chips .chip[data-p="${c.dataset.p}"]`);if(n)n.focus();}};
+  $("#co-state").onchange=e=>{stF=e.target.value;drawMap();list();if(hasMap)animateTo(stView(stF));};
+  $("#co-search").oninput=e=>{q=e.target.value.trim().toLowerCase();list();};
+  $("#co-sort").onclick=e=>{const b=e.target.closest("[data-k]");if(b){sortBy=b.dataset.k;list();}};
+  $("#co-list").onclick=e=>{const b=e.target.closest("[data-n]");if(b)select(+b.dataset.n);};
+  {
+    const sg2=v=>(v>=0?"+":"−")+fmt(Math.abs(v)),big=T.slice(0,m-1).reduce((b,v,j)=>v>T[b]?j:b,0),lb=lab(K[big]);
+    const pts=sd=>fmt(T[big]*(Math.exp(sd)-1));   // an sd on the log scale, as points of that party's share
+    const noPoll=stLands.filter(l=>!stInfo[l].polls),withPoll=stLands.filter(l=>stInfo[l].polls);
+    const avgSd=stLands.reduce((a,l)=>a+Math.sqrt(PV[l][big]),0)/stLands.length;
+    const eff=l=>stEff[l].map((v,j)=>({v,j})).sort((a,b)=>Math.abs(b.v)-Math.abs(a.v)),moves=withPoll.filter(l=>Math.abs(eff(l)[0].v)>=.3).sort((a,b)=>Math.abs(eff(b)[0].v)-Math.abs(eff(a)[0].v)),calm=withPoll.length-moves.length;
+    const stLine=withPoll.length?(moves.length?"the biggest shifts in a state's projected vote share are "+moves.map(l=>`<b>${l}</b> ${eff(l).slice(0,2).filter(q=>Math.abs(q.v)>=.3).map(q=>lab(K[q.j])+" "+sg2(q.v)).join(", ")} points (${stInfo[l].polls} poll${stInfo[l].polls>1?"s":""}, latest ${fmtDate(stInfo[l].last)})`).join("; ")+(calm?`; in ${calm} more state${calm>1?"s":""} with recent polls the effect is under 0.3 points`:""):`${withPoll.length} states have recent polls but their effect is under 0.3 points everywhere`):"none of the state polls are recent enough";
+    const val=MD&&MD.validation?MD.validation:null,vt=y=>val&&val[y]?`${Math.round(val[y].leaderRightPct)}% of constituency leaders called right (the model expected ${Math.round(val[y].expectedRightPct)}%)`:"";
+    $("#co-method").innerHTML=`<p><b>1 · Starting point.</b> The official 2025 second-vote result of each of the 299 constituencies.</p>
+    <p><b>2 · National target.</b> The poll average of ${fmtDate(tMax)}, corrected for how far pollsters missed in 2025: ${K.slice(0,-1).map(k=>lab(k)+" "+fmt(T[K.indexOf(k)])+"%").join(", ")}, ${lab("Sonstige")} ${fmt(T[m-1])}%.</p>
+    ${MD?`<p><b>3 · State polls (“a bit”, not a lot).</b> State polls ask about <i>state</i> elections, so their levels are not copied. For each state and party the model measures how that state’s polls moved since the 2025 federal election (polls from the 4 months around it vs. the last ${SP.maxAgeDays/30} months) <i>relative to</i> how the national polls moved at the same times, so a party that simply polls higher in a state election cancels out. Newer and bigger polls count more (half-life ${SP.halfLifeDays} days). That gap is then shrunk towards zero by the amount state polls have historically missed the truth: with few polls only a small fraction is kept. Right now ${stLine}. ${noPoll.length?`States without recent polls (${noPoll.join(", ")}) simply follow the national swing.`:""}</p>
+    <p><b>4 · Ratio swing.</b> Each party’s share, tilted by its state-poll gap, is multiplied by one party-wide factor and re-normalised in every constituency. The factors are solved so that the national total equals step 2 exactly: state polls only move votes <i>between</i> states.</p>
+    <p><b>5 · ${SP.runs.toLocaleString("en-US")} simulated elections.</b> In each run every party gets three random shocks, then the party ahead in each constituency is recorded; the share of runs a party leads is its chance. (a) <b>National</b>: how far the national poll average misses the national result, from the polls’ miss in 2017, 2021 and 2025 (about ±${pts(sdN[big])} points for ${lb}, one standard deviation). (b) <b>State</b>: how far a whole state can drift from the national swing; this is ±${pts(avgSd*fw)} points for ${lb} on average, smaller in states with fresh polls and larger where there are none. (c) <b>Local</b>: how far a constituency strays from its state (±${pts(sdL[big])} points for ${lb}), measured from the 2017→2021→2025 results. All three are multiplied by ${fw} because replays showed the raw values were overconfident in a turbulent election.</p>
+    ${val?`<p><b>Replay test.</b> Starting from the 2021 result and the polls of January 2025: ${vt("2025")}. From 2017 and August 2021 (a much more turbulent cycle): ${vt("2021")}.</p>`:""}`:`<p><b>3 · Chance.</b> “Chance” comes from ${SP.runs.toLocaleString("en-US")} simulations with a national and a local random error.</p>`}
+    <p><b>Limits.</b> The map shows the party ahead on <b>second votes</b>, not the direct-mandate winner, which also depends on candidates. Parties’ errors are drawn independently, and the model knows nothing about candidates or future events. It is a projection of today’s polls, not a forecast for 2029.</p>`;
+  }
+  coChips();list();select(sel);redraw.push(()=>{drawMap();list();});
+}
+try{await drawConstituencies();}catch(e){console.error(e);showErr("Constituencies tab failed to load: "+e.message);}
+
 
 // ---------- POLL TABS (parties ruled out, maximum voter potential, ...) ----------
 // every tab = one entry in config.json "pollTabs" + one CSV (Datum,Institut,<party columns>). Add an entry to add a tab.
@@ -1239,6 +1610,9 @@ let rzq=0;addEventListener("resize",()=>{cancelAnimationFrame(rzq);rzq=requestAn
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitOv);
 redraw.push(fitOv);
 fitOv();
+// reveal the overview only now: maps drawn, fonts ready, page fitted to the screen (no half-loaded flash, no size jump)
+{const done=()=>{fitOv();const o=$("#tab-overview");if(o)requestAnimationFrame(()=>o.classList.remove("loading"));};
+  (document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(done,done);}
 
 {const m=location.hash.match(/^#state-(\w+)/);if(m)openState(m[1]);}
 // ---------- little scroll fade-ins ----------
@@ -1262,5 +1636,5 @@ try{
   document.addEventListener("touchstart",e=>{const t=e.touches[0];tgt=e.target;active=!!isChart(tgt);moved=false;sx=t.clientX;sy=t.clientY;if(active)fire("mousemove",t,tgt);},{passive:true});
   document.addEventListener("touchmove",e=>{if(!active)return;const t=e.touches[0];if(Math.abs(t.clientY-sy)>14&&Math.abs(t.clientY-sy)>Math.abs(t.clientX-sx)){active=false;fire("mouseleave",t,tgt);return;}moved=true;fire("mousemove",t);},{passive:true});
   document.addEventListener("touchend",e=>{if(!active)return;const t=e.changedTouches[0];setTimeout(()=>{fire("mouseup",t);fire("mouseleave",t,tgt);},1400);},{passive:true});
-  document.addEventListener("touchstart",e=>{if(!e.target.closest(".chart-card svg,#map,#el-map,#el-demo")&&typeof hideTip==="function")hideTip();},{passive:true});
+  document.addEventListener("touchstart",e=>{if(!e.target.closest(".chart-card svg,#map,#el-map,#el-demo,#co-map")&&typeof hideTip==="function")hideTip();},{passive:true});
 })();

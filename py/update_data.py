@@ -4,14 +4,15 @@
   data/germanpolls.csv          federal polls (Bundestag, all institutes)
   state_polls/<State>.csv       one file per Bundesland, e.g. state_polls/Bayern.csv
 
-Run by double-clicking update_data.cmd (Windows) or:  python update_data.py
-Only the Python standard library is needed.  Data: dawum.de (ODC-ODbL).
+Run by double-clicking update_data.cmd (Windows) or:  python py/update_data.py
+It also refreshes the embed image (make_og.py, needs pillow) and the constituency model (calibrate_model.py, needs numpy).
+The download itself only needs the Python standard library.  Data: dawum.de (ODC-ODbL).
 """
 import csv, json, os, re, sys, time, urllib.request
 from datetime import datetime
 
 API = "https://api.dawum.de/"
-HERE = os.path.dirname(os.path.abspath(__file__))
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # repo root (this script lives in py/)
 FEDERAL_CSV = os.path.join(HERE, "data", "germanpolls.csv")
 STATE_DIR = os.path.join(HERE, "state_polls")
 
@@ -170,6 +171,16 @@ def main():
         make_og.main()
     except Exception as e:
         print("  (embed image not updated: %s - run: pip install pillow)" % e)
+<<<<<<< HEAD:update_data.py
+=======
+    try:  # re-estimate the constituency model's noise levels + replay test (data/constituencies.json "model")
+        import calibrate_model
+        print("Constituency model -> data/constituencies.json (a few seconds) ...")
+        m = calibrate_model.main(run_backtest=True, verbose=False); v = m.get("validation", {})
+        print("  noise levels re-estimated; replay 2021->2025: %s%% of constituency leaders right (expected %s%%)" % (v.get("2025", {}).get("leaderRightPct", "?"), v.get("2025", {}).get("expectedRightPct", "?")))
+    except Exception as e:
+        print("  (constituency model not updated: %s - run: pip install numpy)" % e)
+>>>>>>> voter-migration-og-image:py/update_data.py
     print("Done. Data from dawum.de (ODC-ODbL).")
 
 if __name__ == "__main__":
