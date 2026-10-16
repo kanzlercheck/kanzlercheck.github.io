@@ -144,15 +144,20 @@
   </section>
 
   <section id="tab-constituencies" class="pane">
-    <div class="ov-head"><h2>299 races, one by one</h2><p id="co-sub"></p></div>
-    <div class="group-title">Constituencies led (second votes) <span class="gt-hint">· click a party to map where it is strongest</span></div>
+    <div class="ov-head"><h2>Battleground Map</h2><p id="co-sub"></p></div>
+    <div class="group-title">Constituencies led (<span id="co-gt-vote">second votes</span>) <span class="gt-hint">· click a party to map where it is strongest</span></div>
     <div id="co-chips" class="latest"></div>
     <div class="co-grid" id="co-grid">
       <div class="chart-card flow" id="co-mapcard"><div class="sec">
         <h3 id="co-map-title">Who leads in each constituency?</h3>
         <p class="subl" id="co-map-subl">Projected from the current poll average</p>
-        <div class="co-tools"><div class="co-seg" id="co-view" role="tablist" aria-label="Map type"></div></div>
-        <div class="co-tools"><div class="co-left"><div class="co-seg" id="co-year-filter" role="tablist" aria-label="Map data"></div></div><select id="co-state" aria-label="Zoom to a state"></select></div>
+        <div class="note" id="co-vote-note"></div>
+        <div class="co-bar">
+          <div class="co-seg" id="co-vote" role="tablist" aria-label="Vote type" style="display:none"></div>
+          <div class="co-seg" id="co-view" role="tablist" aria-label="Map type"></div>
+          <div class="co-seg" id="co-year-filter" role="tablist" aria-label="Map data"></div>
+          <select id="co-state" aria-label="Zoom to a state"></select>
+        </div>
         <div class="co-mapwrap"><div id="co-map"></div><div class="co-zoom" id="co-zoom"><button type="button" data-z="in" aria-label="Zoom in">+</button><button type="button" data-z="out" aria-label="Zoom out">&minus;</button><button type="button" data-z="reset" aria-label="Reset view">&#8634;</button></div></div><div class="pills" id="co-legend"></div>
       </div></div>
       <div class="chart-card flow"><div class="sec" id="co-detail"></div></div>
@@ -163,11 +168,7 @@
       <div class="co-tools"><input type="search" id="co-search" placeholder="Search by name or number" aria-label="Search constituencies"><div class="filters" id="co-sort" style="padding:0"></div></div>
       <div id="co-list" class="co-list"></div>
     </div></div>
-    <div class="chart-card flow"><details class="sec fold" id="co-fold">
-      <summary><h3>How this projection works</h3></summary>
-      <div id="co-method" class="method"></div>
-    </details></div>
-    <div class="foot">Results and structural data: Die Bundeswahlleiterin (dl-de/by-2-0). Poll average: <a href="https://dawum.de">dawum.de</a>.</div>
+    <div class="foot">Results and structural data: Die Bundeswahlleiterin (dl-de/by-2-0).</div>
   </section>
 
   <section id="tab-election" class="pane">
@@ -220,7 +221,7 @@
       <div class="filters" id="el-map-pick" style="padding:0 0 10px"></div>
       <div id="el-map"></div><div class="pills" id="el-map-legend"></div>
     </div></div>
-    <div class="foot">Results: Federal Returning Officer. Demographics: Infratest dimap exit poll, via Wikipedia. Voter migration: Infratest dimap. Polls: <a href="https://dawum.de">dawum.de</a>.</div>
+    <div class="foot">Results: Federal Returning Officer. Demographics: Infratest dimap exit poll, via Wikipedia. Voter migration: Infratest dimap.</div>
   </section>
 
   <div class="foot">Data: <a href="https://dawum.de">dawum.de</a>. This project is independent and not affiliated with dawum.de.</div>

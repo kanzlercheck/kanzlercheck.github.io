@@ -104,7 +104,7 @@ def attach_2017(wk, K21, K17=None):
     print(f"2017 result attached to {kept} of {len(wk)} constituencies" + (f" ({orig} identical to the original 2017 result, the rest recalculated by the Bundeswahlleiterin to the 2021 boundaries)" if K17 else "")
           + f"; none for {len(miss)} with changed boundaries: {miss}")
 
-# Columns of the structural-data tables, in the order of D in main(): population, foreign %, density, aged 18-34, aged 60+, college-qualified school leavers %, income, unemployment.
+# Columns of the structural-data tables, in the order of D in main(): population, foreign %, density, aged 18-34, aged 60+, high school graduates %, income, unemployment.
 # The 2021 and 2025 files share one layout; in the 2017 file the college-qualification and income columns sit elsewhere (checked against the headers).
 DEMO_COLS = {2025: [5, 7, 8, (12, 13), (15, 16), 32, 35, 46], 2021: [5, 7, 8, (12, 13), (15, 16), 32, 35, 46], 2017: [5, 7, 8, (12, 13), (15, 16), 33, 25, 46]}
 
@@ -158,7 +158,7 @@ def main():
     assert len(ids) == 299 and set(S25) >= set(ids), "expected 299 Wahlkreise"
     # demographics shown in the side panel: (label, column in the Strukturdaten table, number of decimals)
     D = [("Population (1,000)", 5, 0), ("Foreign population %", 7, 1), ("Density (per km²)", 8, 0), ("Aged 18–34 %", (12, 13), 1),
-         ("Aged 60+ %", (15, 16), 1), ("School leavers qualified for college %", 32, 1), ("Disposable income (€ per head)", 35, 0), ("Unemployment rate %", 46, 1)]
+         ("Aged 60+ %", (15, 16), 1), ("High school graduates %", 32, 1), ("Disposable income (€ per head)", 35, 0), ("Unemployment rate %", 46, 1)]
     def dv(row, c): return round(sum(row[j] for j in c) if isinstance(c, tuple) else row[c], 1)
     wk = []
     for w in ids:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Calibrates the win-probability model of the "299 Races" tab and writes the numbers to data/constituencies.json["model"].
 
-  python py/calibrate_model.py            # re-estimate the noise levels from the 2017 / 2021 / 2025 results and polls, write them
+  python py/calibrate_model.py            # re-estimate the noise levels from the 2013 / 2017 / 2021 / 2025 results and polls, write them
   python py/calibrate_model.py --backtest # also replay 2021 -> 2025 (with and without state polls) and print how well it did
 
 What is estimated (all on the log scale of a party's vote share, because a 1 % party and a 30 % party do not wobble by the same points):
@@ -49,6 +49,14 @@ def project(Sb, Vw, T, L0=None, active=None):
 def nat_share(S, V, idx=None):
     idx = np.arange(len(V)) if idx is None else idx; return (V[idx, None] * S[idx]).sum(0) / V[idx].sum()
 
+def load2013(wk):
+    """2013 result per constituency (data/results2013.json, made by py/build_results2013.py): second votes S13 and first votes F13 in the order of K, and a flag
+    for the constituencies that have it (those unchanged in number and name since 2013).  Without the file everything is empty and 2013 is simply not used."""
+    path = os.path.join(HERE, "data", "results2013.json")
+    d = json.load(open(path, encoding="utf-8"))["wk"] if os.path.exists(path) else {}
+    g = lambda w, k: np.array(d[str(w["n"])][k], float) if str(w["n"]) in d else np.zeros(M)
+    return np.array([g(w, "s13") for w in wk]), np.array([g(w, "f13") for w in wk]), np.array([str(w["n"]) in d for w in wk])
+
 # ---------- 1. noise levels from past elections ----------
 def decompose(Sb, Se, V, land, idx, parties, active):
     """Move the earlier result to the TRUE national result, then split what is left into a state part and a local part."""
@@ -71,9 +79,16 @@ def calibrate():
     a = decompose(S21, S25, V, land, range(len(wk)), BIG, np.ones(M, bool)); b = decompose(S17m, S21 * np.array([1, 1, 1, 1, 1, 0, 1, 1]), V, land, np.where(h17)[0], BIG, act17)
     # 2017 -> 2021: S21's BSW share (zero anyway) is ignored
     dy = [(dt.date(2021, 9, 26) - dt.date(2017, 9, 24)).days / 365.25, (dt.date(2025, 2, 23) - dt.date(2021, 9, 26)).days / 365.25]
+    tr = [a, b]                                                                  # one decomposition per election transition
+    S13, F13, h13 = load2013(wk); i13 = np.where(h13 & h17)[0]
+    if len(i13):                                                                 # 2013 -> 2017, only where the constituency is unchanged since 2013
+        # AfD is left out here: it was founded months before the 2013 election (4.7 %), and one common ratio swing does not describe a brand-new party
+        # (the same reason BSW has no history of its own).  Its noise levels come from 2017 -> 2021 and 2021 -> 2025 only.
+        tr.append(decompose(S13, S17m, V, land, i13, [j for j in BIG if K[j] != "AfD"], act17)); dy.append((dt.date(2017, 9, 24) - dt.date(2013, 9, 22)).days / 365.25)
     local, svy = {}, {}
     for j in BIG:
-        local[K[j]] = round(math.sqrt((a[j][0] + b[j][0]) / 2), 4); svy[K[j]] = round((a[j][1] + b[j][1]) / (dy[0] + dy[1]), 5)
+        use = [i for i, t in enumerate(tr) if j in t]                           # the transitions in which this party is part of the estimate
+        local[K[j]] = round(math.sqrt(np.mean([tr[i][j][0] for i in use])), 4); svy[K[j]] = round(sum(tr[i][j][1] for i in use) / sum(dy[i] for i in use), 5)
     for d_ in (local, svy):                                                      # BSW has no history: use the average of the others
         d_["BSW"] = round(float(np.mean([d_[K[j]] for j in BIG])), 5)
     # national: 30-day poll average before each election vs the result
@@ -194,17 +209,71 @@ def backtest(model, use_state, base, actual, ref, today, V, land, wk_idx=None, r
             "brier": round(float(((pr - np.eye(M - 1)[lead_true]) ** 2).sum(1).mean()), 4), "shareMAE_pts": round(float(np.abs(X * 100 - Se)[:, BIG].mean()), 3),
             "expectedRight%": round(100 * float(pr.max(1).mean()), 1)}, pr, lead_true, U
 
+# ---------- 3. the same replay for FIRST votes (the direct-mandate race on the Battleground map) ----------
+def load_first():
+    """First votes per constituency, in the order of K (Free Voters folded into Sonstige): 2025 (f), 2021 on the 2025 boundaries (fp), valid first votes 2025 (fv),
+    and 2017 where the constituency is unchanged (only in data/firstvotes.json)."""
+    C = json.load(open(os.path.join(HERE, "data", "constituencies.json"), encoding="utf-8")); P = C["parties"]
+    def merge(a):
+        a = np.array(a, float); o = [a[P.index(k)] for k in K[:7]]; o.append(a[P.index("Sonstige")] + a[P.index("Freie Wähler")]); return np.array(o)
+    wk = C["wk"]; fv = json.load(open(os.path.join(HERE, "data", "firstvotes.json"), encoding="utf-8"))["wk"]
+    f17 = [fv[str(w["n"])].get("f17") for w in wk]
+    return np.array([merge(w["f"]) for w in wk]), np.array([merge(w["fp"]) for w in wk]), np.array([w["fv"] for w in wk], float), \
+        np.array([x if x else np.zeros(M) for x in f17], float), np.array([bool(x) for x in f17])
+
+def simulate_first(X, Vw, lands, model, T, post, runs, seed=2029):
+    """As simulate(), but with the first-vote local noise and the extra national noise (model["first"]), exactly like the browser for first votes."""
+    rng = np.random.default_rng(seed); n = len(Vw); states = sorted(set(lands)); si = np.array([states.index(l) for l in lands])
+    f = model["settings"]["widen"]; fm = model["first"]
+    sdN = f * np.array([math.sqrt(model["natA"] ** 2 + (model["natB"] / max(T[j], 1)) ** 2 + fm["natExtra"] ** 2) for j in range(M - 1)])
+    sdL = f * np.array([fm["localSd"][K[j]] for j in range(M - 1)]); sdS = f * np.array([[math.sqrt(post[s][j]) for j in range(M - 1)] for s in states])
+    LX = np.log(np.maximum(X[:, :M - 1], 1e-9)); wins = np.zeros((n, M - 1))
+    for _ in range(runs):
+        z = LX + rng.normal(0, sdN) + (rng.normal(0, 1, (len(states), M - 1)) * sdS)[si] + rng.normal(0, 1, (n, M - 1)) * sdL
+        wins[np.arange(n), z.argmax(1)] += 1
+    return wins / runs
+
+def backtest_first(model, use_state, Fb, Fe, S2b, ref, today, V1, V2, land, wk_idx=None, runs=1000, active=None):
+    """Replays one past election for FIRST votes with the browser's first-vote rule: there are no first-vote polls, so the national first-vote target is
+    derived from the SECOND-vote poll average (each party's first votes move by the same relative amount as its second votes).  The winner of every
+    constituency on first votes (Fe = the real first-vote result) is what gets scored.  Fb = first votes of the earlier election, S2b = its second votes
+    (only for the national derivation), V1 / V2 = valid first / second votes (weights)."""
+    nat = read_national(); sp = read_state_polls(); idx = np.arange(len(V1)) if wk_idx is None else wk_idx
+    Fb_, Fe_, S2_, V1_, V2_, ls = Fb[idx], Fe[idx], S2b[idx], V1[idx], V2[idx], land[idx]
+    act = np.ones(M, bool) if active is None else active
+    T2 = np.array([np.mean([v[j] for d0, v in nat if today - dt.timedelta(days=30) <= d0 <= today and v[j] is not None] or [0]) for j in range(7)]); T2 = np.append(T2, 100 - T2.sum()); T2 = T2 * act; T2 = T2 / T2.sum() * 100
+    n1, n2 = nat_share(Fb_, V1_), nat_share(S2_, V2_)
+    # a party without a base result (BSW in 2021) cannot be moved by a ratio: it enters with its second-vote poll share, as in the second-vote replay
+    T = np.where((n1 > 0) & (n2 > 0), n1 * T2 / np.maximum(n2, 1e-9), T2) * act; T = T / T.sum() * 100
+    states = sorted(set(ls)); post = {}; U = {}
+    for s in states:
+        post[s] = []; U[s] = []
+        for j in range(M - 1):
+            v1 = model["stateVarPerYear"][K[j]]; u, pv = state_signal(sp.get(s, []), nat, j, today, ref, v1, model["stateMismatchVar"]) if use_state else (0.0, v1 * (today - ref).days / 365.25)
+            U[s].append(u); post[s].append(pv)
+    L0 = np.zeros((len(idx), M)); [L0.__setitem__((ls == s, slice(0, M - 1)), np.array(U[s])) for s in states]
+    X = project(Fb_, V1_, T, L0=L0, active=act); pr = simulate_first(X, V1_, ls, model, T, post, runs)
+    lead_true = Fe_[:, :M - 1].argmax(1); p_true = pr[np.arange(len(idx)), lead_true]; lead_pred = X[:, :M - 1].argmax(1)
+    srt = np.sort(Fe_[:, :M - 1], 1); wide = (srt[:, -1] - srt[:, -2]) >= 5; ci = np.clip(p_true, 1 / runs, 1)
+    return {"leaderRight%": round(100 * (lead_pred == lead_true).mean(), 1), "sameLeaderAsBase%": round(100 * (Fb_[:, :M - 1].argmax(1) == lead_true).mean(), 1),
+            "leaderRightWhenMargin5Plus%": round(100 * (lead_pred == lead_true)[wide].mean(), 1), "meanLogScore": round(float(np.log(ci).mean()), 4),
+            "brier": round(float(((pr - np.eye(M - 1)[lead_true]) ** 2).sum(1).mean()), 4), "shareMAE_pts": round(float(np.abs(X * 100 - Fe_)[:, BIG].mean()), 3),
+            "expectedRight%": round(100 * float(pr.max(1).mean()), 1)}, pr, lead_true
+
 def main(run_backtest=None, verbose=True):
     run_backtest = ("--backtest" in sys.argv) if run_backtest is None else run_backtest
-    C, model = calibrate(); C["model"] = model
+    C, model = calibrate(); first = (C.get("model") or {}).get("first"); C["model"] = model
+    if first: model["first"] = first                                              # written by py/add_first_votes.py: keep it, the first-vote replay below needs it
     if verbose: print(json.dumps(model, indent=1, ensure_ascii=False))
     def save(): json.dump(C, open(os.path.join(HERE, "data", "constituencies.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     save()
     if run_backtest:
         _, wk, V, land, S25, S21, S17, h17 = load(); S17m = S17.copy(); S17m[:, 7] += S17m[:, 5]; S17m[:, 5] = 0
-        act17 = np.array([1, 1, 1, 1, 1, 0, 1, 1], bool); i17 = np.where(h17)[0]
-        for label, args in (("2021 -> 2025", (S21, S25, dt.date(2021, 9, 26), dt.date(2025, 1, 24), V, land, None, 1000, None)),
-                            ("2017 -> 2021", (S17m, S21, dt.date(2017, 9, 24), dt.date(2021, 8, 27), V, land, i17, 1000, act17))):
+        act17 = np.array([1, 1, 1, 1, 1, 0, 1, 1], bool); i17 = np.where(h17)[0]; S13, F13, h13 = load2013(wk); i13 = np.where(h13 & h17)[0]
+        replays = [("2021 -> 2025", (S21, S25, dt.date(2021, 9, 26), dt.date(2025, 1, 24), V, land, None, 1000, None)),
+                   ("2017 -> 2021", (S17m, S21, dt.date(2017, 9, 24), dt.date(2021, 8, 27), V, land, i17, 1000, act17))]
+        if len(i13): replays.append(("2013 -> 2017", (S13, S17m, dt.date(2013, 9, 22), dt.date(2017, 8, 25), V, land, i13, 1000, act17)))   # no polls before 2016/2017: both lines come out the same
+        for label, args in replays:
             for name, st in (("no state polls  ", False), ("with state polls", True)):
                 r, pr, lt, U = backtest(model, st, *args)
                 if verbose: print(label, name, r)
@@ -214,6 +283,25 @@ def main(run_backtest=None, verbose=True):
         for lo, hi in zip(bins[:-1], bins[1:]):
             m = (fav >= lo) & (fav < hi)
             if m.sum() and verbose: print(f"  favourite given {int(lo*100)}-{int(min(hi,1)*100)}%: n={m.sum():3d}  predicted {100*fav[m].mean():.0f}%  actually won {100*hit[m].mean():.0f}%")
+        if "first" in model:                                                     # the same replays for FIRST votes: who wins the direct mandate?
+            F25, F21, V1, F17, h17f = load_first(); i17f = np.where(h17f & h17)[0]      # 2017 first votes exist only for the unchanged constituencies
+            freplays = [("2021 -> 2025", (F21, F25, S21, dt.date(2021, 9, 26), dt.date(2025, 1, 24), V1, V, land, None, 1000, None)),
+                        ("2017 -> 2021", (F17, F21, S17m, dt.date(2017, 9, 24), dt.date(2021, 8, 27), V1, V, land, i17f, 1000, act17))]
+            i13f = np.where(h13 & h17f & h17)[0]
+            if len(i13f): freplays.append(("2013 -> 2017", (F13, F17, S13, dt.date(2013, 9, 22), dt.date(2017, 8, 25), V1, V, land, i13f, 1000, act17)))
+            for label, args in freplays:
+                for name, st in (("no state polls  ", False), ("with state polls", True)):
+                    r, pr, lt = backtest_first(model, st, *args)
+                    if verbose: print("FIRST votes", label, name, r)
+                    if st:
+                        model.setdefault("validation", {}).setdefault("firstVotes", {})[label[-4:]] = {"leaderRightPct": float(r["leaderRight%"]), "expectedRightPct": float(r["expectedRight%"]),
+                            "sameLeaderAsBasePct": float(r["sameLeaderAsBase%"]), "n": int(len(pr))}
+                        fav = pr.max(1); hit = pr.argmax(1) == lt
+                        if verbose:
+                            print(f"  reliability, first votes {label} with state polls:")
+                            for lo, hi in zip(bins[:-1], bins[1:]):
+                                m = (fav >= lo) & (fav < hi)
+                                if m.sum(): print(f"    favourite given {int(lo*100)}-{int(min(hi,1)*100)}%: n={m.sum():3d}  predicted {100*fav[m].mean():.0f}%  actually won {100*hit[m].mean():.0f}%")
         save()
     return model
 
