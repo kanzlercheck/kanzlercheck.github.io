@@ -1157,7 +1157,8 @@ async function drawConstituencies(){
   let T=K.map((k,j)=>k==="Sonstige"?((pct["Sonstige"]??null)==null&&(pct["Freie Wähler"]??null)==null?nat25[j]:(pct["Sonstige"]||0)+(pct["Freie Wähler"]||0)):(pct[k]!=null?pct[k]:nat25[j]));
   const Ts=T.reduce((a,b)=>a+b,0);T=T.map(v=>v/Ts*100);
   // Apply historical pollster bias: adjust shares by average underestimation/overestimation
-  T=T.map((v,j)=>{const bias=biasAdj[K[j]]||0;return Math.max(0.1,v+bias);});const TTs=T.reduce((a,b)=>a+b,0);T=T.map(v=>v/TTs*100);
+  const BIAS_W=0.15; // share of the 2025 final-poll miss that is carried into the projection (past misses did not repeat in 2017->2021 / 2021->2025 tests, so only a small part)
+  T=T.map((v,j)=>{const bias=(biasAdj[K[j]]||0)*BIAS_W;return Math.max(0.1,v+bias);});const TTs=T.reduce((a,b)=>a+b,0);T=T.map(v=>v/TTs*100);
   // =====================================================================================================================================
   // THE MODEL (numbers come from py/calibrate_model.py, which estimates them from the 2017, 2021 and 2025 results and polls and replays two past elections)
   //  1. Start from the 2025 second-vote result of every constituency.
