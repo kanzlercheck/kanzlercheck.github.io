@@ -171,8 +171,6 @@ def main():
         make_og.main()
     except Exception as e:
         print("  (embed image not updated: %s - run: pip install pillow)" % e)
-<<<<<<< HEAD:update_data.py
-=======
     try:  # re-estimate the constituency model's noise levels + replay test (data/constituencies.json "model")
         import calibrate_model
         print("Constituency model -> data/constituencies.json (a few seconds) ...")
@@ -180,7 +178,6 @@ def main():
         print("  noise levels re-estimated; replay 2021->2025: %s%% of constituency leaders right (expected %s%%)" % (v.get("2025", {}).get("leaderRightPct", "?"), v.get("2025", {}).get("expectedRightPct", "?")))
     except Exception as e:
         print("  (constituency model not updated: %s - run: pip install numpy)" % e)
->>>>>>> voter-migration-og-image:py/update_data.py
     print("Done. Data from dawum.de (ODC-ODbL).")
 
 if __name__ == "__main__":

@@ -376,8 +376,6 @@ body.dark .fac-col.dkb input[type=color]{filter:brightness(2.6)}
 body.dark .mg-bar b[style*="#151518"],body.dark .mg-lab i[style*="#151518"]{background:#7A808A!important}
 .mg-val{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
 @media(max-width:700px){.mg-cols{grid-template-columns:1fr;gap:20px}.mg-row,.mg-key{grid-template-columns:96px 1fr 72px;gap:8px}.mg-item{grid-template-columns:84px 1fr 70px}.mg-sum b{font-size:15px}}
-<<<<<<< HEAD
-=======
 /* constituencies */
 .co-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:24px;align-items:start;margin-bottom:24px}.co-grid .chart-card{margin:0}.co-grid.nomap{grid-template-columns:1fr}
 .co-tools{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:0 0 12px}
@@ -465,4 +463,3 @@ body.dark .mg-bar b[style*="#151518"],body.dark .mg-lab i[style*="#151518"]{back
 @keyframes kcspin{to{transform:rotate(360deg)}}
 @keyframes kcfade{from{opacity:0}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}#tab-overview:not(.loading) #ov-fit{animation:none}}
->>>>>>> voter-migration-og-image
