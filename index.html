@@ -15,8 +15,8 @@
 <meta property="og:title" content="KanzlerCheck: German poll average &amp; Bundestag projection">
 <meta property="og:description" content="German federal election polling average, Bundestag seat projection and government approval. Source: dawum.de">
 <meta property="og:url" content="https://kanzlercheck.github.io/">
-<meta property="og:image" content="https://kanzlercheck.github.io/img/og.png?v=20261013">
-<meta property="og:image:secure_url" content="https://kanzlercheck.github.io/img/og.png?v=20261013">
+<meta property="og:image" content="https://kanzlercheck.github.io/img/og.png?v=20261017">
+<meta property="og:image:secure_url" content="https://kanzlercheck.github.io/img/og.png?v=20261017">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -24,9 +24,9 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="KanzlerCheck: German poll average &amp; Bundestag projection">
 <meta name="twitter:description" content="German federal election polling average, Bundestag seat projection and government approval. Source: dawum.de">
-<meta name="twitter:image" content="https://kanzlercheck.github.io/img/og.png?v=20261013">
+<meta name="twitter:image" content="https://kanzlercheck.github.io/img/og.png?v=20261017">
 <link rel="canonical" href="https://kanzlercheck.github.io/">
-<link rel="stylesheet" href="css/style.css?v=perf21">
+<link rel="stylesheet" href="css/style.css?v=perf23">
 </head>
 <body>
 <script>setTimeout(function(){var o=document.getElementById("tab-overview");if(o)o.classList.remove("loading")},12000)</script>
@@ -115,6 +115,21 @@
     </div>
     <div class="chart-card flow" id="approval-card"><div id="approval-chart"></div><details class="sec fold" id="approval-fold"><summary><h3>Latest polls</h3></summary><div class="scroll" id="approval-table"></div></details></div>
     <div class="chart-card flow" id="chancellor-card"><div id="chancellor-chart"></div><details class="sec fold" id="chancellor-fold"><summary><h3>Latest polls</h3></summary><div class="scroll" id="chancellor-table"></div></details></div>
+    <div class="chart-card flow" id="politician-card" hidden>
+      <div class="filter-row pol-row">
+        <div class="fgroup"><div class="ftitle">Filter by date</div><div class="filters" id="pol-range"></div></div>
+        <div class="fgroup fright"><div class="ftitle">Show</div><div class="filters" id="pol-metric"></div></div>
+        <div class="fgroup fwide pol-who">
+          <div class="ftitle">Politicians</div>
+          <div class="filters" id="pol-party"></div>
+          <button type="button" class="link fac-btn pol-btn" id="pol-pick-btn" aria-expanded="false" aria-controls="pol-panel"><span id="pol-pick-lbl">Choose individual politicians</span><span class="fac-chev" aria-hidden="true"></span></button>
+        </div>
+      </div>
+      <div class="fac-panel" id="pol-panel" hidden><div id="pol-pick"></div></div>
+      <div id="pol-chart"></div>
+      <div class="sec pol-src"><div class="note" id="pol-note"></div></div>
+      <details class="sec fold" id="pol-fold"><summary><h3>Latest poll</h3></summary><div class="scroll" id="pol-table"></div></details>
+    </div>
     <div class="chart-card flow" id="neg-card">
       <div class="seg-bar" id="neg-tabs" role="tablist" aria-label="Poll question"></div>
       <div id="neg-chart"></div>
@@ -145,7 +160,7 @@
 
   <section id="tab-constituencies" class="pane">
     <div class="ov-head"><h2>Battleground Map</h2><p id="co-sub"></p></div>
-    <div class="group-title">Constituencies led (<span id="co-gt-vote">second votes</span>) <span class="gt-hint">· click a party to map where it is strongest</span></div>
+    <div class="group-title">Constituencies led (<span id="co-gt-vote">second votes</span>) <span class="gt-hint">· click a party to highlight the constituencies it leads</span></div>
     <div id="co-chips" class="latest"></div>
     <div class="co-grid" id="co-grid">
       <div class="chart-card flow" id="co-mapcard"><div class="sec">
@@ -228,6 +243,6 @@
 </main>
 <div id="tip" class="tip" hidden></div>
 <script data-goatcounter="https://efefury.goatcounter.com/count" data-goatcounter-settings='{"no_onload":true}' async src="//gc.zgo.at/count.js"></script>
-<script src="js/app.js?v=perf32"></script>
+<script src="js/app.js?v=perf34"></script>
 </body>
 </html>

@@ -407,7 +407,7 @@ body.dark .mg-bar b[style*="#151518"],body.dark .mg-lab i[style*="#151518"]{back
 #co-mapcard .co-bar select{appearance:none;-webkit-appearance:none;border-radius:999px;font-size:12.5px;font-weight:600;padding:7px 30px 7px 14px;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 15px) 50%,calc(100% - 10px) 50%;background-size:5px 5px;background-repeat:no-repeat}
 #co-mapcard .co-bar select:hover{border-color:var(--accent)}
 #co-map svg{width:100%;height:auto;display:block;max-height:640px}
-.wk{fill-rule:evenodd;stroke:var(--cbg);stroke-width:.45px;vector-effect:non-scaling-stroke;cursor:pointer;transition:opacity .15s}.wk.dim{opacity:.22}.wk:hover{stroke:var(--ink);stroke-width:1.3px}.wk.sel{stroke:var(--ink);stroke-width:2px}
+.wk{fill-rule:evenodd;stroke:var(--cbg);stroke-width:.45px;vector-effect:non-scaling-stroke;cursor:pointer;transition:opacity .15s}.wk.dim{opacity:.22}.wk.dim.fade{opacity:.22}.wk:hover{stroke:var(--ink);stroke-width:1.3px}.wk.sel{stroke:var(--ink);stroke-width:2px}
 #co-map svg,#ov-comap svg{width:100%;height:auto;display:block}#co-map{cursor:grab;user-select:none;-webkit-user-select:none;overflow:hidden;border-radius:8px}#co-map.grab{cursor:grabbing}
 #ov-comap{max-width:380px;margin:0 auto}
 .co-mapwrap{position:relative}.co-zoom{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.18)}
@@ -479,3 +479,26 @@ body.dark .mg-bar b[style*="#151518"],body.dark .mg-lab i[style*="#151518"]{back
 @keyframes kcspin{to{transform:rotate(360deg)}}
 @keyframes kcfade{from{opacity:0}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}#tab-overview:not(.loading) #ov-fit{animation:none}}
+/* politician satisfaction card (Poll Average tab) */
+.filter-row .fwide{grid-column:1/-1}
+.pol-src{padding:0 26px 6px}.pol-src .note{margin-top:0;line-height:1.5}
+.pol-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;vertical-align:baseline}
+.pol-tbl td:first-child{color:var(--cink)}
+.pol-chg{font-weight:600}
+.filter-row.pol-row{grid-template-columns:1fr auto}
+.pol-who .filters{margin-bottom:2px}
+.pol-btn{margin-top:8px;border-left:0;padding:4px 0}
+.pol-btn:hover{text-decoration:underline}
+#pol-panel{margin-top:14px;padding:6px 14px 8px}
+.pol-grp{display:grid;grid-template-columns:96px 1fr;gap:4px 12px;align-items:start;padding:9px 0;border-top:1px solid var(--cgrid)}
+.pol-grp:first-child{border-top:0}
+.pol-gl{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding-top:6px}
+.pol-gl i{width:9px;height:9px;border-radius:3px;flex:none}
+.pol-grp .filters{padding:0}
+.pol-grp .faction-chip i{box-shadow:0 0 0 1.5px var(--paper)}
+.pol-grp .faction-chip.on i{box-shadow:0 0 0 1.5px var(--on-accent)}
+body.dark .pol-gl i.dkb{background:#7A808A!important}
+@media(max-width:600px){.pol-src{padding:0 14px 4px}.filter-row.pol-row{grid-template-columns:1fr;gap:12px}.filter-row.pol-row .fright{justify-self:start}.fright .filters{justify-content:flex-start}.pol-btn{min-height:40px}#pol-panel{margin:10px 14px 4px;padding:4px 12px 6px}.pol-grp{grid-template-columns:1fr;gap:2px}.pol-gl{padding-top:0}}
+
+/* battleground map legend: highlighted leaders */
+.pills i.hl{box-shadow:none}.pills i.fd{background:#E2E0DA}body.dark .pills i.fd{background:#2A2E36;box-shadow:inset 0 0 0 1px var(--line)}

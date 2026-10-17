@@ -4,6 +4,7 @@
   "sourceUrl": "https://dawum.de",
   "pollsCsv": "data/germanpolls.csv",
   "approvalCsv": "data/government_approval.csv",
+  "politiciansJson": "data/politicians_approval.json",
   "threshold": 5,
   "seats": 630,
   "hiddenParties": [],

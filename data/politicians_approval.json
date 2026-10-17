@@ -1,0 +1,2016 @@
+[
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2021-12-01",
+   "institution": "infratest dimap",
+   "estimated_from_chart": true
+  },
+  "results": [
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "satisfied_pct": 32
+   },
+   {
+    "name": "Robert Habeck",
+    "party": "Grüne",
+    "satisfied_pct": 48
+   },
+   {
+    "name": "Olaf Scholz",
+    "party": "SPD",
+    "satisfied_pct": 60
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "satisfied_pct": 14
+   },
+   {
+    "name": "Christian Lindner",
+    "party": "FDP",
+    "satisfied_pct": 49
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2022-06-01",
+   "institution": "infratest dimap",
+   "estimated_from_chart": true
+  },
+  "results": [
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "satisfied_pct": 35
+   },
+   {
+    "name": "Robert Habeck",
+    "party": "Grüne",
+    "satisfied_pct": 56
+   },
+   {
+    "name": "Olaf Scholz",
+    "party": "SPD",
+    "satisfied_pct": 39
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "satisfied_pct": 15
+   },
+   {
+    "name": "Christian Lindner",
+    "party": "FDP",
+    "satisfied_pct": 34
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2022-12-01",
+   "institution": "infratest dimap",
+   "estimated_from_chart": true
+  },
+  "results": [
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "satisfied_pct": 30
+   },
+   {
+    "name": "Robert Habeck",
+    "party": "Grüne",
+    "satisfied_pct": 38
+   },
+   {
+    "name": "Olaf Scholz",
+    "party": "SPD",
+    "satisfied_pct": 36
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "satisfied_pct": 18
+   },
+   {
+    "name": "Christian Lindner",
+    "party": "FDP",
+    "satisfied_pct": 30
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2023-06-01",
+   "institution": "infratest dimap",
+   "estimated_from_chart": true
+  },
+  "results": [
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "satisfied_pct": 31
+   },
+   {
+    "name": "Robert Habeck",
+    "party": "Grüne",
+    "satisfied_pct": 23
+   },
+   {
+    "name": "Olaf Scholz",
+    "party": "SPD",
+    "satisfied_pct": 32
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "satisfied_pct": 21
+   },
+   {
+    "name": "Christian Lindner",
+    "party": "FDP",
+    "satisfied_pct": 32
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2023-12-01",
+   "institution": "infratest dimap",
+   "estimated_from_chart": true
+  },
+  "results": [
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "satisfied_pct": 32
+   },
+   {
+    "name": "Robert Habeck",
+    "party": "Grüne",
+    "satisfied_pct": 30
+   },
+   {
+    "name": "Olaf Scholz",
+    "party": "SPD",
+    "satisfied_pct": 20
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "satisfied_pct": 21
+   },
+   {
+    "name": "Christian Lindner",
+    "party": "FDP",
+    "satisfied_pct": 29
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2024-06-01",
+   "institution": "infratest dimap",
+   "estimated_from_chart": true
+  },
+  "results": [
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "satisfied_pct": 34
+   },
+   {
+    "name": "Robert Habeck",
+    "party": "Grüne",
+    "satisfied_pct": 26
+   },
+   {
+    "name": "Olaf Scholz",
+    "party": "SPD",
+    "satisfied_pct": 25
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "satisfied_pct": 20
+   },
+   {
+    "name": "Christian Lindner",
+    "party": "FDP",
+    "satisfied_pct": 20
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2024-12-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": null,
+    "satisfied_pct": 30,
+    "dissatisfied_pct": null,
+    "familiarity_pct": null
+   },
+   {
+    "name": "Robert Habeck",
+    "party": "Grüne",
+    "change": null,
+    "satisfied_pct": 29,
+    "dissatisfied_pct": null,
+    "familiarity_pct": null
+   },
+   {
+    "name": "Olaf Scholz",
+    "party": "SPD",
+    "change": null,
+    "satisfied_pct": 23,
+    "dissatisfied_pct": null,
+    "familiarity_pct": null
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "change": null,
+    "satisfied_pct": 21,
+    "dissatisfied_pct": null,
+    "familiarity_pct": null
+   },
+   {
+    "name": "Christian Lindner",
+    "party": "FDP",
+    "change": null,
+    "satisfied_pct": 20,
+    "dissatisfied_pct": null,
+    "familiarity_pct": null
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2025-01-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Robert Habeck",
+    "party": "Grüne",
+    "change": -1,
+    "satisfied_pct": 28,
+    "dissatisfied_pct": 65,
+    "familiarity_pct": 93
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": -5,
+    "satisfied_pct": 25,
+    "dissatisfied_pct": 64,
+    "familiarity_pct": 89
+   },
+   {
+    "name": "Sahra Wagenknecht",
+    "party": "BSW",
+    "change": 1,
+    "satisfied_pct": 21,
+    "dissatisfied_pct": 68,
+    "familiarity_pct": 89
+   },
+   {
+    "name": "Christian Lindner",
+    "party": "FDP",
+    "change": 1,
+    "satisfied_pct": 21,
+    "dissatisfied_pct": 73,
+    "familiarity_pct": 94
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "change": -1,
+    "satisfied_pct": 20,
+    "dissatisfied_pct": 65,
+    "familiarity_pct": 85
+   },
+   {
+    "name": "Olaf Scholz",
+    "party": "SPD",
+    "change": -3,
+    "satisfied_pct": 20,
+    "dissatisfied_pct": 77,
+    "familiarity_pct": 97
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2025-01-15",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Robert Habeck",
+    "party": "Grüne",
+    "change": 1,
+    "satisfied_pct": 29,
+    "dissatisfied_pct": 66,
+    "familiarity_pct": 95
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": 3,
+    "satisfied_pct": 28,
+    "dissatisfied_pct": 63,
+    "familiarity_pct": 91
+   },
+   {
+    "name": "Olaf Scholz",
+    "party": "SPD",
+    "change": 4,
+    "satisfied_pct": 24,
+    "dissatisfied_pct": 73,
+    "familiarity_pct": 97
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "change": 2,
+    "satisfied_pct": 22,
+    "dissatisfied_pct": 68,
+    "familiarity_pct": 90
+   },
+   {
+    "name": "Sahra Wagenknecht",
+    "party": "BSW",
+    "change": 0,
+    "satisfied_pct": 21,
+    "dissatisfied_pct": 68,
+    "familiarity_pct": 89
+   },
+   {
+    "name": "Christian Lindner",
+    "party": "FDP",
+    "change": -4,
+    "satisfied_pct": 17,
+    "dissatisfied_pct": 77,
+    "familiarity_pct": 94
+   },
+   {
+    "name": "Heidi Reichinnek",
+    "party": "Linke",
+    "change": null,
+    "satisfied_pct": 5,
+    "dissatisfied_pct": 12,
+    "familiarity_pct": 17
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2025-02-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": 4,
+    "satisfied_pct": 32,
+    "dissatisfied_pct": 62,
+    "familiarity_pct": 94
+   },
+   {
+    "name": "Robert Habeck",
+    "party": "Grüne",
+    "change": -2,
+    "satisfied_pct": 27,
+    "dissatisfied_pct": 67,
+    "familiarity_pct": 94
+   },
+   {
+    "name": "Christian Lindner",
+    "party": "FDP",
+    "change": 6,
+    "satisfied_pct": 23,
+    "dissatisfied_pct": 72,
+    "familiarity_pct": 95
+   },
+   {
+    "name": "Olaf Scholz",
+    "party": "SPD",
+    "change": -1,
+    "satisfied_pct": 23,
+    "dissatisfied_pct": 74,
+    "familiarity_pct": 97
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "change": 0,
+    "satisfied_pct": 22,
+    "dissatisfied_pct": 69,
+    "familiarity_pct": 91
+   },
+   {
+    "name": "Sahra Wagenknecht",
+    "party": "BSW",
+    "change": -1,
+    "satisfied_pct": 20,
+    "dissatisfied_pct": 70,
+    "familiarity_pct": 90
+   },
+   {
+    "name": "Jan van Aken",
+    "party": "Linke",
+    "change": null,
+    "satisfied_pct": 6,
+    "dissatisfied_pct": 22,
+    "familiarity_pct": 28
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2025-03-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": 1,
+    "satisfied_pct": 62,
+    "dissatisfied_pct": 22,
+    "familiarity_pct": 84
+   },
+   {
+    "name": "Markus Söder",
+    "party": "CSU",
+    "change": -5,
+    "satisfied_pct": 37,
+    "dissatisfied_pct": 54,
+    "familiarity_pct": 91
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": -5,
+    "satisfied_pct": 30,
+    "dissatisfied_pct": 60,
+    "familiarity_pct": 90
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": null,
+    "satisfied_pct": 28,
+    "dissatisfied_pct": 42,
+    "familiarity_pct": 70
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2025-04-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": -2,
+    "satisfied_pct": 60,
+    "dissatisfied_pct": 26,
+    "familiarity_pct": 86
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": 7,
+    "satisfied_pct": 35,
+    "dissatisfied_pct": 38,
+    "familiarity_pct": 73
+   },
+   {
+    "name": "Markus Söder",
+    "party": "CSU",
+    "change": -2,
+    "satisfied_pct": 35,
+    "dissatisfied_pct": 58,
+    "familiarity_pct": 93
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": -5,
+    "satisfied_pct": 25,
+    "dissatisfied_pct": 70,
+    "familiarity_pct": 95
+   },
+   {
+    "name": "Saskia Esken",
+    "party": "SPD",
+    "change": -4,
+    "satisfied_pct": 13,
+    "dissatisfied_pct": 55,
+    "familiarity_pct": 68
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2025-06-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": 1,
+    "satisfied_pct": 61,
+    "dissatisfied_pct": 26,
+    "familiarity_pct": 87
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": 4,
+    "satisfied_pct": 39,
+    "dissatisfied_pct": 40,
+    "familiarity_pct": 79
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": 14,
+    "satisfied_pct": 39,
+    "dissatisfied_pct": 56,
+    "familiarity_pct": 95
+   },
+   {
+    "name": "Alexander Dobrindt",
+    "party": "CSU",
+    "change": 13,
+    "satisfied_pct": 32,
+    "dissatisfied_pct": 47,
+    "familiarity_pct": 79
+   },
+   {
+    "name": "Johann Wadephul",
+    "party": "CDU",
+    "change": null,
+    "satisfied_pct": 30,
+    "dissatisfied_pct": 25,
+    "familiarity_pct": 55
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "change": 2,
+    "satisfied_pct": 26,
+    "dissatisfied_pct": 66,
+    "familiarity_pct": 92
+   },
+   {
+    "name": "Heidi Reichinnek",
+    "party": "Linke",
+    "change": 5,
+    "satisfied_pct": 17,
+    "dissatisfied_pct": 28,
+    "familiarity_pct": 45
+   },
+   {
+    "name": "Katharina Dröge",
+    "party": "Grüne",
+    "change": null,
+    "satisfied_pct": 12,
+    "dissatisfied_pct": 26,
+    "familiarity_pct": 38
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2025-07-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": 0,
+    "satisfied_pct": 61,
+    "dissatisfied_pct": 25,
+    "familiarity_pct": 86
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": 3,
+    "satisfied_pct": 42,
+    "dissatisfied_pct": 53,
+    "familiarity_pct": 95
+   },
+   {
+    "name": "Bärbel Bas",
+    "party": "SPD",
+    "change": null,
+    "satisfied_pct": 32,
+    "dissatisfied_pct": 28,
+    "familiarity_pct": 60
+   },
+   {
+    "name": "Johann Wadephul",
+    "party": "CDU",
+    "change": 2,
+    "satisfied_pct": 32,
+    "dissatisfied_pct": 29,
+    "familiarity_pct": 61
+   },
+   {
+    "name": "Julia Klöckner",
+    "party": "CDU",
+    "change": 10,
+    "satisfied_pct": 31,
+    "dissatisfied_pct": 38,
+    "familiarity_pct": 69
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": -9,
+    "satisfied_pct": 30,
+    "dissatisfied_pct": 50,
+    "familiarity_pct": 80
+   },
+   {
+    "name": "Alexander Dobrindt",
+    "party": "CSU",
+    "change": -3,
+    "satisfied_pct": 29,
+    "dissatisfied_pct": 47,
+    "familiarity_pct": 76
+   },
+   {
+    "name": "Heidi Reichinnek",
+    "party": "Linke",
+    "change": 3,
+    "satisfied_pct": 20,
+    "dissatisfied_pct": 33,
+    "familiarity_pct": 53
+   },
+   {
+    "name": "Tino Chrupalla",
+    "party": "AfD",
+    "change": 4,
+    "satisfied_pct": 17,
+    "dissatisfied_pct": 50,
+    "familiarity_pct": 67
+   },
+   {
+    "name": "Britta Haßelmann",
+    "party": "Grüne",
+    "change": null,
+    "satisfied_pct": 14,
+    "dissatisfied_pct": 24,
+    "familiarity_pct": 38
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2025-08-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": -1,
+    "satisfied_pct": 60,
+    "dissatisfied_pct": 27,
+    "familiarity_pct": 87
+   },
+   {
+    "name": "Markus Söder",
+    "party": "CSU",
+    "change": 3,
+    "satisfied_pct": 38,
+    "dissatisfied_pct": 55,
+    "familiarity_pct": 93
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": -10,
+    "satisfied_pct": 32,
+    "dissatisfied_pct": 65,
+    "familiarity_pct": 97
+   },
+   {
+    "name": "Johann Wadephul",
+    "party": "CDU",
+    "change": -1,
+    "satisfied_pct": 31,
+    "dissatisfied_pct": 32,
+    "familiarity_pct": 63
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": 0,
+    "satisfied_pct": 30,
+    "dissatisfied_pct": 53,
+    "familiarity_pct": 83
+   },
+   {
+    "name": "Bärbel Bas",
+    "party": "SPD",
+    "change": -6,
+    "satisfied_pct": 26,
+    "dissatisfied_pct": 36,
+    "familiarity_pct": 62
+   },
+   {
+    "name": "Alexander Dobrindt",
+    "party": "CSU",
+    "change": -3,
+    "satisfied_pct": 26,
+    "dissatisfied_pct": 53,
+    "familiarity_pct": 79
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "change": -2,
+    "satisfied_pct": 24,
+    "dissatisfied_pct": 68,
+    "familiarity_pct": 92
+   },
+   {
+    "name": "Jan van Aken",
+    "party": "Linke",
+    "change": 8,
+    "satisfied_pct": 14,
+    "dissatisfied_pct": 31,
+    "familiarity_pct": 45
+   },
+   {
+    "name": "Katharina Dröge",
+    "party": "Grüne",
+    "change": 1,
+    "satisfied_pct": 13,
+    "dissatisfied_pct": 31,
+    "familiarity_pct": 44
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2025-09-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": 0,
+    "satisfied_pct": 60,
+    "dissatisfied_pct": 27,
+    "familiarity_pct": 87
+   },
+   {
+    "name": "Johann Wadephul",
+    "party": "CDU",
+    "change": 4,
+    "satisfied_pct": 35,
+    "dissatisfied_pct": 29,
+    "familiarity_pct": 64
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": 1,
+    "satisfied_pct": 33,
+    "dissatisfied_pct": 62,
+    "familiarity_pct": 95
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": 1,
+    "satisfied_pct": 31,
+    "dissatisfied_pct": 48,
+    "familiarity_pct": 79
+   },
+   {
+    "name": "Bärbel Bas",
+    "party": "SPD",
+    "change": 3,
+    "satisfied_pct": 29,
+    "dissatisfied_pct": 34,
+    "familiarity_pct": 63
+   },
+   {
+    "name": "Alexander Dobrindt",
+    "party": "CSU",
+    "change": -1,
+    "satisfied_pct": 25,
+    "dissatisfied_pct": 51,
+    "familiarity_pct": 76
+   },
+   {
+    "name": "Tino Chrupalla",
+    "party": "AfD",
+    "change": 3,
+    "satisfied_pct": 20,
+    "dissatisfied_pct": 48,
+    "familiarity_pct": 68
+   },
+   {
+    "name": "Heidi Reichinnek",
+    "party": "Linke",
+    "change": -1,
+    "satisfied_pct": 19,
+    "dissatisfied_pct": 32,
+    "familiarity_pct": 51
+   },
+   {
+    "name": "Britta Haßelmann",
+    "party": "Grüne",
+    "change": -2,
+    "satisfied_pct": 12,
+    "dissatisfied_pct": 26,
+    "familiarity_pct": 38
+   },
+   {
+    "name": "Jens Spahn",
+    "party": "CDU",
+    "change": -14,
+    "satisfied_pct": 12,
+    "dissatisfied_pct": 78,
+    "familiarity_pct": 90
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2025-10-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": -4,
+    "satisfied_pct": 56,
+    "dissatisfied_pct": 31,
+    "familiarity_pct": 87
+   },
+   {
+    "name": "Johann Wadephul",
+    "party": "CDU",
+    "change": -1,
+    "satisfied_pct": 34,
+    "dissatisfied_pct": 35,
+    "familiarity_pct": 69
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": 0,
+    "satisfied_pct": 31,
+    "dissatisfied_pct": 54,
+    "familiarity_pct": 85
+   },
+   {
+    "name": "Bärbel Bas",
+    "party": "SPD",
+    "change": 0,
+    "satisfied_pct": 29,
+    "dissatisfied_pct": 38,
+    "familiarity_pct": 67
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": -6,
+    "satisfied_pct": 27,
+    "dissatisfied_pct": 69,
+    "familiarity_pct": 96
+   },
+   {
+    "name": "Alexander Dobrindt",
+    "party": "CSU",
+    "change": 1,
+    "satisfied_pct": 26,
+    "dissatisfied_pct": 54,
+    "familiarity_pct": 80
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "change": 2,
+    "satisfied_pct": 26,
+    "dissatisfied_pct": 65,
+    "familiarity_pct": 91
+   },
+   {
+    "name": "Katherina Reiche",
+    "party": "CDU",
+    "change": null,
+    "satisfied_pct": 15,
+    "dissatisfied_pct": 39,
+    "familiarity_pct": 54
+   },
+   {
+    "name": "Jan van Aken",
+    "party": "Linke",
+    "change": -1,
+    "satisfied_pct": 13,
+    "dissatisfied_pct": 32,
+    "familiarity_pct": 45
+   },
+   {
+    "name": "Katharina Dröge",
+    "party": "Grüne",
+    "change": -1,
+    "satisfied_pct": 12,
+    "dissatisfied_pct": 30,
+    "familiarity_pct": 42
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2025-11-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Alexander Dobrindt",
+    "party": "CSU",
+    "change": 0,
+    "satisfied_pct": 26,
+    "dissatisfied_pct": 55,
+    "familiarity_pct": 81
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": -5,
+    "satisfied_pct": 26,
+    "dissatisfied_pct": 57,
+    "familiarity_pct": 83
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": -1,
+    "satisfied_pct": 26,
+    "dissatisfied_pct": 71,
+    "familiarity_pct": 97
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2025-12-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": 2,
+    "satisfied_pct": 58,
+    "dissatisfied_pct": 29,
+    "familiarity_pct": 87
+   },
+   {
+    "name": "Johann Wadephul",
+    "party": "CDU",
+    "change": -1,
+    "satisfied_pct": 33,
+    "dissatisfied_pct": 39,
+    "familiarity_pct": 72
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": 4,
+    "satisfied_pct": 30,
+    "dissatisfied_pct": 54,
+    "familiarity_pct": 84
+   },
+   {
+    "name": "Alexander Dobrindt",
+    "party": "CSU",
+    "change": 2,
+    "satisfied_pct": 28,
+    "dissatisfied_pct": 53,
+    "familiarity_pct": 81
+   },
+   {
+    "name": "Bärbel Bas",
+    "party": "SPD",
+    "change": -3,
+    "satisfied_pct": 26,
+    "dissatisfied_pct": 46,
+    "familiarity_pct": 72
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": -3,
+    "satisfied_pct": 23,
+    "dissatisfied_pct": 74,
+    "familiarity_pct": 97
+   },
+   {
+    "name": "Tino Chrupalla",
+    "party": "AfD",
+    "change": 0,
+    "satisfied_pct": 20,
+    "dissatisfied_pct": 55,
+    "familiarity_pct": 75
+   },
+   {
+    "name": "Heidi Reichinnek",
+    "party": "Linke",
+    "change": 0,
+    "satisfied_pct": 19,
+    "dissatisfied_pct": 38,
+    "familiarity_pct": 57
+   },
+   {
+    "name": "Jens Spahn",
+    "party": "CDU",
+    "change": 4,
+    "satisfied_pct": 16,
+    "dissatisfied_pct": 77,
+    "familiarity_pct": 93
+   },
+   {
+    "name": "Britta Haßelmann",
+    "party": "Grüne",
+    "change": 0,
+    "satisfied_pct": 12,
+    "dissatisfied_pct": 30,
+    "familiarity_pct": 42
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2026-01-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": -1,
+    "satisfied_pct": 57,
+    "dissatisfied_pct": 29,
+    "familiarity_pct": 86
+   },
+   {
+    "name": "Markus Söder",
+    "party": "CSU",
+    "change": -5,
+    "satisfied_pct": 33,
+    "dissatisfied_pct": 58,
+    "familiarity_pct": 91
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": -4,
+    "satisfied_pct": 26,
+    "dissatisfied_pct": 56,
+    "familiarity_pct": 82
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "change": -1,
+    "satisfied_pct": 25,
+    "dissatisfied_pct": 64,
+    "familiarity_pct": 89
+   },
+   {
+    "name": "Alexander Dobrindt",
+    "party": "CSU",
+    "change": -4,
+    "satisfied_pct": 24,
+    "dissatisfied_pct": 52,
+    "familiarity_pct": 76
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": 1,
+    "satisfied_pct": 24,
+    "dissatisfied_pct": 73,
+    "familiarity_pct": 97
+   },
+   {
+    "name": "Katherina Reiche",
+    "party": "CDU",
+    "change": -1,
+    "satisfied_pct": 14,
+    "dissatisfied_pct": 43,
+    "familiarity_pct": 57
+   },
+   {
+    "name": "Jan van Aken",
+    "party": "Linke",
+    "change": 0,
+    "satisfied_pct": 13,
+    "dissatisfied_pct": 29,
+    "familiarity_pct": 42
+   },
+   {
+    "name": "Franziska Brantner",
+    "party": "Grüne",
+    "change": null,
+    "satisfied_pct": 9,
+    "dissatisfied_pct": 26,
+    "familiarity_pct": 35
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2026-02-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": 0,
+    "satisfied_pct": 57,
+    "dissatisfied_pct": 32,
+    "familiarity_pct": 89
+   },
+   {
+    "name": "Johann Wadephul",
+    "party": "CDU",
+    "change": -2,
+    "satisfied_pct": 31,
+    "dissatisfied_pct": 40,
+    "familiarity_pct": 71
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": 5,
+    "satisfied_pct": 31,
+    "dissatisfied_pct": 52,
+    "familiarity_pct": 83
+   },
+   {
+    "name": "Bärbel Bas",
+    "party": "SPD",
+    "change": 1,
+    "satisfied_pct": 27,
+    "dissatisfied_pct": 45,
+    "familiarity_pct": 72
+   },
+   {
+    "name": "Alexander Dobrindt",
+    "party": "CSU",
+    "change": 3,
+    "satisfied_pct": 27,
+    "dissatisfied_pct": 53,
+    "familiarity_pct": 80
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": 1,
+    "satisfied_pct": 25,
+    "dissatisfied_pct": 74,
+    "familiarity_pct": 99
+   },
+   {
+    "name": "Heidi Reichinnek",
+    "party": "Linke",
+    "change": -1,
+    "satisfied_pct": 18,
+    "dissatisfied_pct": 38,
+    "familiarity_pct": 56
+   },
+   {
+    "name": "Katherina Reiche",
+    "party": "CDU",
+    "change": 4,
+    "satisfied_pct": 18,
+    "dissatisfied_pct": 46,
+    "familiarity_pct": 64
+   },
+   {
+    "name": "Tino Chrupalla",
+    "party": "AfD",
+    "change": -3,
+    "satisfied_pct": 17,
+    "dissatisfied_pct": 55,
+    "familiarity_pct": 72
+   },
+   {
+    "name": "Britta Haßelmann",
+    "party": "Grüne",
+    "change": 1,
+    "satisfied_pct": 13,
+    "dissatisfied_pct": 29,
+    "familiarity_pct": 42
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2026-03-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": -2,
+    "satisfied_pct": 55,
+    "dissatisfied_pct": 33,
+    "familiarity_pct": 88
+   },
+   {
+    "name": "Johann Wadephul",
+    "party": "CDU",
+    "change": 2,
+    "satisfied_pct": 33,
+    "dissatisfied_pct": 39,
+    "familiarity_pct": 72
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": 2,
+    "satisfied_pct": 33,
+    "dissatisfied_pct": 50,
+    "familiarity_pct": 83
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": 4,
+    "satisfied_pct": 29,
+    "dissatisfied_pct": 68,
+    "familiarity_pct": 97
+   },
+   {
+    "name": "Alexander Dobrindt",
+    "party": "CSU",
+    "change": 1,
+    "satisfied_pct": 28,
+    "dissatisfied_pct": 52,
+    "familiarity_pct": 80
+   },
+   {
+    "name": "Bärbel Bas",
+    "party": "SPD",
+    "change": -2,
+    "satisfied_pct": 25,
+    "dissatisfied_pct": 46,
+    "familiarity_pct": 71
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "change": 0,
+    "satisfied_pct": 25,
+    "dissatisfied_pct": 65,
+    "familiarity_pct": 90
+   },
+   {
+    "name": "Jan van Aken",
+    "party": "Linke",
+    "change": 0,
+    "satisfied_pct": 13,
+    "dissatisfied_pct": 31,
+    "familiarity_pct": 44
+   },
+   {
+    "name": "Katherina Reiche",
+    "party": "CDU",
+    "change": -5,
+    "satisfied_pct": 13,
+    "dissatisfied_pct": 50,
+    "familiarity_pct": 63
+   },
+   {
+    "name": "Franziska Brantner",
+    "party": "Grüne",
+    "change": 3,
+    "satisfied_pct": 12,
+    "dissatisfied_pct": 28,
+    "familiarity_pct": 40
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2026-04-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": -6,
+    "satisfied_pct": 49,
+    "dissatisfied_pct": 36,
+    "familiarity_pct": 85
+   },
+   {
+    "name": "Johann Wadephul",
+    "party": "CDU",
+    "change": -3,
+    "satisfied_pct": 30,
+    "dissatisfied_pct": 42,
+    "familiarity_pct": 72
+   },
+   {
+    "name": "Markus Söder",
+    "party": "CSU",
+    "change": -6,
+    "satisfied_pct": 27,
+    "dissatisfied_pct": 63,
+    "familiarity_pct": 90
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": -8,
+    "satisfied_pct": 21,
+    "dissatisfied_pct": 76,
+    "familiarity_pct": 97
+   },
+   {
+    "name": "Tino Chrupalla",
+    "party": "AfD",
+    "change": 1,
+    "satisfied_pct": 18,
+    "dissatisfied_pct": 55,
+    "familiarity_pct": 73
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": -15,
+    "satisfied_pct": 18,
+    "dissatisfied_pct": 67,
+    "familiarity_pct": 85
+   },
+   {
+    "name": "Heidi Reichinnek",
+    "party": "Linke",
+    "change": -3,
+    "satisfied_pct": 15,
+    "dissatisfied_pct": 44,
+    "familiarity_pct": 59
+   },
+   {
+    "name": "Bärbel Bas",
+    "party": "SPD",
+    "change": -10,
+    "satisfied_pct": 15,
+    "dissatisfied_pct": 57,
+    "familiarity_pct": 72
+   },
+   {
+    "name": "Katherina Reiche",
+    "party": "CDU",
+    "change": -1,
+    "satisfied_pct": 12,
+    "dissatisfied_pct": 56,
+    "familiarity_pct": 68
+   },
+   {
+    "name": "Britta Haßelmann",
+    "party": "Grüne",
+    "change": -6,
+    "satisfied_pct": 7,
+    "dissatisfied_pct": 30,
+    "familiarity_pct": 37
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2026-05-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": 7,
+    "satisfied_pct": 56,
+    "dissatisfied_pct": 32,
+    "familiarity_pct": 88
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "change": 1,
+    "satisfied_pct": 26,
+    "dissatisfied_pct": 64,
+    "familiarity_pct": 90
+   },
+   {
+    "name": "Alexander Dobrindt",
+    "party": "CSU",
+    "change": -3,
+    "satisfied_pct": 25,
+    "dissatisfied_pct": 51,
+    "familiarity_pct": 76
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": 3,
+    "satisfied_pct": 21,
+    "dissatisfied_pct": 64,
+    "familiarity_pct": 85
+   },
+   {
+    "name": "Bärbel Bas",
+    "party": "SPD",
+    "change": 3,
+    "satisfied_pct": 18,
+    "dissatisfied_pct": 54,
+    "familiarity_pct": 72
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": -5,
+    "satisfied_pct": 16,
+    "dissatisfied_pct": 83,
+    "familiarity_pct": 99
+   },
+   {
+    "name": "Franziska Brantner",
+    "party": "Grüne",
+    "change": 0,
+    "satisfied_pct": 12,
+    "dissatisfied_pct": 29,
+    "familiarity_pct": 41
+   },
+   {
+    "name": "Katherina Reiche",
+    "party": "CDU",
+    "change": 0,
+    "satisfied_pct": 12,
+    "dissatisfied_pct": 59,
+    "familiarity_pct": 71
+   },
+   {
+    "name": "Jens Spahn",
+    "party": "CDU",
+    "change": -4,
+    "satisfied_pct": 12,
+    "dissatisfied_pct": 78,
+    "familiarity_pct": 90
+   },
+   {
+    "name": "Ines Schwerdtner",
+    "party": "Linke",
+    "change": null,
+    "satisfied_pct": 7,
+    "dissatisfied_pct": 21,
+    "familiarity_pct": 28
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2026-06-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": -2,
+    "satisfied_pct": 54,
+    "dissatisfied_pct": 34,
+    "familiarity_pct": 88
+   },
+   {
+    "name": "Hendrik Wüst",
+    "party": "CDU",
+    "change": 2,
+    "satisfied_pct": 31,
+    "dissatisfied_pct": 31,
+    "familiarity_pct": 62
+   },
+   {
+    "name": "Johann Wadephul",
+    "party": "CDU",
+    "change": 0,
+    "satisfied_pct": 30,
+    "dissatisfied_pct": 40,
+    "familiarity_pct": 70
+   },
+   {
+    "name": "Wolfgang Kubicki",
+    "party": "FDP",
+    "change": -11,
+    "satisfied_pct": 21,
+    "dissatisfied_pct": 50,
+    "familiarity_pct": 71
+   },
+   {
+    "name": "Alexander Dobrindt",
+    "party": "CSU",
+    "change": -4,
+    "satisfied_pct": 21,
+    "dissatisfied_pct": 58,
+    "familiarity_pct": 79
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": 0,
+    "satisfied_pct": 21,
+    "dissatisfied_pct": 63,
+    "familiarity_pct": 84
+   },
+   {
+    "name": "Tino Chrupalla",
+    "party": "AfD",
+    "change": 1,
+    "satisfied_pct": 19,
+    "dissatisfied_pct": 55,
+    "familiarity_pct": 74
+   },
+   {
+    "name": "Heidi Reichinnek",
+    "party": "Linke",
+    "change": 3,
+    "satisfied_pct": 18,
+    "dissatisfied_pct": 43,
+    "familiarity_pct": 61
+   },
+   {
+    "name": "Bärbel Bas",
+    "party": "SPD",
+    "change": 0,
+    "satisfied_pct": 18,
+    "dissatisfied_pct": 58,
+    "familiarity_pct": 76
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": 0,
+    "satisfied_pct": 16,
+    "dissatisfied_pct": 82,
+    "familiarity_pct": 98
+   },
+   {
+    "name": "Katherina Reiche",
+    "party": "CDU",
+    "change": 3,
+    "satisfied_pct": 15,
+    "dissatisfied_pct": 57,
+    "familiarity_pct": 72
+   },
+   {
+    "name": "Britta Haßelmann",
+    "party": "Grüne",
+    "change": 3,
+    "satisfied_pct": 10,
+    "dissatisfied_pct": 31,
+    "familiarity_pct": 41
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2026-07-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": -2,
+    "satisfied_pct": 52,
+    "dissatisfied_pct": 36,
+    "familiarity_pct": 88
+   },
+   {
+    "name": "Johann Wadephul",
+    "party": "CDU",
+    "change": -2,
+    "satisfied_pct": 28,
+    "dissatisfied_pct": 44,
+    "familiarity_pct": 72
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "change": 1,
+    "satisfied_pct": 27,
+    "dissatisfied_pct": 63,
+    "familiarity_pct": 90
+   },
+   {
+    "name": "Alexander Dobrindt",
+    "party": "CSU",
+    "change": 1,
+    "satisfied_pct": 22,
+    "dissatisfied_pct": 58,
+    "familiarity_pct": 80
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": 0,
+    "satisfied_pct": 21,
+    "dissatisfied_pct": 64,
+    "familiarity_pct": 85
+   },
+   {
+    "name": "Bärbel Bas",
+    "party": "SPD",
+    "change": 0,
+    "satisfied_pct": 18,
+    "dissatisfied_pct": 60,
+    "familiarity_pct": 78
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": -3,
+    "satisfied_pct": 13,
+    "dissatisfied_pct": 84,
+    "familiarity_pct": 97
+   },
+   {
+    "name": "Franziska Brantner",
+    "party": "Grüne",
+    "change": -1,
+    "satisfied_pct": 11,
+    "dissatisfied_pct": 32,
+    "familiarity_pct": 43
+   },
+   {
+    "name": "Katherina Reiche",
+    "party": "CDU",
+    "change": -4,
+    "satisfied_pct": 11,
+    "dissatisfied_pct": 63,
+    "familiarity_pct": 74
+   },
+   {
+    "name": "Ines Schwerdtner",
+    "party": "Linke",
+    "change": 2,
+    "satisfied_pct": 9,
+    "dissatisfied_pct": 25,
+    "familiarity_pct": 34
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2026-08-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": 1,
+    "satisfied_pct": 53,
+    "dissatisfied_pct": 34,
+    "familiarity_pct": 87
+   },
+   {
+    "name": "Johann Wadephul",
+    "party": "CDU",
+    "change": 4,
+    "satisfied_pct": 32,
+    "dissatisfied_pct": 40,
+    "familiarity_pct": 72
+   },
+   {
+    "name": "Alexander Dobrindt",
+    "party": "CSU",
+    "change": 6,
+    "satisfied_pct": 28,
+    "dissatisfied_pct": 54,
+    "familiarity_pct": 82
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": 2,
+    "satisfied_pct": 23,
+    "dissatisfied_pct": 62,
+    "familiarity_pct": 85
+   },
+   {
+    "name": "Tino Chrupalla",
+    "party": "AfD",
+    "change": 3,
+    "satisfied_pct": 22,
+    "dissatisfied_pct": 51,
+    "familiarity_pct": 73
+   },
+   {
+    "name": "Bärbel Bas",
+    "party": "SPD",
+    "change": 4,
+    "satisfied_pct": 22,
+    "dissatisfied_pct": 55,
+    "familiarity_pct": 77
+   },
+   {
+    "name": "Heidi Reichinnek",
+    "party": "Linke",
+    "change": 1,
+    "satisfied_pct": 19,
+    "dissatisfied_pct": 42,
+    "familiarity_pct": 61
+   },
+   {
+    "name": "Katherina Reiche",
+    "party": "CDU",
+    "change": 4,
+    "satisfied_pct": 15,
+    "dissatisfied_pct": 58,
+    "familiarity_pct": 73
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": 1,
+    "satisfied_pct": 14,
+    "dissatisfied_pct": 84,
+    "familiarity_pct": 98
+   },
+   {
+    "name": "Britta Haßelmann",
+    "party": "Grüne",
+    "change": 1,
+    "satisfied_pct": 11,
+    "dissatisfied_pct": 28,
+    "familiarity_pct": 39
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2026-09-02",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": -2,
+    "satisfied_pct": 51,
+    "dissatisfied_pct": 34,
+    "familiarity_pct": 85
+   },
+   {
+    "name": "Johann Wadephul",
+    "party": "CDU",
+    "change": 2,
+    "satisfied_pct": 34,
+    "dissatisfied_pct": 42,
+    "familiarity_pct": 76
+   },
+   {
+    "name": "Alexander Dobrindt",
+    "party": "CSU",
+    "change": 2,
+    "satisfied_pct": 30,
+    "dissatisfied_pct": 52,
+    "familiarity_pct": 82
+   },
+   {
+    "name": "Alice Weidel",
+    "party": "AfD",
+    "change": -1,
+    "satisfied_pct": 26,
+    "dissatisfied_pct": 64,
+    "familiarity_pct": 90
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": -1,
+    "satisfied_pct": 22,
+    "dissatisfied_pct": 65,
+    "familiarity_pct": 87
+   },
+   {
+    "name": "Bärbel Bas",
+    "party": "SPD",
+    "change": -4,
+    "satisfied_pct": 18,
+    "dissatisfied_pct": 59,
+    "familiarity_pct": 77
+   },
+   {
+    "name": "Katherina Reiche",
+    "party": "CDU",
+    "change": -2,
+    "satisfied_pct": 13,
+    "dissatisfied_pct": 62,
+    "familiarity_pct": 75
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": -1,
+    "satisfied_pct": 13,
+    "dissatisfied_pct": 83,
+    "familiarity_pct": 96
+   },
+   {
+    "name": "Felix Banaszak",
+    "party": "Grüne",
+    "change": null,
+    "satisfied_pct": 12,
+    "dissatisfied_pct": 29,
+    "familiarity_pct": 41
+   },
+   {
+    "name": "Ines Schwerdtner",
+    "party": "Linke",
+    "change": -2,
+    "satisfied_pct": 7,
+    "dissatisfied_pct": 24,
+    "familiarity_pct": 31
+   }
+  ]
+ },
+ {
+  "poll_info": {
+   "title": "Politikerzufriedenheit",
+   "source_survey": "ARD-DeutschlandTREND",
+   "publish_date": "2026-10-01",
+   "institution": "infratest dimap"
+  },
+  "results": [
+   {
+    "name": "Boris Pistorius",
+    "party": "SPD",
+    "change": -1,
+    "satisfied_pct": 50,
+    "dissatisfied_pct": 36,
+    "familiarity_pct": 86
+   },
+   {
+    "name": "Johann Wadephul",
+    "party": "CDU",
+    "change": 0,
+    "satisfied_pct": 34,
+    "dissatisfied_pct": 41,
+    "familiarity_pct": 75
+   },
+   {
+    "name": "Alexander Dobrindt",
+    "party": "CSU",
+    "change": -3,
+    "satisfied_pct": 27,
+    "dissatisfied_pct": 55,
+    "familiarity_pct": 82
+   },
+   {
+    "name": "Tino Chrupalla",
+    "party": "AfD",
+    "change": 0,
+    "satisfied_pct": 22,
+    "dissatisfied_pct": 56,
+    "familiarity_pct": 78
+   },
+   {
+    "name": "Lars Klingbeil",
+    "party": "SPD",
+    "change": -2,
+    "satisfied_pct": 20,
+    "dissatisfied_pct": 67,
+    "familiarity_pct": 87
+   },
+   {
+    "name": "Carsten Linnemann",
+    "party": "CDU",
+    "change": null,
+    "satisfied_pct": 18,
+    "dissatisfied_pct": 52,
+    "familiarity_pct": 70
+   },
+   {
+    "name": "Bärbel Bas",
+    "party": "SPD",
+    "change": -1,
+    "satisfied_pct": 17,
+    "dissatisfied_pct": 58,
+    "familiarity_pct": 75
+   },
+   {
+    "name": "Heidi Reichinnek",
+    "party": "Linke",
+    "change": -3,
+    "satisfied_pct": 16,
+    "dissatisfied_pct": 46,
+    "familiarity_pct": 62
+   },
+   {
+    "name": "Friedrich Merz",
+    "party": "CDU",
+    "change": -3,
+    "satisfied_pct": 10,
+    "dissatisfied_pct": 88,
+    "familiarity_pct": 98
+   },
+   {
+    "name": "Britta Haßelmann",
+    "party": "Grüne",
+    "change": -2,
+    "satisfied_pct": 9,
+    "dissatisfied_pct": 26,
+    "familiarity_pct": 35
+   }
+  ]
+ }
+]
