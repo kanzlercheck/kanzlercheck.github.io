@@ -1,0 +1,34 @@
+{
+ "_source": "Der Bundeswahlleiter(in), final second-vote results, national. Used for the rings and tooltips in the Poll Average chart. Sonstige excludes Freie Wähler.",
+ "2017-09-24": {
+  "CDU/CSU": 32.9,
+  "SPD": 20.5,
+  "AfD": 12.6,
+  "FDP": 10.7,
+  "Linke": 9.2,
+  "Grüne": 8.9,
+  "Freie Wähler": 1.0,
+  "Sonstige": 4.0
+ },
+ "2021-09-26": {
+  "CDU/CSU": 24.1,
+  "SPD": 25.7,
+  "AfD": 10.3,
+  "FDP": 11.5,
+  "Linke": 4.9,
+  "Grüne": 14.8,
+  "Freie Wähler": 2.4,
+  "Sonstige": 6.3
+ },
+ "2025-02-23": {
+  "CDU/CSU": 28.5,
+  "AfD": 20.8,
+  "SPD": 16.4,
+  "Grüne": 11.6,
+  "Linke": 8.8,
+  "BSW": 5.0,
+  "FDP": 4.3,
+  "Freie Wähler": 1.5,
+  "Sonstige": 3.2
+ }
+}

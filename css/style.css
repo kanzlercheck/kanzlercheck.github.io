@@ -513,3 +513,17 @@ table.pp tbody tr.sel td{background:color-mix(in srgb,var(--accent) 16%,transpar
 table.pp tbody tr:focus-visible{outline:none}
 .pp-more{display:flex;justify-content:center;gap:8px;margin-top:14px}
 @media(max-width:900px){.pp-note{padding:12px 14px 0}}
+
+/* Battleground map: date snapshot (calendar) */
+.co-headrow{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:10px 14px;flex-wrap:wrap}
+.co-headrow h3{margin:0;flex:1 1 220px;min-width:0}
+.co-datein{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
+.co-calpill{appearance:none;display:inline-flex;align-items:center;gap:7px;flex:none;border:1px solid var(--line);background:var(--paper);color:var(--muted);font:600 12.5px/1 inherit;font-family:inherit;padding:8px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:border-color .15s ease,color .15s ease,background .15s ease}
+.co-calpill svg{display:block;flex:none;width:15px;height:15px}
+.co-calpill[hidden],.co-datein[hidden]{display:none!important}
+.co-calpill:hover{color:var(--ink);border-color:var(--accent)}
+.co-calpill:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.co-calpill.snap{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent);border-color:var(--accent)}
+.co-back{appearance:none;border:1px solid var(--line);background:var(--paper);color:var(--accent);font:600 11.5px/1 inherit;font-family:inherit;padding:4px 10px;border-radius:999px;cursor:pointer;margin-left:4px}
+.co-back:hover{border-color:var(--accent)}
+#co-vote-note:not(:empty){margin:0 0 12px;line-height:1.6}

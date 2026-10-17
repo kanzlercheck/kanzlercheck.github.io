@@ -166,7 +166,10 @@
     <div id="co-chips" class="latest"></div>
     <div class="co-grid" id="co-grid">
       <div class="chart-card flow" id="co-mapcard"><div class="sec">
-        <h3 id="co-map-title">Who leads in each constituency?</h3>
+        <div class="co-headrow"><h3 id="co-map-title">Who leads in each constituency?</h3>
+          <button type="button" class="co-calpill" id="co-cal" hidden aria-label="Pick a date to see how the map looked then"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="co-callbl">Pick a date</span></button>
+          <input type="date" id="co-date" class="co-datein" hidden disabled tabindex="-1" aria-label="Date for the map snapshot">
+        </div>
         <p class="subl" id="co-map-subl">Projected from the current poll average</p>
         <div class="note" id="co-vote-note"></div>
         <div class="co-bar">
@@ -245,6 +248,6 @@
 </main>
 <div id="tip" class="tip" hidden></div>
 <script data-goatcounter="https://efefury.goatcounter.com/count" data-goatcounter-settings='{"no_onload":true}' async src="//gc.zgo.at/count.js"></script>
-<script src="js/app.js?v=perf36"></script>
+<script src="js/app.js?v=perf39"></script>
 </body>
 </html>
