@@ -273,6 +273,7 @@
     "rows": [
      {
       "label": "Men",
+      "share": 48.7,
       "v": {
        "CDU/CSU": 30,
        "AfD": 24,
@@ -286,6 +287,7 @@
      },
      {
       "label": "Women",
+      "share": 51.3,
       "v": {
        "CDU/CSU": 27,
        "AfD": 18,
@@ -304,6 +306,7 @@
     "rows": [
      {
       "label": "18–24 years",
+      "share": 6.6,
       "v": {
        "CDU/CSU": 13,
        "AfD": 21,
@@ -317,6 +320,7 @@
      },
      {
       "label": "25–34 years",
+      "share": 12.2,
       "v": {
        "CDU/CSU": 17,
        "AfD": 24,
@@ -330,6 +334,7 @@
      },
      {
       "label": "35–44 years",
+      "share": 14.8,
       "v": {
        "CDU/CSU": 24,
        "AfD": 26,
@@ -343,6 +348,7 @@
      },
      {
       "label": "45–59 years",
+      "share": 24.1,
       "v": {
        "CDU/CSU": 33,
        "AfD": 22,
@@ -356,6 +362,7 @@
      },
      {
       "label": "60–69 years",
+      "share": 19.8,
       "v": {
        "CDU/CSU": 33,
        "AfD": 19,
@@ -369,6 +376,7 @@
      },
      {
       "label": "70 or older",
+      "share": 22.6,
       "v": {
        "CDU/CSU": 43,
        "AfD": 10,
@@ -514,40 +522,153 @@
      }
     ]
    }
-  ]
+  ],
+  "shareSource": "Bundeswahlleiterin, Repräsentative Wahlstatistik 2025 (Heft 4, Übersicht 5): share of all voters"
  },
  "migration": {
   "source": "Infratest dimap",
   "asOf": "2025-02-24",
   "flows": [
-   {"from":"FDP","to":"SPD","v":120000},
-   {"from":"Nichtwähler","to":"SPD","v":250000},
-   {"from":"SPD","to":"Grüne","v":100000},
-   {"from":"SPD","to":"BSW","v":440000},
-   {"from":"SPD","to":"Linke","v":560000},
-   {"from":"SPD","to":"AfD","v":720000},
-   {"from":"SPD","to":"CDU/CSU","v":1760000},
-   {"from":"Grüne","to":"CDU/CSU","v":460000},
-   {"from":"Nichtwähler","to":"CDU/CSU","v":900000},
-   {"from":"FDP","to":"CDU/CSU","v":1350000},
-   {"from":"CDU/CSU","to":"Linke","v":70000},
-   {"from":"CDU/CSU","to":"BSW","v":220000},
-   {"from":"CDU/CSU","to":"AfD","v":1010000},
-   {"from":"Nichtwähler","to":"Grüne","v":110000},
-   {"from":"FDP","to":"Grüne","v":140000},
-   {"from":"Grüne","to":"AfD","v":100000},
-   {"from":"Grüne","to":"BSW","v":150000},
-   {"from":"Grüne","to":"Linke","v":700000},
-   {"from":"FDP","to":"Nichtwähler","v":40000},
-   {"from":"FDP","to":"Linke","v":100000},
-   {"from":"FDP","to":"BSW","v":260000},
-   {"from":"FDP","to":"AfD","v":890000},
-   {"from":"Linke","to":"AfD","v":110000},
-   {"from":"Nichtwähler","to":"AfD","v":1810000},
-   {"from":"Nichtwähler","to":"Linke","v":290000},
-   {"from":"Linke","to":"BSW","v":350000},
-   {"from":"Nichtwähler","to":"BSW","v":400000},
-   {"from":"AfD","to":"BSW","v":60000}
+   {
+    "from": "FDP",
+    "to": "SPD",
+    "v": 120000
+   },
+   {
+    "from": "Nichtwähler",
+    "to": "SPD",
+    "v": 250000
+   },
+   {
+    "from": "SPD",
+    "to": "Grüne",
+    "v": 100000
+   },
+   {
+    "from": "SPD",
+    "to": "BSW",
+    "v": 440000
+   },
+   {
+    "from": "SPD",
+    "to": "Linke",
+    "v": 560000
+   },
+   {
+    "from": "SPD",
+    "to": "AfD",
+    "v": 720000
+   },
+   {
+    "from": "SPD",
+    "to": "CDU/CSU",
+    "v": 1760000
+   },
+   {
+    "from": "Grüne",
+    "to": "CDU/CSU",
+    "v": 460000
+   },
+   {
+    "from": "Nichtwähler",
+    "to": "CDU/CSU",
+    "v": 900000
+   },
+   {
+    "from": "FDP",
+    "to": "CDU/CSU",
+    "v": 1350000
+   },
+   {
+    "from": "CDU/CSU",
+    "to": "Linke",
+    "v": 70000
+   },
+   {
+    "from": "CDU/CSU",
+    "to": "BSW",
+    "v": 220000
+   },
+   {
+    "from": "CDU/CSU",
+    "to": "AfD",
+    "v": 1010000
+   },
+   {
+    "from": "Nichtwähler",
+    "to": "Grüne",
+    "v": 110000
+   },
+   {
+    "from": "FDP",
+    "to": "Grüne",
+    "v": 140000
+   },
+   {
+    "from": "Grüne",
+    "to": "AfD",
+    "v": 100000
+   },
+   {
+    "from": "Grüne",
+    "to": "BSW",
+    "v": 150000
+   },
+   {
+    "from": "Grüne",
+    "to": "Linke",
+    "v": 700000
+   },
+   {
+    "from": "FDP",
+    "to": "Nichtwähler",
+    "v": 40000
+   },
+   {
+    "from": "FDP",
+    "to": "Linke",
+    "v": 100000
+   },
+   {
+    "from": "FDP",
+    "to": "BSW",
+    "v": 260000
+   },
+   {
+    "from": "FDP",
+    "to": "AfD",
+    "v": 890000
+   },
+   {
+    "from": "Linke",
+    "to": "AfD",
+    "v": 110000
+   },
+   {
+    "from": "Nichtwähler",
+    "to": "AfD",
+    "v": 1810000
+   },
+   {
+    "from": "Nichtwähler",
+    "to": "Linke",
+    "v": 290000
+   },
+   {
+    "from": "Linke",
+    "to": "BSW",
+    "v": 350000
+   },
+   {
+    "from": "Nichtwähler",
+    "to": "BSW",
+    "v": 400000
+   },
+   {
+    "from": "AfD",
+    "to": "BSW",
+    "v": 60000
+   }
   ]
  }
 }

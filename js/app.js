@@ -503,6 +503,7 @@ const escF=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;
 const facKey=id=>"F:"+id;
 const facOfParty=p=>FAC.find(f=>f.members.includes(p))||null;
 let faOn={poll:false,parl:false},facVer=0,activeF=new Set(),vpCache=null,vpVer=-1,PM=null,baseM=null;
+let selPoll=null; // index into polls of the poll shown in the Bundestag projection (null = current poll average)
 // the chart units: each faction (if it has members) plus every party not in a faction
 function unitsOf(){
   const inF=new Set(FAC.flatMap(f=>f.members));
@@ -517,6 +518,15 @@ function viewPolls(){
 }
 // projection model for the faction view (same method as the party model)
 function buildPM(){
+  if(selPoll!=null&&baseM){
+    // one specific poll: seats are worked out from that poll's own figures (same method as the average)
+    const src=faOn.parl?viewPolls():polls,rec=src[selPoll],ord=[...(faOn.parl?unitsOf():parties)].sort((a,b)=>spec(a)-spec(b)),pc={},st={};
+    ord.forEach(p=>pc[p]=rec.v[p]!=null?rec.v[p]:null);
+    const el_=ord.filter(p=>pc[p]!=null&&pc[p]>=thr&&!isOther(p));
+    const sl_=sainteLague(Object.fromEntries(el_.map(p=>[p,pc[p]])),N);
+    ord.forEach(p=>st[p]=sl_[p]||0);
+    PM={order:ord,pct:pc,seats:st,elig:el_};return;
+  }
   if(!faOn.parl||!baseM){PM=baseM;return;}
   const src=viewPolls(),order=[...unitsOf()].sort((a,b)=>spec(a)-spec(b)),pct={},seats={};
   order.forEach(p=>pct[p]=smoothedValueAt(src,p,tMax,BW));
@@ -669,7 +679,7 @@ function drawSeats(svg,L,o){
 const members=()=>[...sel].filter(p=>PM.seats[p]>0).sort((a,b)=>spec(a)-spec(b));
 function drawParl(){
   const W=940,H=710,cx=W/2,cy=470,rOut=330,rIn=178;
-  const svg=frame($("#parl-chart"),{W,H,title:cfg.parliamentHeadline,sub:cfg.parliamentSubline,source:cfg.sourceName,boldSource:true});
+  const svg=frame($("#parl-chart"),{W,H,title:cfg.parliamentHeadline,sub:selPoll!=null?`Based on the ${polls[selPoll].inst||""} poll of ${fmtDate(polls[selPoll].t)}`:cfg.parliamentSubline,source:cfg.sourceName,boldSource:true});
   const L=layoutSeats(cx,cy,rIn,rOut);
   drawSeats(svg,L,{cx,cy,rIn,rOut,dim:p=>sel.size>0&&!sel.has(p)});
   const act=PM.order.filter(p=>PM.seats[p]>0),n=act.length,gp=8,avail=W-52,PADX=18,MINW=44,MAXW=230,names=act.map(p=>lab(p));
@@ -713,7 +723,7 @@ function renderCust(){
   if(!m.length){box.innerHTML=`<span class="no">No parties selected yet. Click parties in the legend above or choose a coalition below.</span>`;return;}
   const s=m.reduce((a,p)=>a+PM.seats[p],0),ok=s>=maj;
   box.innerHTML=`<div class="sec-top"><b>${m.map(lab).join(" + ")}</b><button class="link" id="cust-clear" type="button">Clear</button></div>
-    <div class="res ${ok?"yes":"no"}">${s} of ${N} seats \u2014 ${ok?`majority (${s-maj} above the ${maj} needed)`:`no majority (${maj-s} short of the ${maj} needed)`}</div>${barHtml(m)}`;
+    <div class="res ${ok?"yes":"no"}">${s} of ${N} seats \u2014 ${ok?`majority (${s-maj} above the ${maj} needed)`:`no majority (${maj-s} short of the ${maj} needed)`} \u00B7 ${fmt(s/N*100)}% of seats</div>${barHtml(m)}`;
   $("#cust-clear").onclick=()=>{sel.clear();drawParl();};
 }
 function renderCoalitions(){
@@ -722,16 +732,50 @@ function renderCoalitions(){
   const valid=cfg.coalitions.map(cmap).filter(c=>c.every(p=>PM.seats[p]!=null))
     .filter(c=>!faOn.parl||c.length>1)
     .filter((c,i,a)=>!faOn.parl||a.findIndex(d=>key(d)===key(c))===i);
-  $("#coalitions").innerHTML=valid.map((c,i)=>{
+  const rows=valid.map((c,i)=>{
     const s=c.reduce((a,p)=>a+PM.seats[p],0),ok=s>=maj;
-    const nm=c.map(x=>`<span><i class="${dark(colorOf(x))?"dkb":""}" style="background:${colorOf(x)}"></i> ${lab(x)}</span>`).join('<span class="pl">+</span>');
-    return `<div class="coal" data-c="${i}" title="Show in the coalition builder"><div class="nm">${nm}</div><div class="cs"><b>${s}</b><span>seats</span><em class="${ok?"yes":"no"}">${ok?"Majority":"No majority"}</em></div>${barHtml(c)}<div class="cf">${ok?`${s-maj} above the ${maj} needed`:`${maj-s} short of the ${maj} needed`}</div></div>`;
-  }).join("")||"<span class='no'>No coalitions in config.json match the parties in the CSV.</span>";
-  $("#coalitions").onclick=e=>{const r=e.target.closest(".coal");if(!r)return;sel.clear();valid[+r.dataset.c].forEach(p=>sel.add(p));drawParl();$("#cust").scrollIntoView({block:"center",behavior:"smooth"});};
+    const nm=c.map(x=>`<span class="cp"><i class="dotc ${dark(colorOf(x))?"dkb":""}" style="background:${colorOf(x)}"></i>${lab(x)}</span>`).join('<span class="pl"> + </span>');
+    return `<tr class="coal-row" data-c="${i}" title="Show in the coalition builder"><td>${nm}</td><td><b>${s}</b></td><td>${fmt(s/N*100)}%</td><td class="cb">${barHtml(c)}</td><td class="${ok?"yes":"no"}">${ok?`Majority (+${s-maj})`:`No majority (\u2212${maj-s})`}</td></tr>`;
+  }).join("");
+  $("#coalitions").innerHTML=rows?`<div class="scroll"><table class="coal-t"><thead><tr><th>Coalition</th><th>Seats</th><th>Share</th><th class="cb"></th><th>Majority of ${maj}</th></tr></thead><tbody>${rows}</tbody></table></div>`:"<span class='no'>No coalitions in config.json match the parties in the CSV.</span>";
+  $("#coalitions").onclick=e=>{const r=e.target.closest(".coal-row");if(!r)return;sel.clear();valid[+r.dataset.c].forEach(p=>sel.add(p));drawParl();$("#cust").scrollIntoView({block:"center",behavior:"smooth"});};
 }
 if(polls.length){
   drawParl();
   renderCoalitions();
+}
+
+// ---------- latest polls in the Bundestag projection: click a poll to see its seats ----------
+if(polls.length){
+  const PP_FIRST=15,PP_STEP=25;let ppShown=PP_FIRST;
+  const ppTable=$("#parl-poll-table"),ppMore=$("#parl-poll-more"),ppNote=$("#parl-poll-note");
+  const ppCand=parties.filter(p=>!isOther(p));
+  function ppRender(){
+    const n=polls.length,from=n-1,to=Math.max(0,n-ppShown);let rows="";
+    for(let i=from;i>=to;i--){const r=polls[i],top=Math.max(...ppCand.map(p=>r.v[p]??-1));
+      rows+=`<tr class="${selPoll===i?"sel":""}" data-i="${i}" tabindex="0" role="button" aria-pressed="${selPoll===i}" title="Show this poll in the Bundestag projection"><td>${fmtDate(r.t)}</td><td>${r.inst||""}</td>${parties.map(p=>`<td class="${r.v[p]===top&&!isOther(p)?"lead":""}">${r.v[p]!=null?fmt(r.v[p])+"%":"\u2013"}</td>`).join("")}</tr>`;}
+    ppTable.innerHTML=`<table class="pp"><thead><tr><th>Date</th><th>Pollster</th>${parties.map(p=>`<th class="${dark(colorOf(p))?"dk":""}" style="border-bottom-color:${colorOf(p,parties.indexOf(p))}">${lab(p)}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table>`;
+    const left=n-ppShown;
+    ppMore.innerHTML=(left>0?`<button type="button" class="faction-chip" data-a="more">See more${left>PP_STEP?"":" ("+left+")"}</button>`:"")+(ppShown>PP_FIRST?`<button type="button" class="faction-chip" data-a="hide">Hide</button>`:"");
+    ppMore.hidden=!ppMore.innerHTML;
+  }
+  function ppNoteRender(){
+    if(selPoll==null){ppNote.hidden=true;ppNote.innerHTML="";return;}
+    const r=polls[selPoll];
+    ppNote.innerHTML=`<div class="sec-top"><span>Showing the projection for the <b>${r.inst||"selected"}</b> poll of <b>${fmtDate(r.t)}</b></span><button class="link" id="parl-poll-back" type="button">Back to current projection</button></div>`;
+    ppNote.hidden=false;
+    $("#parl-poll-back").onclick=()=>ppSelect(null);
+  }
+  function ppSelect(i){
+    selPoll=i;buildPM();drawParl();renderCoalitions();ppNoteRender();ppRender();
+    (selPoll!=null?ppNote:$("#parl-chart")).scrollIntoView({block:"start",behavior:"smooth"});
+  }
+  ppTable.addEventListener("click",e=>{const tr=e.target.closest("tr[data-i]");if(!tr)return;const i=+tr.dataset.i;ppSelect(selPoll===i?null:i);});
+  ppTable.addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!==" ")return;const tr=e.target.closest("tr[data-i]");if(!tr)return;e.preventDefault();const i=+tr.dataset.i;ppSelect(selPoll===i?null:i);});
+  ppMore.addEventListener("click",e=>{const b=e.target.closest("button[data-a]");if(!b)return;
+    if(b.dataset.a==="more")ppShown=Math.min(polls.length,ppShown+PP_STEP);else ppShown=PP_FIRST;
+    ppRender();});
+  ppRender();
 }
 
 // ---------- OVERVIEW ----------
@@ -1107,14 +1151,14 @@ async function drawElection(){
     $("#el-demo-party").innerHTML=`<button type="button" class="faction-chip ${dp==null?"on":""}" data-p="">All parties</button>`+DP.map(p=>`<button type="button" class="faction-chip ${dp===p?"on":""}" data-p="${p}">${lab(p)}</button>`).join("");
     if(dp==null){
       $("#el-demo").innerHTML=rows.map(r=>{const sum=DP.reduce((a,p)=>a+r.v[p],0);
-        return `<div class="drow${r.tot?" tot":""}"><div>${r.label}</div><div class="dbar"><div>${DP.map(p=>{const c=colorOf(p),v=r.v[p];return `<i class="${dark(c)?"dkb":""}" data-r="${r.label}" data-p="${p}" style="width:${v/sum*100}%;background:${c};color:${contrast(c)}">${v>=4?v:""}</i>`;}).join("")}</div></div></div>`;}).join("");
+        return `<div class="drow${r.tot?" tot":""}"><div>${r.label}${r.share!=null?` <span class="dshare">(${Math.round(r.share)}%)</span>`:""}</div><div class="dbar"><div>${DP.map(p=>{const c=colorOf(p),v=r.v[p];return `<i class="${dark(c)?"dkb":""}" data-r="${r.label}" data-p="${p}" style="width:${v/sum*100}%;background:${c};color:${contrast(c)}">${v>=4?v:""}</i>`;}).join("")}</div></div></div>`;}).join("");
       $("#el-demo-legend").innerHTML=DP.map(p=>`<span><i class="${dark(colorOf(p))?"dk":""}" style="background:${colorOf(p)}"></i>${lab(p)}</span>`).join("");
     }else{
       const mx=Math.max(...rows.map(r=>r.v[dp])),c=colorOf(dp);
-      $("#el-demo").innerHTML=rows.map(r=>`<div class="drow${r.tot?" tot":""}"><div>${r.label}</div><div class="dbar single"><i class="${dark(c)?"dkb":""}" data-r="${r.label}" data-p="${dp}" style="width:${r.v[dp]/mx*86}%;background:${c}"></i><b>${r.v[dp]}%</b></div></div>`).join("");
+      $("#el-demo").innerHTML=rows.map(r=>`<div class="drow${r.tot?" tot":""}"><div>${r.label}${r.share!=null?` <span class="dshare">(${Math.round(r.share)}%)</span>`:""}</div><div class="dbar single"><i class="${dark(c)?"dkb":""}" data-r="${r.label}" data-p="${dp}" style="width:${r.v[dp]/mx*86}%;background:${c}"></i><b>${r.v[dp]}%</b></div></div>`).join("");
       $("#el-demo-legend").innerHTML="";
     }
-    $("#el-demo-note").textContent="";
+    $("#el-demo-note").textContent=g.rows.some(r=>r.share!=null)?"Percentage in brackets: group's share of all voters (Bundeswahlleiterin, repr. Wahlstatistik 2025).":"";
   }
   $("#el-demo-cat").onclick=e=>{const b=e.target.closest("[data-g]");if(b){dg=+b.dataset.g;drawDemo();}};
   $("#el-demo-party").onclick=e=>{const b=e.target.closest("[data-p]");if(b){dp=b.dataset.p||null;drawDemo();}};

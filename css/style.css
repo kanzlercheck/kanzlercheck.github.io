@@ -54,22 +54,21 @@ td:first-child{color:var(--cmut)}
 td.lead{font-weight:700}
 tr:last-child td{border-bottom:none}
 body.dark th.dk{border-bottom-color:#7A808A!important}
-#coalitions{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
-.coal{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:11px 14px 12px;min-width:0;color:var(--cink);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:border-color .15s ease,box-shadow .15s ease}
-.coal:hover{border-color:var(--accent);box-shadow:0 2px 10px color-mix(in srgb,var(--accent) 22%,transparent)}
-.coal .nm{display:flex;flex-wrap:wrap;align-items:center;gap:3px 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-.coal .nm i{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none}
-.coal .nm .pl{color:var(--cmut);font-weight:500}
-.coal .cs{display:flex;align-items:baseline;gap:6px;margin:5px 0 10px}
-.coal .cs b{font-size:21px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
-.coal .cs span{font-size:12.5px;color:var(--cmut)}
-.coal .cs em{margin-left:auto;font-style:normal;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;background:var(--track);color:var(--cmut)}
-.coal .cs em.yes{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
-.coal .bar{height:6px;background:var(--track);position:relative;border-radius:3px;margin:0 0 9px}
-.coal .bar>div{display:flex;height:100%;overflow:hidden;border-radius:3px}
-.coal .bar u{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;border-radius:1px;background:var(--cink);opacity:.55}
-.coal .cf{font-size:11.5px;color:var(--cmut);font-variant-numeric:tabular-nums}
-body.dark .coal .dkb{background:#7A808A!important}
+table.coal-t tbody tr{cursor:pointer}
+table.coal-t tbody tr:hover td{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.coal-t td:first-child{color:var(--cink);font-weight:600}
+.coal-t .cp{display:inline-flex;align-items:center}
+.coal-t .pl{color:var(--cmut);font-weight:400;white-space:pre}
+.coal-t th:nth-child(2),.coal-t td:nth-child(2){text-align:right}
+.coal-t th:last-child,.coal-t td:last-child{text-align:left}
+.coal-t td.yes{font-weight:700;color:var(--ok)}
+.coal-t td.no{color:var(--cmut)}
+.coal-t .cb{width:36%;min-width:130px}
+.coal-t .bar{height:6px;background:var(--track);position:relative;margin:0}
+.coal-t .bar>div{display:flex;height:100%;overflow:hidden}
+.coal-t .bar u{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:var(--cink);opacity:.6}
+body.dark .coal-t .dkb{background:#7A808A!important}
+@media(max-width:600px){.coal-t th.cb,.coal-t td.cb{display:none}}
 .yes{color:var(--ok);font-weight:700}.no{color:var(--cmut)}
 .panel{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin:0 0 24px}
 .method{font-size:13px;line-height:1.55;color:var(--muted)}
@@ -166,13 +165,14 @@ body.dark .eltrack i.dkb{background:#7A808A!important}
 body.dark #el-map svg path.st.dk{fill:#7A808A}
 .drow{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center;margin:0 0 8px;font-size:13px;color:var(--cink)}
 .drow.tot{margin-bottom:14px;font-weight:700}
+.dshare{color:var(--cmut,#8b8f98);font-weight:400;font-size:.92em;white-space:nowrap}
 .dbar>div{display:flex;height:30px;border-radius:3px;overflow:hidden;background:var(--track)}
 .dbar i{display:flex;align-items:center;justify-content:center;font:700 12px/1 inherit;font-style:normal;cursor:default}
 body.dark .dbar i.dkb{background:#7A808A!important}
 .dbar.single{display:flex;align-items:center;gap:8px}
 .dbar.single i{height:26px;border-radius:3px;display:block}
 .dbar.single b{font-size:15px;font-variant-numeric:tabular-nums}
-@media(max-width:600px){.elrow{grid-template-columns:78px 1fr;grid-template-rows:auto auto;row-gap:4px}.eltag{grid-column:1;grid-row:1 / span 2}.elval{grid-column:2;grid-row:1}.eltrack{grid-column:2;grid-row:2}.drow{grid-template-columns:96px 1fr}}
+@media(max-width:600px){.elrow{grid-template-columns:78px 1fr;grid-template-rows:auto auto;row-gap:4px}.eltag{grid-column:1;grid-row:1 / span 2}.elval{grid-column:2;grid-row:1}.eltrack{grid-column:2;grid-row:2}.drow{grid-template-columns:110px 1fr}}
 
 .note:empty{display:none}
 
@@ -502,3 +502,14 @@ body.dark .pol-gl i.dkb{background:#7A808A!important}
 
 /* battleground map legend: highlighted leaders */
 .pills i.hl{box-shadow:none}.pills i.fd{background:#E2E0DA}body.dark .pills i.fd{background:#2A2E36;box-shadow:inset 0 0 0 1px var(--line)}
+
+/* latest polls in the Bundestag projection */
+#parl-poll-note,#parl-chart{scroll-margin-top:62px}
+.pp-note{padding:12px 26px 0;font-size:13px;color:var(--cink)}
+.pp-hint{margin:0 0 8px}
+table.pp tbody tr{cursor:pointer;transition:background .12s ease}
+table.pp tbody tr:hover td,table.pp tbody tr:focus-visible td{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+table.pp tbody tr.sel td{background:color-mix(in srgb,var(--accent) 16%,transparent);font-weight:700}
+table.pp tbody tr:focus-visible{outline:none}
+.pp-more{display:flex;justify-content:center;gap:8px;margin-top:14px}
+@media(max-width:900px){.pp-note{padding:12px 14px 0}}
