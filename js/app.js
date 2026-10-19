@@ -1347,6 +1347,7 @@ async function drawConstituencies(){
   renderYearButtons();
   const firstOK=()=>hasFirst&&(!SNAP||!!SNAP.F);
   const renderVoteButtons=()=>{const row=$("#co-vote");if(!row)return;row.style.display=firstOK()?"":"none";
+    const ci=$("#co-info");if(ci){let gone=false;try{gone=localStorage.getItem("co-info-hide")==="1";}catch(e){}ci.hidden=gone||!firstOK();const cx=$("#co-info-x");if(cx&&!cx.dataset.b){cx.dataset.b="1";cx.addEventListener("click",()=>{ci.hidden=true;try{localStorage.setItem("co-info-hide","1");}catch(e){}});}}
     $("#co-vote").innerHTML=[[1,"First vote"],[2,"Second vote"]].map(([k,t])=>`<button type="button" role="tab" aria-selected="${voteMode===k}" class="${voteMode===k?"on":""}" data-vote="${k}">${t}</button>`).join("");};
   renderVoteButtons();
   const renderViewButtons=()=>{$("#co-view").innerHTML=[["lead","Leader"],["swing","Swings"],["cert","Certainty"]].map(([k,t])=>{
@@ -1514,8 +1515,8 @@ async function drawConstituencies(){
         if(!touch)hideTip();
         // two quick clicks on a constituency = double-click (done by hand: the map is redrawn after the first click, so the browser's own dblclick never fires)
         if(dbl){lastClk=null;hideTip();pinned=null;const ck=cityOf(p.n);
-          if(ck){ // city district: double-click zooms to the city, double-click again back out to its state
-            if(cityF===ck){cityF="";stF=r.w.land;}else{cityF=ck;stF=r.w.land;}
+          if(ck){ // city district: double-click zooms to the city, double-click again back out to the federal map
+            if(cityF===ck){cityF="";stF="";}else{cityF=ck;stF=r.w.land;}
             $("#co-state").value=stF;select(p.n);if(hasMap)animateTo(cityF?cityView(cityF):stView(stF));return;}
           const fromCity=!!cityF;cityF="";stF=(fromCity||stF!==r.w.land)?r.w.land:""; // from a city view, double-clicking elsewhere moves to that district's state
           $("#co-state").value=stF;select(p.n);if(hasMap)animateTo(stView(stF));return;}
