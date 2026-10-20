@@ -76,9 +76,9 @@ const isFac=p=>typeof p==="string"&&p.startsWith("F:");
 const facById=id=>FAC.find(f=>f.id===id);
 const lab=p=>{if(isFac(p)){const f=facById(p.slice(2));return f?f.name:p;}return (cfg.labels||{})[p]||p;};
 const FALLBACK=["#1C4E9C","#C62828","#2E7D32","#F9A825","#6A1B9A","#00838F","#8D6E63","#546E7A"];
-const colorOf=(p,i=0)=>isFac(p)?((facById(p.slice(2))||{}).color||"#888888"):cfg.colors[p]||cfg.colors[p==="Union"?"CDU/CSU":p]||FALLBACK[i%FALLBACK.length];
+const colorOf=(p,i=0)=>isFac(p)?((facById(p.slice(2))||{}).color||"#888888"):(p==="SSW"?"#003C8F":cfg.colors[p])||cfg.colors[p==="Union"?"CDU/CSU":p]||FALLBACK[i%FALLBACK.length];
 const lum=c=>{const n=parseInt(c.slice(1),16);return((n>>16)&255)*.299+((n>>8)&255)*.587+(n&255)*.114;};
-const dark=c=>/^#[0-9a-f]{6}$/i.test(c)&&lum(c)<60;
+const dark=c=>c!=="#003C8F"&&/^#[0-9a-f]{6}$/i.test(c)&&lum(c)<60;
 const contrast=c=>/^#[0-9a-f]{6}$/i.test(c)&&lum(c)>=140?"#15181C":"#ffffff";
 const lighten=(hex,a)=>{const c=hex.replace("#","");if(c.length!==6)return hex;const ch=i=>{const v=parseInt(c.substr(i,2),16);return Math.round(v+(255-v)*a).toString(16).padStart(2,"0");};return"#"+ch(0)+ch(2)+ch(4);};
 const monthAgo=t=>{const d=new Date(t);d.setUTCMonth(d.getUTCMonth()-1);return +d;};
@@ -110,7 +110,7 @@ function goTab(t,target){
   if(target)requestAnimationFrame(()=>{const e=document.getElementById(target);if(e)e.scrollIntoView();});
 }
 document.querySelectorAll(".tab-btn").forEach(b=>b.onclick=()=>goTab(b.dataset.tab));
-document.querySelectorAll("[data-go]").forEach(b=>{b.onclick=()=>goTab(b.dataset.go,b.dataset.scroll);if(b.classList.contains("clickable"))b.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();goTab(b.dataset.go,b.dataset.scroll);}};});
+document.querySelectorAll("[data-go]").forEach(b=>{b.onclick=e=>{e.stopPropagation();goTab(b.dataset.go,b.dataset.scroll);};if(b.classList.contains("clickable"))b.onkeydown=e=>{if(e.target!==b)return;if(e.key==="Enter"||e.key===" "){e.preventDefault();goTab(b.dataset.go,b.dataset.scroll);}};});
 if(location.hash)goTab(location.hash.slice(1));
 try{if(!document.querySelector(`.tab-btn[data-tab="${location.hash.slice(1)}"]`)&&!/^#state-/.test(location.hash))track("/overview","Overview");}catch(e){track("/overview","Overview");}
 
@@ -520,19 +520,19 @@ function viewPolls(){
 function buildPM(){
   if(selPoll!=null&&baseM){
     // one specific poll: seats are worked out from that poll's own figures (same method as the average)
-    const src=faOn.parl?viewPolls():polls,rec=src[selPoll],ord=[...(faOn.parl?unitsOf():parties)].sort((a,b)=>spec(a)-spec(b)),pc={},st={};
-    ord.forEach(p=>pc[p]=rec.v[p]!=null?rec.v[p]:null);
+    const src=faOn.parl?viewPolls():polls,rec=src[selPoll],ord=[...(faOn.parl?unitsOf():parties),"SSW"].sort((a,b)=>spec(a)-spec(b)),pc={},st={};
+    ord.forEach(p=>pc[p]=p!=="SSW"&&rec.v[p]!=null?rec.v[p]:null);
     const el_=ord.filter(p=>pc[p]!=null&&pc[p]>=thr&&!isOther(p));
-    const sl_=sainteLague(Object.fromEntries(el_.map(p=>[p,pc[p]])),N);
-    ord.forEach(p=>st[p]=sl_[p]||0);
+    const sl_=sainteLague(Object.fromEntries(el_.map(p=>[p,pc[p]])),N-1); // 1 seat is reserved for SSW (minority exemption)
+    ord.forEach(p=>st[p]=p==="SSW"?1:(sl_[p]||0));
     PM={order:ord,pct:pc,seats:st,elig:el_};return;
   }
   if(!faOn.parl||!baseM){PM=baseM;return;}
-  const src=viewPolls(),order=[...unitsOf()].sort((a,b)=>spec(a)-spec(b)),pct={},seats={};
-  order.forEach(p=>pct[p]=smoothedValueAt(src,p,tMax,BW));
+  const src=viewPolls(),order=[...unitsOf(),"SSW"].sort((a,b)=>spec(a)-spec(b)),pct={},seats={};
+  order.forEach(p=>pct[p]=p==="SSW"?null:smoothedValueAt(src,p,tMax,BW));
   const elig=order.filter(p=>pct[p]!=null&&pct[p]>=thr&&!isOther(p));
-  const sl=sainteLague(Object.fromEntries(elig.map(p=>[p,pct[p]])),N);
-  order.forEach(p=>seats[p]=sl[p]||0);
+  const sl=sainteLague(Object.fromEntries(elig.map(p=>[p,pct[p]])),N-1);
+  order.forEach(p=>seats[p]=p==="SSW"?1:(sl[p]||0));
   PM={order,pct,seats,elig};
 }
 function defaultFactions(){
@@ -645,13 +645,13 @@ if(polls.length){
 
 // ---------- BUNDESTAG ----------
 const thr=cfg.threshold,N=cfg.seats,maj=Math.floor(N/2)+1;
-const order=[...parties].sort((a,b)=>spec(a)-spec(b)),pct={},sel=new Set();
+const order=[...parties,"SSW"].sort((a,b)=>spec(a)-spec(b)),pct={},sel=new Set();
 let seats={},elig=[];
 if(polls.length){
-  order.forEach(p=>pct[p]=smoothedValueAt(polls,p,tMax,BW));
+  order.forEach(p=>pct[p]=p==="SSW"?null:smoothedValueAt(polls,p,tMax,BW));
   elig=order.filter(p=>pct[p]!=null&&pct[p]>=thr&&!isOther(p));
-  const sl=sainteLague(Object.fromEntries(elig.map(p=>[p,pct[p]])),N);
-  order.forEach(p=>seats[p]=sl[p]||0);
+  const sl=sainteLague(Object.fromEntries(elig.map(p=>[p,pct[p]])),N-1); // 1 seat is reserved for SSW (minority exemption)
+  order.forEach(p=>seats[p]=p==="SSW"?1:(sl[p]||0));
 }
 baseM={order,pct,seats,elig};PM=baseM;buildPM();
 function layoutSeats(cx,cy,rIn,rOut){
@@ -669,7 +669,7 @@ function drawSeats(svg,L,o){
   const owner=[];PM.order.forEach(p=>{for(let i=0;i<PM.seats[p];i++)owner.push(p);});
   L.slots.forEach((s,i)=>{const p=owner[i];
     const c=el("circle",{class:"seat"+(p&&dark(colorOf(p))?" dk":""),cx:s.x.toFixed(2),cy:s.y.toFixed(2),r:L.dotR.toFixed(2),fill:p?colorOf(p,parties.indexOf(p)):"#D6D6D2",opacity:p&&o.dim&&o.dim(p)?.2:1},svg);
-    if(p){c.addEventListener("mousemove",e=>showTip(e,`<b>${lab(p)}</b>: ${PM.seats[p]} seats (${fmt(PM.pct[p])}%)`));c.addEventListener("mouseleave",hideTip);}
+    if(p){c.addEventListener("mousemove",e=>showTip(e,p==="SSW"?`<b>SSW</b>: 1 seat (exempt from the 5% threshold as a minority party)`:`<b>${lab(p)}</b>: ${PM.seats[p]} seats (${fmt(PM.pct[p])}%)`));c.addEventListener("mouseleave",hideTip);}
   });
   const bp=L.rowsData.map(row=>{const m=row.items.length;let s=0;while(s<m&&row.items[s].gi<maj)s++;
     const a=s<=0?180:s>=m?0:(row.items[s-1].angle+row.items[s].angle)/2;return pt(o.cx,o.cy,row.r,a);});
@@ -677,49 +677,62 @@ function drawSeats(svg,L,o){
   const full=[pt(o.cx,o.cy,o.rIn-14,ang(bp[0])),...bp,pt(o.cx,o.cy,o.rOut+14,ang(bp[bp.length-1]))].map(([a,b])=>`${a.toFixed(2)},${b.toFixed(2)}`).join(" ");
   el("polyline",{class:"halo",points:full,fill:"none","stroke-width":5.5,"stroke-linejoin":"round","stroke-linecap":"round",opacity:.9},svg);
   el("polyline",{class:"zl",points:full,fill:"none","stroke-width":2.6,"stroke-dasharray":"5,4","stroke-linecap":"round"},svg);
-  el("text",{class:"ink",x:o.cx,y:o.cy-48,"text-anchor":"middle","font-size":42,"font-weight":700},svg,String(N));
-  el("text",{class:"mut",x:o.cx,y:o.cy-18,"text-anchor":"middle","font-size":15},svg,"Seats");
-  el("text",{class:"mut",x:o.cx,y:o.cy+20,"text-anchor":"middle","font-size":14,"font-weight":700,"letter-spacing":"0.02em"},svg,`${maj} needed for majority`);
+  const MB=!!o.M;
+  el("text",{class:"ink",x:o.cx,y:o.cy-(MB?40:48),"text-anchor":"middle","font-size":MB?40:42,"font-weight":700},svg,String(N));
+  el("text",{class:"mut",x:o.cx,y:o.cy-(MB?14:18),"text-anchor":"middle","font-size":MB?16:15},svg,"Seats");
+  el("text",{class:"mut",x:o.cx,y:o.cy+(MB?20:20),"text-anchor":"middle","font-size":MB?14:14,"font-weight":700,"letter-spacing":"0.02em"},svg,`${maj} needed for majority`);
 }
 const members=()=>[...sel].filter(p=>PM.seats[p]>0).sort((a,b)=>spec(a)-spec(b));
 function drawParl(){
-  const W=940,H=710,cx=W/2,cy=470,rOut=330,rIn=178;
+  const M=CW()<1000; // phones: narrower canvas (text renders larger), party boxes wrap onto several rows
+  const W=M?500:940,cx=W/2,rOut=M?232:330,rIn=M?122:178,cy=M?96+rOut:470;
+  const act=PM.order.filter(p=>PM.seats[p]>0),n=act.length,gp=M?6:8,avail=W-(M?32:52),PADX=M?16:18,MINW=M?46:44,MAXW=230,names=act.map(p=>lab(p));
+  // party boxes: one row on desktop (shrinks to fit); on phones they wrap onto as many rows as needed at a readable size
+  let fs0=M?13:12,rows=[],bws=[];
+  if(M){
+    const w=names.map(t=>Math.min(MAXW,Math.max(MINW,tw(t,fs0)+PADX)));
+    let r=[],used=0;w.forEach((bw,i)=>{if(r.length&&used+gp+bw>avail){rows.push(r);r=[];used=0;}used+=(r.length?gp:0)+bw;r.push(i);});if(r.length)rows.push(r);
+    bws=w;
+  }else{
+    let nat;const calc=f=>names.map(t=>Math.min(MAXW,Math.max(MINW,tw(t,f)+PADX)));
+    for(;;){nat=calc(fs0);if(nat.reduce((a,b)=>a+b,0)+(n-1)*gp<=avail||fs0<=8.5)break;fs0-=.5;}
+    const natSum=nat.reduce((a,b)=>a+b,0),sc=natSum+(n-1)*gp>avail?(avail-(n-1)*gp)/natSum:1;bws=nat.map(w=>w*sc);rows=[act.map((_,i)=>i)];
+  }
+  const boxY=cy+(M?46:48),rowH=M?62:0,boxH=M?36:32,barY=boxY+(M?rows.length*rowH+26:64),bH=M?36:34,H=barY+bH+(M?92:94);
   const svg=frame($("#parl-chart"),{W,H,title:cfg.parliamentHeadline,sub:selPoll!=null?`Based on the ${polls[selPoll].inst||""} poll of ${fmtDate(polls[selPoll].t)}`:cfg.parliamentSubline,source:cfg.sourceName,boldSource:true});
   const L=layoutSeats(cx,cy,rIn,rOut);
-  drawSeats(svg,L,{cx,cy,rIn,rOut,dim:p=>sel.size>0&&!sel.has(p)});
-  const act=PM.order.filter(p=>PM.seats[p]>0),n=act.length,gp=8,avail=W-52,PADX=18,MINW=44,MAXW=230,names=act.map(p=>lab(p));
-  // each box is as wide as its name (min/max limits); if they do not all fit, everything shrinks proportionally
-  let fs0=12,nat;const calc=f=>names.map(t=>Math.min(MAXW,Math.max(MINW,tw(t,f)+PADX)));
-  for(;;){nat=calc(fs0);if(nat.reduce((a,b)=>a+b,0)+(n-1)*gp<=avail||fs0<=8.5)break;fs0-=.5;}
-  const natSum=nat.reduce((a,b)=>a+b,0),sc=natSum+(n-1)*gp>avail?(avail-(n-1)*gp)/natSum:1,bws=nat.map(w=>w*sc);
-  let bxAcc=cx-(bws.reduce((a,b)=>a+b,0)+(n-1)*gp)/2;
-  act.forEach((p,i)=>{
-    const bw=bws[i],bx=bxAcc;bxAcc+=bw+gp;
-    const c=colorOf(p,parties.indexOf(p)),on=sel.has(p),ft=fitLabel(names[i],fs0,bw-12);
-    const g=el("g",{style:"cursor:pointer"},svg);g.addEventListener("click",()=>{on?sel.delete(p):sel.add(p);drawParl();});
-    el("rect",{class:dark(c)?"dk":"",x:bx.toFixed(2),y:518,width:bw.toFixed(2),height:32,rx:6,fill:c},g);
-    if(on)el("rect",{class:"zl",x:(bx-3).toFixed(2),y:515,width:(bw+6).toFixed(2),height:38,rx:8,fill:"none","stroke-width":2.5,style:"stroke:var(--cink)"},g);
-    el("text",{x:(bx+bw/2).toFixed(2),y:(518+16+ft.fs*.35).toFixed(2),"text-anchor":"middle","font-size":ft.fs.toFixed(1),"font-weight":700,fill:contrast(c)},g,ft.t);
-    el("text",{class:"ink",x:(bx+bw/2).toFixed(2),y:(518+32+15+6).toFixed(2),"text-anchor":"middle","font-size":15,"font-weight":700},g,String(PM.seats[p]));
+  drawSeats(svg,L,{cx,cy,rIn,rOut,dim:p=>sel.size>0&&!sel.has(p),M});
+  rows.forEach((row,ri)=>{
+    const rw=row.reduce((a,i)=>a+bws[i],0)+(row.length-1)*gp;let bxAcc=cx-rw/2;const by=boxY+ri*rowH;
+    row.forEach(i=>{
+      const p=act[i],bw=bws[i],bx=bxAcc;bxAcc+=bw+gp;
+      const c=colorOf(p,parties.indexOf(p)),on=sel.has(p),ft=fitLabel(names[i],fs0,bw-12);
+      const g=el("g",{style:"cursor:pointer"},svg);g.addEventListener("click",()=>{on?sel.delete(p):sel.add(p);drawParl();});
+      if(M)el("rect",{x:(bx-3).toFixed(2),y:by-3,width:(bw+6).toFixed(2),height:rowH-4,fill:"transparent"},g); // bigger tap target
+      el("rect",{class:dark(c)?"dk":"",x:bx.toFixed(2),y:by,width:bw.toFixed(2),height:boxH,rx:6,fill:c},g);
+      if(on)el("rect",{class:"zl",x:(bx-3).toFixed(2),y:by-3,width:(bw+6).toFixed(2),height:boxH+6,rx:8,fill:"none","stroke-width":2.5,style:"stroke:var(--cink)"},g);
+      el("text",{x:(bx+bw/2).toFixed(2),y:(by+boxH/2+ft.fs*.35).toFixed(2),"text-anchor":"middle","font-size":ft.fs.toFixed(1),"font-weight":700,fill:contrast(c)},g,ft.t);
+      el("text",{class:"ink",x:(bx+bw/2).toFixed(2),y:(by+boxH+(M?18:21)).toFixed(2),"text-anchor":"middle","font-size":M?16:15,"font-weight":700},g,String(PM.seats[p]));
+    });
   });
-  const bx0=26,bW=W-52,bY=582,bH=34;
-  el("text",{class:"mut",x:bx0,y:bY-14,"font-size":11,"font-weight":700,"letter-spacing":"0.04em"},svg,"VOTE SHARE");
+  const bx0=M?16:26,bW=W-2*bx0,bY=barY;
+  el("text",{class:"mut",x:bx0,y:bY-14,"font-size":M?12.5:11,"font-weight":700,"letter-spacing":"0.04em"},svg,"VOTE SHARE");
   el("rect",{x:bx0,y:bY,width:bW,height:bH,rx:4,style:"fill:var(--track)"},svg);
   let cur=bx0;
   PM.order.forEach(p=>{
     const v=Math.round((PM.pct[p]||0)*10)/10;if(v<=0)return;
     const w=Math.min(bW-(cur-bx0),v/100*bW);if(w<=0)return;const c=colorOf(p,parties.indexOf(p));
     el("rect",{class:dark(c)?"dk":"",x:cur.toFixed(2),y:bY,width:w.toFixed(2),height:bH,fill:c},svg);
-    if(w>22)el("text",{x:(cur+w/2).toFixed(2),y:(bY+bH/2+4).toFixed(2),"text-anchor":"middle","font-size":11,"font-weight":700,fill:contrast(c)},svg,v+"%");
+    if(w>(M?30:22))el("text",{x:(cur+w/2).toFixed(2),y:(bY+bH/2+4).toFixed(2),"text-anchor":"middle","font-size":M?12.5:11,"font-weight":700,fill:contrast(c)},svg,v+"%");
     cur+=w;
   });
   const ow=bx0+bW-cur;
   if(ow>.5){el("rect",{x:cur.toFixed(2),y:bY,width:ow.toFixed(2),height:bH,style:"fill:var(--other)"},svg);
-    if(ow>22)el("text",{class:"oth",x:(cur+ow/2).toFixed(2),y:(bY+bH/2+4).toFixed(2),"text-anchor":"middle","font-size":11,"font-weight":700},svg,"Other");}
+    if(ow>(M?44:22))el("text",{class:"oth",x:(cur+ow/2).toFixed(2),y:(bY+bH/2+4).toFixed(2),"text-anchor":"middle","font-size":M?12.5:11,"font-weight":700},svg,"Other");}
   const mx=bx0+bW*.5;
   el("line",{class:"halo",x1:mx,y1:bY-8,x2:mx,y2:bY+bH+8,"stroke-width":5.5,"stroke-linecap":"round",opacity:.9},svg);
   el("line",{class:"zl",x1:mx,y1:bY-8,x2:mx,y2:bY+bH+8,"stroke-width":2.6,"stroke-dasharray":"5,4","stroke-linecap":"round"},svg);
-  el("text",{class:"ink",x:mx,y:bY+bH+22,"text-anchor":"middle","font-size":11,"font-weight":700},svg,"50%+1 majority");
+  el("text",{class:"ink",x:mx,y:bY+bH+(M?26:22),"text-anchor":"middle","font-size":M?12.5:11,"font-weight":700},svg,"50%+1 majority");
   renderCust();
 }
 const barHtml=m=>`<div class="bar"><div>${m.map(p=>`<i class="${dark(colorOf(p))?"dkb":""}" style="width:${PM.seats[p]/N*100}%;background:${colorOf(p)}"></i>`).join("")}</div><u style="left:${maj/N*100}%"></u></div>`;
@@ -748,6 +761,7 @@ function renderCoalitions(){
 if(polls.length){
   drawParl();
   renderCoalitions();
+  redraw.push(drawParl); // re-layout when crossing the phone breakpoint
 }
 
 // ---------- latest polls in the Bundestag projection: click a poll to see its seats ----------

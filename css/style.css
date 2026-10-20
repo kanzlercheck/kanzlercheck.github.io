@@ -539,3 +539,34 @@ table.pp tbody tr:focus-visible{outline:none}
 .co-info-x{appearance:none;position:absolute;top:6px;right:6px;width:26px;height:26px;border:0;background:none;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;border-radius:50%;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .co-info-x:hover{color:var(--ink);background:var(--bar-bg)}
 .co-info-t{font-weight:700;font-size:13px;color:var(--cink);margin:0 0 4px}
+
+/* overview: coalition builder shortcut on the Federal poll average card */
+.ov-cb{appearance:none;display:inline-flex;align-items:center;gap:6px;margin:0 0 10px;padding:6px 14px;border:1px solid var(--accent);border-radius:16px;background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent);font:600 12.5px inherit;font-family:inherit;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:background .12s ease,color .12s ease}
+.ov-cb:hover,.ov-cb:focus-visible{background:var(--accent);color:var(--on-accent);outline:none}
+@media(max-width:600px){.ov-cb{min-height:40px;padding:8px 16px;font-size:13.5px;border-radius:20px}}
+
+/* Bundestag projection on phones */
+@media(max-width:600px){
+  #tab-parliament .cust-head{flex-direction:column;align-items:flex-start;gap:8px}
+  #tab-parliament .cust-head h3{margin:0}
+  #tab-parliament .fac-ctrl{justify-content:flex-start;gap:10px 14px}
+  #tab-parliament .fac-btn{min-height:40px;padding-left:12px}
+  #tab-parliament .cust .sec-top{flex-wrap:wrap;align-items:center;gap:6px 12px}
+  #tab-parliament .cust .res{font-size:14px;line-height:1.35}
+  #tab-parliament #cust-clear{min-height:36px;padding:0 6px}
+  #tab-parliament .sec .fac-panel{margin:0 0 14px}
+  .pp-note{padding:12px 14px 0}.pp-note .sec-top{flex-wrap:wrap;gap:6px 12px}
+  #parl-poll-more .link,#parl-poll-more button{min-height:40px}
+  table.pp td,table.pp th{padding:9px 8px}
+  table.coal-t td:first-child{white-space:normal;min-width:120px}
+  table.coal-t td,table.coal-t th{padding:10px 8px}
+  table.coal-t td.yes,table.coal-t td.no{font-size:12px}
+}
+
+/* overview: button sits between the card title and the "Poll average" link */
+.sec-top .ov-cb{margin:0;align-self:center}
+.sec-top:has(.ov-cb){flex-wrap:wrap;row-gap:8px}
+@media(max-width:600px){.sec-top:has(.ov-cb) .ov-cb{order:3}}
+/* Bundestag projection: no big gap between the coalition box and the chart */
+#tab-parliament .chart-card>.sec:first-child{padding-bottom:0}
+#tab-parliament .cust{margin-bottom:0}
