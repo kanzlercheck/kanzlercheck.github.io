@@ -1342,8 +1342,13 @@ async function drawConstituencies(){
     if(nt)nt.innerHTML=SNAP?`<b>Snapshot: ${fmtDate(SNAP.ms)}</b> · built on the ${SNAP.year} election result${SNAP.filled?` (${SNAP.filled} of ${n} constituencies had no comparable ${SNAP.year} result and were estimated from the next election)`:""}${GY===2025?"":` · ${GY} constituency boundaries`}${SNAP.F?"":" · first votes not available for this period"} · <button type="button" class="co-back" data-back="1">Back to today</button>`:"";};
   setTexts();
   // chips: constituencies led per party; click one to map where that party is strongest (click again to go back)
-  const coChips=()=>{$("#co-chips").innerHTML=[...K.keys()].filter(j=>expW[j]>0).sort((a,b)=>expW[b]-expW[a]).map(j=>{const col=colorOf(K[j]);
-    return `<div class="chip col${dark(col)?" dk":""}${mode===j?" sel":""}" data-p="${j}" tabindex="0" role="button" aria-pressed="${mode===j}" title="Highlight the constituencies ${lab(K[j])} leads" style="background:${col};border-color:${col};color:${contrast(col)}"><b>${expW[j]}</b><span>${lab(K[j])} · constituencies led</span></div>`;}).join("")
+  const coChips=()=>{
+    // projection: expected constituencies led; 2025 / 2021 / 2017: constituencies actually won in that election
+    const cntY={};if(yearView!==PJ)yearData.forEach(d=>{if(d)cntY[d.lead]=(cntY[d.lead]||0)+1;});
+    const cnum=j=>yearView===PJ?expW[j]:(cntY[j]||0);
+    const gt=$("#co-gt-vote");if(gt)gt.textContent=vn()+" votes"+(yearView===PJ?"":" \u00B7 "+yearView+" result");
+    $("#co-chips").innerHTML=[...K.keys()].filter(j=>cnum(j)>0).sort((a,b)=>cnum(b)-cnum(a)).map(j=>{const col=colorOf(K[j]);
+    return `<div class="chip col${dark(col)?" dk":""}${mode===j?" sel":""}" data-p="${j}" tabindex="0" role="button" aria-pressed="${mode===j}" title="Highlight the constituencies ${lab(K[j])} leads" style="background:${col};border-color:${col};color:${contrast(col)}"><b>${cnum(j)}</b><span>${lab(K[j])} · constituencies led</span></div>`;}).join("")
     +`<div class="chip${certainty?" sel":""}" data-cert="1"${yearView===PJ?"":" hidden"} tabindex="0" role="button" aria-pressed="${certainty}" title="Show how certain each constituency is" style="border-left-color:#999;cursor:pointer"><b>${tossups}</b><span>Toss-ups (lead under 60% likely)</span></div>`;};
   let hasQ=W.some(q=>q.q);const DV=C.demo.map((_,k)=>W.map(q=>q.d[k]).sort((a,b)=>a-b));
   // state of the view
@@ -1511,7 +1516,28 @@ async function drawConstituencies(){
   // swings: projected leader differs from the 2025 winner (same vote type) -> drawn striped in the Leader view
   const prevLead=w=>{const i_=SNAP?W.indexOf(w):-1,a=SNAP?(voteMode===1?SNAP.F[i_]:SNAP.Sd[i_]):(voteMode===1?w.f25:w.s25);let b=0;for(let j=1;j<m-1;j++)if(a[j]>a[b])b=j;return b;};
   const swingOf=d=>yearView===PJ&&d&&d.lead!==prevLead(d.w)?prevLead(d.w):-1;
+  // Regional projection card: vote share of the selected state / city / Ruhrgebiet = the projected constituency shares, weighted by each constituency's valid votes in the 2025 election.
+  // Only second votes, only today's projection, only regions with at least REG_MIN constituencies (small cities are too noisy).
+  const REG_MIN=4;
+  function drawRegion(){
+    const host=$("#co-region");if(!host)return;
+    let rs=null,name="";
+    if(cityF&&CITIES[cityF]){rs=R.filter(r=>CITIES[cityF].includes(r.w.n));name=cityF;}
+    else if(stF){rs=R.filter(r=>r.w.land===stF);name=stF;}
+    if(!rs||rs.length<REG_MIN||voteMode!==2||yearView!==PJ||SNAP){host.hidden=true;host.innerHTML="";return;}
+    const t=rs.reduce((a,r)=>a+r.w.v,0),P=K.map((k,j)=>rs.reduce((a,r)=>a+r.w.v*r.x[j],0)/t),B=K.map((k,j)=>rs.reduce((a,r)=>a+r.w.v*r.w.s25[j],0)/t);
+    const lead=K.map((k,j)=>rs.filter(r=>r.lead===j).length),mx=Math.max(...P);
+    const ord=[...K.keys()].sort((a,b)=>(a===m-1)-(b===m-1)||P[b]-P[a]);
+    const top=ord.find(j=>lead[j]>0&&j!==m-1),ld=top!=null?`${lab(K[top])} leads ${lead[top]} of ${rs.length}`:"";
+    const sg=d=>{const v=Math.round(d*10)/10;return v===0?"\u00B10.0":(v>0?"+":"\u2212")+Math.abs(v).toFixed(1);};
+    host.innerHTML=`<div class="rg-head"><h4>${name}</h4><span>projected second votes</span></div>
+      <p class="subl">${rs.length} constituencies${ld?" \u00B7 "+ld:""} \u00B7 change vs ${GY}</p>
+      <div class="rg-rows">${ord.map(j=>{const col=colorOf(K[j]),d=P[j]-B[j];
+        return `<div class="rg-row"><span class="rg-n"><i class="${dark(col)?"dk":""}" style="background:${col}"></i>${lab(K[j])}</span><span class="rg-bar"><b class="${dark(col)?"dk":""}" style="width:${Math.max(1.5,P[j]/mx*100).toFixed(1)}%;background:${col}"></b></span><span class="rg-v">${P[j].toFixed(1)}%</span><span class="rg-d ${d>0.05?"up":d<-0.05?"dn":""}">${sg(d)}</span></div>`;}).join("")}</div>`;
+    host.hidden=false;
+  }
   function drawMap(){
+  drawRegion();
     if(!hasMap)return;
     mapHost.innerHTML="";const svg=el("svg",{viewBox:vbStr(view),role:"img","aria-label":"Leading party per constituency"},mapHost);svgEl=svg;
     const leaderView=swings,defs=el("defs",{},svg),pats={};
