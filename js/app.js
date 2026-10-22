@@ -103,13 +103,27 @@ function track(path,title){
 function goTab(t,target){
   const b=document.querySelector(`.tab-btn[data-tab="${t}"]`);if(!b)return;
   track("/"+t,b.textContent.trim());
-  document.querySelectorAll(".tab-btn").forEach(x=>x.classList.toggle("active",x===b));
+  document.querySelectorAll(".tab-btn").forEach(x=>x.classList.toggle("active",x.dataset.tab===t));
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("active",p.id==="tab-"+t));
   history.replaceState(null,"","#"+t);scrollTo(0,0);
   if(typeof fitOv==="function")fitOv();
   if(target)requestAnimationFrame(()=>{const e=document.getElementById(target);if(e)e.scrollIntoView();});
 }
-document.querySelectorAll(".tab-btn").forEach(b=>b.onclick=()=>goTab(b.dataset.tab));
+document.querySelectorAll(".tab-btn").forEach(b=>b.onclick=()=>{goTab(b.dataset.tab);if(typeof sideSet==="function")sideSet(false);});
+// ---------- sidebar menu: show / hide ----------
+function sideSet(open){
+  const sb=document.getElementById("sidebar"),sc=document.getElementById("side-scrim"),tg=document.getElementById("side-toggle");
+  if(!sb)return;
+  sb.classList.toggle("open",open);sb.setAttribute("aria-hidden",String(!open));
+  if(tg){tg.setAttribute("aria-expanded",String(open));tg.setAttribute("aria-label",open?"Hide menu":"Show menu");}
+  if(sc){if(open){sc.hidden=false;requestAnimationFrame(()=>sc.classList.add("open"));}else{sc.classList.remove("open");setTimeout(()=>{if(!sb.classList.contains("open"))sc.hidden=true;},200);}}
+}
+{const tg=document.getElementById("side-toggle"),cl=document.getElementById("side-close"),sc=document.getElementById("side-scrim");
+  if(tg)tg.onclick=()=>sideSet(!document.getElementById("sidebar").classList.contains("open"));
+  if(cl)cl.onclick=()=>sideSet(false);
+  if(sc)sc.onclick=()=>sideSet(false);
+  addEventListener("keydown",e=>{if(e.key==="Escape")sideSet(false);});
+  try{matchMedia("(min-width:601px)").addEventListener("change",e=>{if(e.matches)sideSet(false);});}catch(e){}}
 document.querySelectorAll("[data-go]").forEach(b=>{b.onclick=e=>{e.stopPropagation();goTab(b.dataset.go,b.dataset.scroll);};if(b.classList.contains("clickable"))b.onkeydown=e=>{if(e.target!==b)return;if(e.key==="Enter"||e.key===" "){e.preventDefault();goTab(b.dataset.go,b.dataset.scroll);}};});
 if(location.hash)goTab(location.hash.slice(1));
 try{if(!document.querySelector(`.tab-btn[data-tab="${location.hash.slice(1)}"]`)&&!/^#state-/.test(location.hash))track("/overview","Overview");}catch(e){track("/overview","Overview");}
@@ -253,7 +267,7 @@ function lineChart(host,o){
       const k=dark(s.color)?"dk":"",a={class:k,fill:"none",stroke:s.color,"stroke-width":2.6,"stroke-linejoin":"round","stroke-linecap":"round"};
       if(dd)el("path",{...a,d:dd.trim(),"stroke-dasharray":"2,6"},svg);
       if(ds)el("path",{...a,d:ds.trim()},svg);
-    }else if(d)el("path",{class:dark(s.color)?"dk":"",d:d.trim(),fill:"none",stroke:s.color,"stroke-width":2.6,"stroke-linejoin":"round","stroke-linecap":"round"},svg);
+    }else if(d&&!o.noLine)el("path",{class:dark(s.color)?"dk":"",d:d.trim(),fill:"none",stroke:s.color,"stroke-width":2.6,"stroke-linejoin":"round","stroke-linecap":"round"},svg);
     if(last&&(o.endWithin==null||last.t>=t1-o.endWithin*DAY))ends.push({s,v:last.v,y:y(last.v),ty:y(last.v),ex:x(last.t)});
   });
   evs.forEach(e=>o.series.forEach(s=>{const v=nearV(s,e.t);if(v==null)return;
@@ -483,17 +497,17 @@ function approvalChart(opt){
 }
 if(apData.length){approvalChart();redraw.push(approvalChart);}
 
-function pollTableHtml(recs,plist){
+function pollTableHtml(recs,plist,pick){
   const recent=recs.slice(-15).reverse(),cand=plist.filter(p=>!isOther(p));
   return `<table><thead><tr><th>Date</th><th>Pollster</th>${plist.map(p=>`<th class="${dark(colorOf(p))?"dk":""}" style="border-bottom-color:${colorOf(p,parties.indexOf(p))}">${lab(p)}</th>`).join("")}</tr></thead><tbody>`+
     recent.map(r=>{const top=Math.max(...cand.map(p=>r.v[p]??-1));
-      return `<tr><td>${fmtDate(r.t)}</td><td>${r.inst||r.i||""}</td>${plist.map(p=>`<td class="${r.v[p]===top&&!isOther(p)?"lead":""}">${r.v[p]!=null?fmt(r.v[p])+"%":"\u2013"}</td>`).join("")}</tr>`;}).join("")+`</tbody></table>`;
+      const nm=r.inst||r.i||"";return `<tr${pick!==undefined&&nm&&pick===nm?' class="pst-on"':""}><td>${fmtDate(r.t)}</td>${pick!==undefined&&nm?`<td class="pst${pick===nm?" on":""}" data-pst="${escF(nm)}" tabindex="0" role="button" aria-pressed="${pick===nm}" title="Show only polls by ${escF(nm)}">${escF(nm)}</td>`:`<td>${nm}</td>`}${plist.map(p=>`<td class="${r.v[p]===top&&!isOther(p)?"lead":""}">${r.v[p]!=null?fmt(r.v[p])+"%":"\u2013"}</td>`).join("")}</tr>`;}).join("")+`</tbody></table>`;
 }
 // ---------- POLLS TAB ----------
 let tMin=0,tMax=0,BW=cfg.smoothingDays||30;
 const active=new Set(parties);
 const RANGES=[["6m","6 months",6],["1y","1 year",12],["2y","2 years",24],["5y","5 years",60],["10y","10 years",120],["all","All time",0]];
-let pollRange="all";
+let pollRange="all",pollsterSel=null; // pollsterSel: show only this pollster in the poll chart (null = all)
 function rangeStart(){if(pollRange==="all")return tMin;const m=RANGES.find(r=>r[0]===pollRange)[2],d=new Date(tMax);d.setUTCMonth(d.getUTCMonth()-m);return Math.max(tMin,+d);}
 const smoothCache=new Map(),viewCache=new Map();
 function smoothedPoints(p,ts,N,src=polls,tag=""){const k=pollRange+"|"+tag+p;let pts=smoothCache.get(k);if(!pts){pts=Array.from({length:N+1},(_,i)=>{const t=ts+(tMax-ts)*i/N;return{t,v:smoothedValueAt(src,p,t,BW)};});smoothCache.set(k,pts);}return pts;}
@@ -604,14 +618,22 @@ function bindFactions(){
 }
 if(polls.length){loadFac();activeF=new Set(unitsOf());bindFactions();renderFacEditor();syncFacUI();}
 
+// one pollster's own polls as a series: joined by a continuous line, broken where that pollster has a long gap
+function rawPoints(src,p,ts){
+  const out=[];let prev=null;
+  src.forEach(r=>{if(r.t<ts||r.v[p]==null)return;
+    if(prev!=null&&r.t-prev>120*DAY)out.push({t:(r.t+prev)/2,v:null});
+    out.push({t:r.t,v:r.v[p]});prev=r.t;});
+  return out;
+}
 function drawPolls(){
   const N=220,host=$("#poll-chart"),ts=rangeStart(),fm=faOn.poll;
-  const src=fm?viewPolls():polls,tag=fm?"F"+facVer+"|":"";
+  const src0=fm?viewPolls():polls,src=pollsterSel?src0.filter(r=>r.inst===pollsterSel):src0,tag=(fm?"F"+facVer+"|":"")+(pollsterSel?"P:"+pollsterSel+"|":"");
   const units=fm?unitsOf():parties,vset=fm?activeF:active;
   const vis=units.filter(p=>vset.has(p));
   const viewKey=tag+pollRange+"|"+vis.join(",")+"|"+(isDarkMode()?"d":"l")+"|"+CW(),cachedView=viewCache.get(viewKey);
   if(cachedView){viewCache.delete(viewKey);viewCache.set(viewKey,cachedView);host.replaceChildren(...cachedView);return;}
-  const series=vis.map(p=>({name:lab(p),color:colorOf(p,parties.indexOf(p)),points:smoothedPoints(p,ts,N,src,tag)}));
+  const series=vis.map(p=>({name:lab(p),color:colorOf(p,parties.indexOf(p)),points:pollsterSel?rawPoints(src,p,ts):smoothedPoints(p,ts,N,src,tag)}));
   const dots=[];vis.forEach(p=>src.forEach(r=>{if(r.t>=ts&&r.v[p]!=null)dots.push({t:r.t,v:r.v[p],color:colorOf(p,parties.indexOf(p))});}));
   // actual federal election results (rings), with the final polls for comparison in the tooltip - same as on the state charts
   const preAvg=(p,t)=>{let w=src.filter(q=>q.t<t&&q.t>=t-30*DAY&&q.v[p]!=null);if(!w.length)w=src.filter(q=>q.t<t&&q.v[p]!=null).slice(-3);return w.length?{v:w.reduce((a,q)=>a+q.v[p],0)/w.length,n:w.length}:null;};
@@ -619,7 +641,7 @@ function drawPolls(){
     vis.forEach(p=>{if(r[p]==null)return;const pa=preAvg(p,t);if(pa)results.push({t,v:r[p],name:lab(p),pre:pa.v,preN:pa.n,color:colorOf(p,parties.indexOf(p))});});});
   const mx=Math.max(0,...dots.map(d=>d.v),...results.map(r=>r.v)),yMax=Math.ceil(Math.max(10,mx*1.12)/5)*5;
   let step=1;[1,2,5,10,20,25,50,100].forEach(s=>{if(s<=yMax/6*1.4)step=s;});
-  lineChart(host,{H:720,rasterDots:true,events:true,months:pollRange==="6m"||pollRange==="1y"?[1,2,3,4,5,6,7,8,9,10,11]:pollRange==="2y"||undefined,title:cfg.pollHeadline,sub:cfg.pollSubline+(results.length?" \u00B7 rings = actual federal election results":""),source:"Source: "+cfg.sourceName,series,dots,results,yMin:0,yMax,step,threshold:cfg.threshold,endLabel:(v,n)=>`${fmt(v)} % ${n}`});
+  lineChart(host,{H:720,rasterDots:true,t0:pollsterSel?ts:undefined,t1:pollsterSel?tMax:undefined,events:true,months:pollRange==="6m"||pollRange==="1y"?[1,2,3,4,5,6,7,8,9,10,11]:pollRange==="2y"||undefined,title:cfg.pollHeadline,sub:cfg.pollSubline+(pollsterSel?" \u00B7 only "+pollsterSel:"")+(results.length?" \u00B7 rings = actual federal election results":""),source:"Source: "+cfg.sourceName,series,dots,results,yMin:0,yMax,step,threshold:cfg.threshold,endLabel:(v,n)=>`${fmt(v)} % ${n}`});
   viewCache.set(viewKey,Array.from(host.childNodes));if(viewCache.size>14)viewCache.delete(viewCache.keys().next().value);
 }
 function renderChips(){
@@ -640,7 +662,18 @@ if(polls.length){
   };
   drawPolls();renderChips();redraw.push(drawPolls);
 
-  $("#poll-table").innerHTML=pollTableHtml(polls,parties);
+  const pollPick=(nm,scroll)=>{
+    pollsterSel=nm&&nm!==pollsterSel?nm:null;
+    $("#poll-table").innerHTML=pollTableHtml(polls,parties,pollsterSel);
+    const bar=$("#poll-pf");
+    if(bar){bar.hidden=!pollsterSel;bar.innerHTML=pollsterSel?`<span>Showing only polls by <b>${escF(pollsterSel)}</b></span><button type="button" class="link" data-clear="1">Show all pollsters &times;</button>`:"";}
+    drawPolls();
+    if(pollsterSel&&scroll&&bar)bar.scrollIntoView({block:"start",behavior:"smooth"});
+  };
+  $("#poll-table").innerHTML=pollTableHtml(polls,parties,pollsterSel);
+  $("#poll-table").addEventListener("click",e=>{const c=e.target.closest("[data-pst]");if(c)pollPick(c.dataset.pst,true);});
+  $("#poll-table").addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!==" ")return;const c=e.target.closest("[data-pst]");if(c){e.preventDefault();pollPick(c.dataset.pst,true);}});
+  {const bar=$("#poll-pf");if(bar)bar.addEventListener("click",e=>{if(e.target.closest("[data-clear]"))pollPick(null,false);});}
 }
 
 // ---------- BUNDESTAG ----------
@@ -1956,6 +1989,7 @@ function scaleAll(){
   const g=innerWidth<900?1:Math.max(1,Math.min(innerWidth/1620,innerHeight/911));
   const tb=$("#tabbar"),m=$("main.wrap");
   if(tb)tb.style.zoom=g>1?g:"";
+  const sb=$("#sidebar");if(sb)sb.style.zoom=g>1?g:"";
   if(m)m.style.zoom=g>1?g:"";
   return g;
 }

@@ -26,29 +26,40 @@
 <meta name="twitter:description" content="German federal election polling average, Bundestag seat projection and government approval. Source: dawum.de">
 <meta name="twitter:image" content="https://kanzlercheck.github.io/img/og.png?v=20261017">
 <link rel="canonical" href="https://kanzlercheck.github.io/">
-<link rel="stylesheet" href="css/style.css?v=perf25">
+<link rel="stylesheet" href="css/style.css?v=perf27">
 </head>
 <body>
 <script>setTimeout(function(){var o=document.getElementById("tab-overview");if(o)o.classList.remove("loading")},12000)</script>
 <script>(function(){var s=null;try{s=localStorage.getItem("theme")}catch(e){}var d=s?s==="dark":true;if(d)document.body.classList.add("dark")})()</script>
 <div id="tabbar">
   <div class="brandbox">
+    <button type="button" id="side-toggle" class="side-toggle" aria-label="Show menu" aria-expanded="false" aria-controls="sidebar"><span class="burger" aria-hidden="true"></span></button>
     <img class="logo" id="logo" src="img/logo.png" alt="" width="74" height="30"><script>if(document.body.classList.contains("dark"))document.getElementById("logo").src="img/logo-dark.png"</script>
     <span class="brand" id="site-title">KanzlerCheck</span>
   </div>
   <nav class="tabs" role="tablist">
     <button class="tab-btn active" data-tab="overview" role="tab" type="button">Overview</button>
     <button class="tab-btn" data-tab="constituencies" role="tab" type="button">Battleground map</button>
-    <button class="tab-btn" data-tab="polls" role="tab" type="button">Poll Average</button>
+    <button class="tab-btn" data-tab="polls" role="tab" type="button">Polls &amp; Approval</button>
     <button class="tab-btn" data-tab="parliament" role="tab" type="button">Bundestag Projection</button>
     <button class="tab-btn" data-tab="election" role="tab" type="button">2025 Election</button>
-    <button class="tab-btn soon" type="button" aria-disabled="true" tabindex="-1">NEWS (SOON)</button>
   </nav>
   <div id="theme-zone">
     <label class="switch" aria-label="Dark mode"><input type="checkbox" id="dark-toggle"><span class="slider"></span></label>
     <span>Dark mode</span>
   </div>
 </div>
+<div id="side-scrim" hidden></div>
+<aside id="sidebar" aria-label="Main menu" aria-hidden="true">
+  <div class="side-head"><span>Menu</span><button type="button" id="side-close" class="side-close" aria-label="Hide menu">&times;</button></div>
+  <nav class="side-nav" role="tablist">
+    <button class="tab-btn active" data-tab="overview" role="tab" type="button">Overview</button>
+    <button class="tab-btn" data-tab="constituencies" role="tab" type="button">Battleground map</button>
+    <button class="tab-btn" data-tab="polls" role="tab" type="button">Polls &amp; Approval</button>
+    <button class="tab-btn" data-tab="parliament" role="tab" type="button">Bundestag Projection</button>
+    <button class="tab-btn" data-tab="election" role="tab" type="button">2025 Election</button>
+  </nav>
+</aside>
 <main class="wrap">
   <div id="error" class="error" hidden></div>
 
@@ -110,6 +121,7 @@
         <div class="fgroup fright"><div class="ftitle">Party visibility</div><div class="filters" id="party-filters"></div></div>
       </div>
       <div class="fac-panel" id="fac-panel" hidden><div id="fac-editor" class="fac-ed"></div></div>
+      <div class="pf-bar" id="poll-pf" hidden></div>
       <div id="poll-chart"></div>
       <details class="sec fold"><summary><h3>Latest polls</h3></summary><div class="scroll" id="poll-table"></div></details>
     </div>
@@ -250,6 +262,6 @@
 </main>
 <div id="tip" class="tip" hidden></div>
 <script data-goatcounter="https://efefury.goatcounter.com/count" data-goatcounter-settings='{"no_onload":true}' async src="//gc.zgo.at/count.js"></script>
-<script src="js/app.js?v=perf39"></script>
+<script src="js/app.js?v=perf43"></script>
 </body>
 </html>
