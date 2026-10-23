@@ -2,7 +2,7 @@ name: Update embed image
 on:
   push:
     branches: [main]
-    paths: ["data/germanpolls.csv", "config.json", "index.html"]
+    paths: ["data/germanpolls.csv", "data/government_approval.csv", "state_polls/*.csv", "data/state_results.json", "data/constituencies.json", "config.json", "index.html", "py/make_og.py", "py/build_pages.py"]
   workflow_dispatch:
 permissions:
   contents: write
@@ -18,5 +18,5 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git add img/og.png index.html 404.html sitemap.xml polls parliament constituencies election state
+          git add img/og.png img/og index.html 404.html sitemap.xml polls parliament constituencies election state
           git diff --cached --quiet || (git commit -m "Update embed image" && git push)
