@@ -103,11 +103,11 @@ class Card:
     def __init__(self, title, sub):
         self.img = Image.new("RGB", (W * S, H * S), BG); self.d = ImageDraw.Draw(self.img)
         logo = Image.open(os.path.join(HERE, "img", "logo-dark.png")).convert("RGBA")
-        lh = 96; lw = round(logo.width * lh / logo.height)
+        lh = 108; lw = round(logo.width * lh / logo.height)
         logo = logo.resize((lw * S, lh * S), Image.LANCZOS)
-        self.img.paste(logo, ((W - lw) // 2 * S, 16 * S), logo)
-        self.text(W / 2, 128, title, 600, 25, INK, "ma")
-        self.text(W / 2, 160, sub, 400, 15, MUT, "ma")
+        self.img.paste(logo, ((W - lw) // 2 * S, 10 * S), logo)
+        self.text(W / 2, 122, title, 600, 34, INK, "ma")
+        self.text(W / 2, 164, sub, 400, 21, MUT, "ma")
     def text(self, x, y, t, w, s, fill, anchor="la"):
         self.d.text((x * S, y * S), t, font=_font(w, s), fill=fill, anchor=anchor)
     def width(self, t, w, s): return self.d.textlength(t, font=_font(w, s)) / S
@@ -131,61 +131,62 @@ class Card:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         self.img.resize((W, H), Image.LANCZOS).save(path, optimize=True)
 
-def draw_bars(card, items, vfmt=lambda v: "%d%%" % round(v), foot_dy=72):
+def draw_bars(card, items, vfmt=lambda v: "%d%%" % round(v), foot_dy=88, base=508):
     """items: dict(name, color(hex), v, [prev], [gov], [foot]).  Same bar chart as the home page of the site."""
-    left, right, gap, base, maxh = 64, 64, 16, 468, 200
+    left, right, gap = 52, 40, 16
+    maxh = base - 280
     n = len(items); bw = (W - left - right - (n - 1) * gap) / n
     scale = maxh / max(10, *(it["v"] for it in items))
     y5 = base - 5 * scale
-    for x in range(left, W - right, 12):
-        card.line([(x, y5), (min(x + 6, W - right), y5)], LINE, 2)
-    card.text(left - 8, y5 - 9, "5%", 500, 13, MUT, "ra")
+    for x in range(left, W - right, 14):
+        card.line([(x, y5), (min(x + 7, W - right), y5)], LINE, 3)
+    card.text(left - 8, y5 - 12, "5%", 500, 17, MUT, "ra")
     for i, it in enumerate(items):
         x = left + i * (bw + gap); cx = x + bw / 2; v = it["v"]; h = max(2, v * scale); top = base - h
         c = bar_color(it["color"])
-        card.rrect(x, top, x + bw, base, 2, c)
+        card.rrect(x, top, x + bw, base, 3, c)
         has_d = it.get("prev") is not None
-        card.text(cx, top - (54 if has_d else 32), vfmt(v), 700, 27, INK, "ma")
+        card.text(cx, top - (76 if has_d else 48), vfmt(v), 700, 38, INK, "ma")
         if has_d:
             dv = v - it["prev"]; flat = abs(dv) < .05
             s = "(=)" if flat else "(%s%.1f)" % ("+" if dv > 0 else "\u2212", abs(dv))
-            card.text(cx, top - 22, s, 600, 17, INK if flat else (OK if dv > 0 else ERR), "ma")
+            card.text(cx, top - 34, s, 600, 24, INK if flat else (OK if dv > 0 else ERR), "ma")
         tint = lighten(c, .38)
-        card.rrect(x, base + 10, x + bw, base + 42, 2, tint)
-        name = it["name"]; fs = 16
-        while card.width(name, 700, fs) > bw - 10 and fs > 10: fs -= 1
+        card.rrect(x, base + 12, x + bw, base + 56, 3, tint)
+        name = it["name"]; fs = 22
+        while card.width(name, 700, fs) > bw - 10 and fs > 11: fs -= 1
         if card.width(name, 700, fs) > bw - 10:
             while len(name) > 1 and card.width(name + "\u2026", 700, fs) > bw - 10: name = name[:-1]
             name += "\u2026"
-        card.text(cx, base + 26, name, 700, fs, (21, 24, 28) if lum(tint) >= 140 else (255, 255, 255), "mm")
-        if it.get("gov"): card.text(cx, base + 50, "Gov't", 600, 14, ERR, "ma")
-        if it.get("foot"): card.text(cx, base + foot_dy, it["foot"], 700, 14, MUT, "ma")
+        card.text(cx, base + 34, name, 700, fs, (21, 24, 28) if lum(tint) >= 140 else (255, 255, 255), "mm")
+        if it.get("gov"): card.text(cx, base + 62, "Gov't", 600, 19, ERR, "ma")
+        if it.get("foot"): card.text(cx, base + foot_dy, it["foot"], 700, 19, MUT, "ma")
 
-def line_panel(card, box, series, t0, t1, ymin, ymax, step, lab_w, month_step=2, ylab_w=44):
+def line_panel(card, box, series, t0, t1, ymin, ymax, step, lab_w, month_step=2, ylab_w=48):
     """Smoothed trend lines.  series: dict(label, color(hex), pts[(date, value|None)]).  box = (x0, y0, x1, y1) incl. axis labels."""
-    x0, y0, x1, y1 = box; L = x0 + ylab_w; R = x1 - lab_w; B = y1 - 26; T = y0
+    x0, y0, x1, y1 = box; L = x0 + ylab_w; R = x1 - lab_w; B = y1 - 32; T = y0
     X = lambda t: L + (t - t0).days / max(1, (t1 - t0).days) * (R - L)
     Y = lambda v: B - (v - ymin) / (ymax - ymin) * (B - T)
     v = ymin
     while v <= ymax + 1e-9:
-        card.line([(L, Y(v)), (R, Y(v))], LINE, 1)
-        card.text(L - 8, Y(v) - 8, "%d%%" % v, 400, 13, MUT, "ra"); v += step
+        card.line([(L, Y(v)), (R, Y(v))], LINE, 2)
+        card.text(L - 8, Y(v) - 11, "%d%%" % v, 400, 17, MUT, "ra"); v += step
     d = date(t0.year, t0.month, 1)   # month ticks
     while d <= t1:
         if d >= t0 and (d.month - 1) % month_step == 0:
-            card.text(X(d), B + 8, MON[d.month - 1], 400, 12, MUT, "ma")
+            card.text(X(d), B + 8, MON[d.month - 1], 400, 16, MUT, "ma")
         d = date(d.year + (d.month == 12), d.month % 12 + 1, 1)
     ends = []
     for s in series:
         pts = [(X(t), Y(v)) for t, v in s["pts"] if v is not None]
         if len(pts) < 2: continue
-        col = line_color(s["color"]); card.line(pts, col, 3.5)
+        col = line_color(s["color"]); card.line(pts, col, 5)
         ends.append([pts[-1][1], s, col, [v for _, v in s["pts"] if v is not None][-1]])
     ends.sort(key=lambda e: e[0])
     for i in range(1, len(ends)):   # keep the end labels apart
-        if ends[i][0] - ends[i - 1][0] < 19: ends[i][0] = ends[i - 1][0] + 19
+        if ends[i][0] - ends[i - 1][0] < 24: ends[i][0] = ends[i - 1][0] + 24
     for y, s, col, val in ends:
-        card.text(R + 10, y - 9, "%s %d%%" % (s["label"], round(val)), 700, 15, col)
+        card.text(R + 10, y - 12, "%s %d%%" % (s["label"], round(val)), 700, 18, col)
 
 # ---------------------------------------------------------------- hemicycle (port of layoutSeats() in js/app.js)
 def sainte_lague(pct, seats):
@@ -242,8 +243,8 @@ def card_polls(cfg, polls, parties):
                    pts=[(t0 + timedelta(days=round(days * k / 100)), smoothed(polls, p, t0 + timedelta(days=round(days * k / 100)), bw)) for k in range(101)]) for p in ps]
     top = max(v for s in series for _, v in s["pts"] if v is not None)
     c = Card("Election polls & approval", "Federal voting intention, last 12 months  \u00b7  latest %s" % t_max.strftime("%d %b %Y").lstrip("0"))
-    c.text(64, 204, "Poll average", 700, 15, MUT)
-    line_panel(c, (64, 226, 770, 598), series, t0, t_max, 0, math.ceil(top / 5) * 5, 5, lab_w=104)
+    c.text(24, 204, "Poll average", 700, 21, MUT)
+    line_panel(c, (24, 238, 612, 622), series, t0, t_max, 0, math.ceil(top / 5) * 5, 5, lab_w=122)
     # government approval (right)
     try:
         with open(os.path.join(HERE, cfg.get("approvalCsv", "data/government_approval.csv")), encoding="utf-8-sig", newline="") as f:
@@ -272,8 +273,8 @@ def card_polls(cfg, polls, parties):
             if x["label"] in ("Approve", "Disapprove"): x["label"] = "Gov. " + x["label"].lower()
         vals = [v for s in ser for _, v in s["pts"] if v is not None]
         lo, hi = math.floor(min(vals) / 10) * 10, math.ceil(max(vals) / 10) * 10
-        c.text(810, 204, "Government & chancellor approval", 700, 15, MUT)
-        line_panel(c, (810, 226, 1170, 598), ser, a0, a_max, lo, hi, 10, lab_w=150, month_step=4, ylab_w=40)
+        c.text(628, 204, "Government & chancellor approval", 700, 21, MUT)
+        line_panel(c, (628, 238, 1190, 622), ser, a0, a_max, lo, hi, 10, lab_w=216, month_step=4)
     except Exception as e:
         print("  (approval panel skipped: %s)" % e)
     return c, t_max
@@ -290,7 +291,7 @@ def seat_model(cfg, polls, parties, at=None):
 def card_parliament(cfg, polls, parties):
     t_max = polls[-1][0]; order, pct, seats, N = seat_model(cfg, polls, parties); maj = N // 2 + 1; labels = cfg.get("labels", {})
     c = Card("Bundestag projection", "Seats based on the poll average of %s" % t_max.strftime("%d %b %Y").lstrip("0"))
-    cx, cy, r_out, r_in = W / 2, 466, 258, 140
+    cx, cy, r_out, r_in = W / 2, 498, 294, 158
     rows, slots, dot = layout_seats(N, cx, cy, r_in, r_out)
     owner = [p for p in order for _ in range(seats[p])]
     for i, s in enumerate(slots):
@@ -307,15 +308,15 @@ def card_parliament(cfg, polls, parties):
     ang = lambda p: math.atan2(cy - p[1], p[0] - cx)
     ext = lambda r, p: (cx + r * math.cos(ang(p)), cy - r * math.sin(ang(p)))
     full = [ext(r_in - 14, bp[0]), *bp, ext(r_out + 14, bp[-1])]
-    c.line(full, BG, 5.5); c.dashed(full, INK, 2.6, 5, 4)
-    c.text(cx, cy - 78, str(N), 700, 42, INK, "ma"); c.text(cx, cy - 26, "Seats", 400, 15, MUT, "ma")
-    c.text(cx, cy + 2, "%d needed for majority" % maj, 700, 13, MUT, "ma")
-    act = [p for p in order if seats[p] > 0]; gp = 10
-    ws = [max(64, c.width(labels.get(p, p), 700, 15) + 26) for p in act]; x = cx - (sum(ws) + gp * (len(act) - 1)) / 2
+    c.line(full, BG, 8); c.dashed(full, INK, 4, 8, 6)
+    c.text(cx, cy - 124, str(N), 700, 58, INK, "ma"); c.text(cx, cy - 62, "Seats", 400, 22, MUT, "ma")
+    c.text(cx, cy - 30, "%d needed for majority" % maj, 700, 18, MUT, "ma")
+    act = [p for p in order if seats[p] > 0]; gp = 12
+    ws = [max(80, c.width(labels.get(p, p), 700, 22) + 34) for p in act]; x = cx - (sum(ws) + gp * (len(act) - 1)) / 2
     for p, w in zip(act, ws):
-        col = bar_color(party_color(cfg, p)); c.rrect(x, cy + 36, x + w, cy + 70, 6, col)
-        c.text(x + w / 2, cy + 53, labels.get(p, p), 700, 15, (21, 24, 28) if lum(col) >= 140 else (255, 255, 255), "mm")
-        c.text(x + w / 2, cy + 78, str(seats[p]), 700, 20, INK, "ma"); x += w + gp
+        col = bar_color(party_color(cfg, p)); c.rrect(x, cy + 30, x + w, cy + 76, 8, col)
+        c.text(x + w / 2, cy + 53, labels.get(p, p), 700, 22, (21, 24, 28) if lum(col) >= 140 else (255, 255, 255), "mm")
+        c.text(x + w / 2, cy + 82, str(seats[p]), 700, 30, INK, "ma"); x += w + gp
     return c, t_max
 
 def project_constituencies(cfg, polls, parties):
@@ -351,11 +352,11 @@ def card_constituencies(cfg, polls, parties):
     g = json.load(open(os.path.join(HERE, "data", "wahlkreise.geojson"), encoding="utf-8"))
     pts = [p for f in g["features"] for poly in f["geometry"]["coordinates"] for ring in poly for p in ring]
     lo0, lo1 = min(p[0] for p in pts), max(p[0] for p in pts); la0, la1 = min(p[1] for p in pts), max(p[1] for p in pts)
-    kx = math.cos(math.radians((la0 + la1) / 2)); mh = 396; sc = mh / (la1 - la0); mw = (lo1 - lo0) * kx * sc
+    kx = math.cos(math.radians((la0 + la1) / 2)); mh = 420; sc = mh / (la1 - la0); mw = (lo1 - lo0) * kx * sc
     counts = {}
     for p in lead.values(): counts[p] = counts.get(p, 0) + 1
-    rows = sorted(counts.items(), key=lambda kv: -kv[1]); lw = 330; gap = 90
-    mx = (W - (mw + gap + lw)) / 2; my = 196
+    rows = sorted(counts.items(), key=lambda kv: -kv[1]); lw = 430; gap = 70
+    mx = (W - (mw + gap + lw)) / 2; my = 200
     c = Card("Battleground map", "Who leads in each of the %d constituencies  \u00b7  poll average of %s" % (len(lead), t_max.strftime("%d %b %Y").lstrip("0")))
     pr = lambda p: ((mx + (p[0] - lo0) * kx * sc) * S, (my + (la1 - p[1]) * sc) * S)
     for ft in g["features"]:
@@ -363,11 +364,11 @@ def card_constituencies(cfg, polls, parties):
         for poly in ft["geometry"]["coordinates"]:
             c.d.polygon([pr(p) for p in poly[0]], fill=col, outline=BG, width=S)
             for hole in poly[1:]: c.d.polygon([pr(p) for p in hole], fill=BG)
-    lx = mx + mw + gap; ly = my + (mh - 44 * len(rows)) / 2
+    rh = min(68, mh / len(rows)); lx = mx + mw + gap; ly = my + (mh - rh * len(rows)) / 2
     for i, (p, n) in enumerate(rows):
-        y = ly + i * 44; col = bar_color(party_color(cfg, p))
-        c.rrect(lx, y + 4, lx + 28, y + 32, 4, col)
-        c.text(lx + 44, y + 18, labels.get(p, p), 700, 22, INK, "lm"); c.text(lx + lw, y + 18, str(n), 700, 30, INK, "rm")
+        y = ly + i * rh; col = bar_color(party_color(cfg, p)); cy_ = y + rh / 2
+        c.rrect(lx, cy_ - 20, lx + 40, cy_ + 20, 6, col)
+        c.text(lx + 60, cy_, labels.get(p, p), 700, 34, INK, "lm"); c.text(lx + lw, cy_, str(n), 700, 46, INK, "rm")
     return c, t_max
 
 def card_election(cfg):
@@ -383,7 +384,7 @@ def card_election(cfg):
     def vf(v):  # one decimal; BSW (4.98) must not read as 5.0 = "above the threshold"
         t = "%.1f" % v
         return ("%.2f" % v if v < 5 <= float(t) else t) + "%"
-    draw_bars(c, items, vfmt=vf, foot_dy=58)
+    draw_bars(c, items, vfmt=vf, foot_dy=68, base=524)
     return c, date.fromisoformat(d)
 
 def card_state(cfg, sid, slug, en, results):
@@ -406,7 +407,7 @@ def card_state(cfg, sid, slug, en, results):
     sub = "Latest poll %s" % t.strftime("%d %b %Y").lstrip("0")
     if last: sub += "  \u00b7  last state election (%s) below" % date.fromisoformat(last).strftime("%d %b %Y").lstrip("0")
     c = Card("%s poll average" % en, sub)
-    draw_bars(c, items, foot_dy=58)
+    draw_bars(c, items, foot_dy=68, base=524)
     return c, t
 
 # ---------------------------------------------------------------- main
