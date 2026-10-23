@@ -8,8 +8,8 @@
 <meta name="color-scheme" content="light dark">
 <title>KanzlerCheck</title>
 <meta name="description" content="German federal election polling average, Bundestag seat projection and government approval. Source: dawum.de">
-<link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
-<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="KanzlerCheck">
 <meta property="og:title" content="KanzlerCheck: German poll average &amp; Bundestag projection">
@@ -26,7 +26,7 @@
 <meta name="twitter:description" content="German federal election polling average, Bundestag seat projection and government approval. Source: dawum.de">
 <meta name="twitter:image" content="https://kanzlercheck.github.io/img/og.png?v=20261023">
 <link rel="canonical" href="https://kanzlercheck.github.io/">
-<link rel="stylesheet" href="css/style.css?v=perf28">
+<link rel="stylesheet" href="/css/style.css?v=perf30">
 </head>
 <body>
 <script>setTimeout(function(){var o=document.getElementById("tab-overview");if(o)o.classList.remove("loading")},12000)</script>
@@ -34,7 +34,7 @@
 <div id="tabbar">
   <div class="brandbox">
     <button type="button" id="side-toggle" class="side-toggle" aria-label="Show menu" aria-expanded="false" aria-controls="sidebar"><span class="burger" aria-hidden="true"></span></button>
-    <img class="logo" id="logo" src="img/logo.png" alt="" width="74" height="30"><script>if(document.body.classList.contains("dark"))document.getElementById("logo").src="img/logo-dark.png"</script>
+    <img class="logo" id="logo" src="/img/logo.png" alt="" width="74" height="30"><script>if(document.body.classList.contains("dark"))document.getElementById("logo").src="/img/logo-dark.png"</script>
     <span class="brand" id="site-title">KanzlerCheck</span>
   </div>
   <nav class="tabs" role="tablist">
@@ -45,6 +45,7 @@
     <button class="tab-btn" data-tab="election" role="tab" type="button">2025 Election</button>
   </nav>
   <div id="theme-zone">
+    <button type="button" id="share-btn" class="share-btn" title="Copy a link to exactly this view" aria-label="Copy a link to this view"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg><span aria-live="polite">Copy link</span></button>
     <label class="switch" aria-label="Dark mode"><input type="checkbox" id="dark-toggle"><span class="slider"></span></label>
     <span>Dark mode</span>
   </div>
@@ -84,7 +85,7 @@
       <div class="chart-card flow clickable" data-go="polls" data-scroll="approval-card" tabindex="0" role="link" aria-label="Open government approval"><div class="sec">
         <div class="sec-top"><h3>Government approval</h3><span class="link">Details &rarr;</span></div>
         <div class="bignum" id="ov-appr-nums"></div><div id="ov-appr"></div>
-        <div class="chan-box"><img class="chan-pic" src="img/merz.png" alt="Chancellor" width="300" height="245"><div class="chan-info"><h4>Chancellor approval</h4><div class="bignum" id="ov-chan-nums"></div></div></div>
+        <div class="chan-box"><img class="chan-pic" src="/img/merz.png" alt="Chancellor" width="300" height="245"><div class="chan-info"><h4>Chancellor approval</h4><div class="bignum" id="ov-chan-nums"></div></div></div>
       </div></div>
       <div class="chart-card flow clickable" data-go="election" tabindex="0" role="link" aria-label="Open 2025 election"><div class="sec">
         <div class="sec-top"><h3>2025 federal election</h3><span class="link">Details &rarr;</span></div>
@@ -262,6 +263,6 @@
 </main>
 <div id="tip" class="tip" hidden></div>
 <script data-goatcounter="https://efefury.goatcounter.com/count" data-goatcounter-settings='{"no_onload":true}' async src="//gc.zgo.at/count.js"></script>
-<script src="js/app.js?v=perf43"></script>
+<script src="/js/app.js?v=perf45"></script>
 </body>
 </html>

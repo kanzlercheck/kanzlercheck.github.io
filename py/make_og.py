@@ -122,6 +122,10 @@ def main():
     if new != html:
         open(ip, "w", encoding="utf-8", newline="").write(new)
     print("  embed image -> img/og.png (poll average of %s)" % t_max.isoformat())
+    try:  # the per-address copies of index.html (polls/, state/BY/, ...) carry the same image link: rebuild them
+        import build_pages; build_pages.main()
+    except Exception as e:
+        print("  (pages not rebuilt: %s - run: python py/build_pages.py)" % e)
 
 if __name__ == "__main__":
     main()

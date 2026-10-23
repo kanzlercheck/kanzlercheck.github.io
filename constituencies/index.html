@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FCF7DC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101113" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<title>Battleground map – KanzlerCheck</title>
+<meta name="description" content="German federal election polling average, Bundestag seat projection and government approval. Source: dawum.de">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="KanzlerCheck">
+<meta property="og:title" content="KanzlerCheck: Battleground map">
+<meta property="og:description" content="German federal election polling average, Bundestag seat projection and government approval. Source: dawum.de">
+<meta property="og:url" content="https://kanzlercheck.github.io/constituencies/">
+<meta property="og:image" content="https://kanzlercheck.github.io/img/og.png?v=20261023">
+<meta property="og:image:secure_url" content="https://kanzlercheck.github.io/img/og.png?v=20261023">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="KanzlerCheck: federal poll average, dark mode bar chart of the latest German polls">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="KanzlerCheck: Battleground map">
+<meta name="twitter:description" content="German federal election polling average, Bundestag seat projection and government approval. Source: dawum.de">
+<meta name="twitter:image" content="https://kanzlercheck.github.io/img/og.png?v=20261023">
+<link rel="canonical" href="https://kanzlercheck.github.io/constituencies/">
+<link rel="stylesheet" href="/css/style.css?v=perf30">
+</head>
+<body>
+<script>setTimeout(function(){var o=document.getElementById("tab-overview");if(o)o.classList.remove("loading")},12000)</script>
+<script>(function(){var s=null;try{s=localStorage.getItem("theme")}catch(e){}var d=s?s==="dark":true;if(d)document.body.classList.add("dark")})()</script>
+<div id="tabbar">
+  <div class="brandbox">
+    <button type="button" id="side-toggle" class="side-toggle" aria-label="Show menu" aria-expanded="false" aria-controls="sidebar"><span class="burger" aria-hidden="true"></span></button>
+    <img class="logo" id="logo" src="/img/logo.png" alt="" width="74" height="30"><script>if(document.body.classList.contains("dark"))document.getElementById("logo").src="/img/logo-dark.png"</script>
+    <span class="brand" id="site-title">KanzlerCheck</span>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab-btn active" data-tab="overview" role="tab" type="button">Overview</button>
+    <button class="tab-btn" data-tab="constituencies" role="tab" type="button">Battleground map</button>
+    <button class="tab-btn" data-tab="polls" role="tab" type="button">Polls &amp; Approval</button>
+    <button class="tab-btn" data-tab="parliament" role="tab" type="button">Bundestag Projection</button>
+    <button class="tab-btn" data-tab="election" role="tab" type="button">2025 Election</button>
+  </nav>
+  <div id="theme-zone">
+    <button type="button" id="share-btn" class="share-btn" title="Copy a link to exactly this view" aria-label="Copy a link to this view"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg><span aria-live="polite">Copy link</span></button>
+    <label class="switch" aria-label="Dark mode"><input type="checkbox" id="dark-toggle"><span class="slider"></span></label>
+    <span>Dark mode</span>
+  </div>
+</div>
+<div id="side-scrim" hidden></div>
+<aside id="sidebar" aria-label="Main menu" aria-hidden="true">
+  <div class="side-head"><span>Menu</span><button type="button" id="side-close" class="side-close" aria-label="Hide menu">&times;</button></div>
+  <nav class="side-nav" role="tablist">
+    <button class="tab-btn active" data-tab="overview" role="tab" type="button">Overview</button>
+    <button class="tab-btn" data-tab="constituencies" role="tab" type="button">Battleground map</button>
+    <button class="tab-btn" data-tab="polls" role="tab" type="button">Polls &amp; Approval</button>
+    <button class="tab-btn" data-tab="parliament" role="tab" type="button">Bundestag Projection</button>
+    <button class="tab-btn" data-tab="election" role="tab" type="button">2025 Election</button>
+  </nav>
+</aside>
+<main class="wrap">
+  <div id="error" class="error" hidden></div>
+
+  <section id="tab-overview" class="pane active loading"><div id="ov-loader" role="status" aria-live="polite"><div class="spin" aria-hidden="true"></div><span>Loading latest polls…</span></div><div id="ov-fit">
+    <div class="ov-head"><h2>Germany at a glance</h2><div>
+    <div class="group-title">Current poll average</div>
+    <div id="ov-chips" class="latest"></div>
+    <div class="ov-grid ov-main">
+      <div class="chart-card flow ov-map"><div class="sec">
+        <div class="filters" id="ov-mapsw" style="padding:0 0 10px;display:none"><button type="button" class="faction-chip on" data-m="wk">Constituencies</button><button type="button" class="faction-chip" data-m="st">States</button></div>
+        <div class="sec-top"><h3 id="map-title">Who leads in each state?</h3></div>
+        <p class="subl">Latest state polls</p>
+        <div id="map"></div><div class="pills" id="map-legend"></div><div class="note" id="map-note"></div>
+        <div id="ov-comap" style="display:none"></div><div class="pills" id="ov-co-legend" style="display:none"></div>
+      </div></div>
+      <div class="ov-right">
+      <div class="chart-card flow clickable" data-go="polls" tabindex="0" role="link" aria-label="Open poll average"><div class="sec">
+        <div class="sec-top"><h3>Federal poll average</h3><button type="button" class="ov-cb" data-go="parliament" aria-label="Open the coalition builder in the Bundestag projection">Coalition builder &rarr;</button><span class="link">Poll average &rarr;</span></div>
+        <p class="subl">vs. 1 month ago</p><div id="ov-bars"></div>
+      </div></div>
+      <div class="ov-row">
+      <div class="chart-card flow clickable" data-go="polls" data-scroll="approval-card" tabindex="0" role="link" aria-label="Open government approval"><div class="sec">
+        <div class="sec-top"><h3>Government approval</h3><span class="link">Details &rarr;</span></div>
+        <div class="bignum" id="ov-appr-nums"></div><div id="ov-appr"></div>
+        <div class="chan-box"><img class="chan-pic" src="/img/merz.png" alt="Chancellor" width="300" height="245"><div class="chan-info"><h4>Chancellor approval</h4><div class="bignum" id="ov-chan-nums"></div></div></div>
+      </div></div>
+      <div class="chart-card flow clickable" data-go="election" tabindex="0" role="link" aria-label="Open 2025 election"><div class="sec">
+        <div class="sec-top"><h3>2025 federal election</h3><span class="link">Details &rarr;</span></div>
+        <p class="subl" id="ov-elec-sub"></p><div id="ov-elec"></div>
+      </div></div>
+      </div>
+      </div>
+    </div>
+    <div class="foot ov-foot">Data: <a href="https://dawum.de">dawum.de</a>. This project is independent and not affiliated with dawum.de.</div>
+  </div></section>
+
+  <section id="tab-state" class="pane">
+    <div class="row"><button class="link" data-go="overview" type="button">&larr; Back to overview</button></div>
+    <div class="chart-card flow">
+      <div class="filter-row"><div class="fgroup"><div class="ftitle">Filter by date</div><div class="filters" id="state-range"></div></div></div>
+      <div id="state-chart"></div>
+      <div class="filters" id="state-pick"></div>
+      <div class="sec"><h3>Latest polls</h3><div class="scroll" id="state-table"></div></div>
+    </div>
+  </section>
+
+  <section id="tab-polls" class="pane">
+    <div class="chart-card flow">
+      <div class="filter-row">
+        <div class="fgroup"><div class="ftitle">Filter by date</div><div class="filters" id="range-filters"></div></div>
+        <div class="fgroup fac-group">
+          <div class="ftitle">Coalition Builder</div>
+          <div class="fac-ctrl">
+            <div class="fac-toggle"><label class="switch" aria-label="Show poll average grouped by coalitions"><input type="checkbox" id="fac-poll"><span class="slider"></span></label><span>Group by coalitions</span></div>
+            <button type="button" class="link fac-btn" id="fac-edit-btn" aria-expanded="false" aria-controls="fac-panel">Customize coalitions<span class="fac-chev" aria-hidden="true"></span></button>
+          </div>
+          <div class="fac-hint">Group parties into custom coalitions and view combined polling.</div>
+        </div>
+        <div class="fgroup fright"><div class="ftitle">Party visibility</div><div class="filters" id="party-filters"></div></div>
+      </div>
+      <div class="fac-panel" id="fac-panel" hidden><div id="fac-editor" class="fac-ed"></div></div>
+      <div class="pf-bar" id="poll-pf" hidden></div>
+      <div id="poll-chart"></div>
+      <details class="sec fold"><summary><h3>Latest polls</h3></summary><div class="scroll" id="poll-table"></div></details>
+    </div>
+    <div class="chart-card flow" id="approval-card"><div id="approval-chart"></div><details class="sec fold" id="approval-fold"><summary><h3>Latest polls</h3></summary><div class="scroll" id="approval-table"></div></details></div>
+    <div class="chart-card flow" id="chancellor-card"><div id="chancellor-chart"></div><details class="sec fold" id="chancellor-fold"><summary><h3>Latest polls</h3></summary><div class="scroll" id="chancellor-table"></div></details></div>
+    <div class="chart-card flow" id="politician-card" hidden>
+      <div class="filter-row pol-row">
+        <div class="fgroup"><div class="ftitle">Filter by date</div><div class="filters" id="pol-range"></div></div>
+        <div class="fgroup fright"><div class="ftitle">Show</div><div class="filters" id="pol-metric"></div></div>
+        <div class="fgroup fwide pol-who">
+          <div class="ftitle">Politicians</div>
+          <div class="filters" id="pol-party"></div>
+          <button type="button" class="link fac-btn pol-btn" id="pol-pick-btn" aria-expanded="false" aria-controls="pol-panel"><span id="pol-pick-lbl">Choose individual politicians</span><span class="fac-chev" aria-hidden="true"></span></button>
+        </div>
+      </div>
+      <div class="fac-panel" id="pol-panel" hidden><div id="pol-pick"></div></div>
+      <div id="pol-chart"></div>
+      <div class="sec pol-src"><div class="note" id="pol-note"></div></div>
+      <details class="sec fold" id="pol-fold"><summary><h3>Latest poll</h3></summary><div class="scroll" id="pol-table"></div></details>
+    </div>
+    <div class="chart-card flow" id="neg-card">
+      <div class="seg-bar" id="neg-tabs" role="tablist" aria-label="Poll question"></div>
+      <div id="neg-chart"></div>
+      <div id="neg-trend"></div>
+      <div class="sec" id="neg-sec"><h3>All results</h3><div class="scroll" id="neg-table"></div></div>
+    </div>
+  </section>
+
+  <section id="tab-parliament" class="pane">
+    <div class="chart-card flow">
+      <div class="sec">
+        <div class="cust-head">
+          <h3>Build your own coalition</h3>
+          <div class="fac-ctrl">
+            <div class="fac-toggle"><label class="switch" aria-label="Show projection grouped by coalitions"><input type="checkbox" id="fac-parl"><span class="slider"></span></label><span>Group by coalitions</span></div>
+            <button type="button" class="link fac-btn" id="fac-edit-btn-parl" aria-expanded="false" aria-controls="fac-panel-parl">Customize coalitions<span class="fac-chev" aria-hidden="true"></span></button>
+          </div>
+        </div>
+        <div class="fac-panel" id="fac-panel-parl" hidden><div id="fac-editor-parl" class="fac-ed"></div></div>
+        <div class="cust" id="cust"></div>
+      </div>
+      <div class="sec pp-note" id="parl-poll-note" hidden></div>
+      <div id="parl-chart"></div>
+      <details class="sec fold" id="parl-poll-fold"><summary><h3>Latest polls</h3></summary><div class="note pp-hint">Click a poll to see the Bundestag projection for that poll.</div><div class="scroll" id="parl-poll-table"></div><div class="pp-more" id="parl-poll-more"></div></details>
+      <div class="sec">
+        <h3 style="margin-top:22px">Possible coalitions</h3><div id="coalitions"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-constituencies" class="pane">
+    <div class="ov-head"><h2>Battleground Map</h2><p id="co-sub"></p></div>
+    <div class="group-title">Constituencies led (<span id="co-gt-vote">second votes</span>) <span class="gt-hint">· click a party to highlight the constituencies it leads</span></div>
+    <div id="co-chips" class="latest"></div>
+    <div class="co-grid" id="co-grid">
+      <div class="chart-card flow" id="co-mapcard"><div class="sec">
+        <div class="co-headrow"><h3 id="co-map-title">Who leads in each constituency?</h3>
+          <button type="button" class="co-calpill" id="co-cal" hidden aria-label="Pick a date to see how the map looked then"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="co-callbl">Pick a date</span></button>
+          <input type="date" id="co-date" class="co-datein" hidden disabled tabindex="-1" aria-label="Date for the map snapshot">
+        </div>
+        <p class="subl" id="co-map-subl">Projected from the current poll average</p>
+        <div class="note" id="co-vote-note"></div>
+        <div class="co-info" id="co-info" hidden><div class="co-info-t">Germany uses a mixed-member proportional system</div><p><b>First vote:</b> you pick a candidate for your local constituency. Whoever gets the most votes there wins it, and the first vote map shows exactly that (candidate with most votes wins, first past the post).<br><b>Second vote:</b> you pick a party. It decides how many seats each party gets in total, so it is the vote that counts most. A constituency winner only gets a seat if their party's second votes cover it (proportional representation).</p><button type="button" class="co-info-x" id="co-info-x" aria-label="Hide this explanation">&times;</button></div>
+        <div class="co-bar">
+          <div class="co-seg" id="co-vote" role="tablist" aria-label="Vote type" style="display:none"></div>
+          <div class="co-seg" id="co-view" role="tablist" aria-label="Map type"></div>
+          <div class="co-seg" id="co-year-filter" role="tablist" aria-label="Map data"></div>
+          <select id="co-state" aria-label="Zoom to a state"></select>
+        </div>
+        <div class="co-mapwrap"><div id="co-map"></div><div class="co-zoom" id="co-zoom"><button type="button" data-z="in" aria-label="Zoom in">+</button><button type="button" data-z="out" aria-label="Zoom out">&minus;</button><button type="button" data-z="reset" aria-label="Reset view">&#8634;</button></div></div><div class="pills" id="co-legend"></div>
+        <div class="co-region" id="co-region" hidden></div>
+      </div></div>
+      <div class="chart-card flow"><div class="sec" id="co-detail"></div></div>
+    </div>
+    <div class="chart-card flow"><div class="sec">
+      <h3>All 299 constituencies</h3>
+      <p class="subl" id="co-list-sub">Select one to see its projection and demographics</p>
+      <div class="co-tools"><input type="search" id="co-search" placeholder="Search by name or number" aria-label="Search constituencies"><div class="filters" id="co-sort" style="padding:0"></div></div>
+      <div id="co-list" class="co-list"></div>
+    </div></div>
+    <div class="foot">Results and structural data: Die Bundeswahlleiterin (dl-de/by-2-0).</div>
+  </section>
+
+  <section id="tab-election" class="pane">
+    <div class="ov-head"><h2>2025 federal election</h2><p id="el-sub"></p></div>
+    <div class="group-title">Final result</div>
+    <div id="el-chips" class="latest"></div>
+    <div class="ov-grid">
+      <div class="chart-card flow"><div class="sec">
+        <h3>Result &amp; seats</h3>
+        <p class="subl">vs. 2021 election</p>
+        <div id="el-bars"></div>
+      </div></div>
+      <div class="chart-card flow"><div class="sec">
+        <h3>The new Bundestag</h3>
+        <div id="el-parl"></div><div class="pills" id="el-parl-legend"></div>
+      </div></div>
+    </div>
+    <div class="chart-card flow"><div class="sec">
+      <h3>Who voted for whom?</h3>
+      <p class="subl">Vote share of each party within every group of voters</p>
+      <div class="filters" id="el-demo-cat" style="padding:0 0 6px"></div>
+      <div class="filters" id="el-demo-party" style="padding:0 0 14px"></div>
+      <div id="el-demo"></div><div class="pills" id="el-demo-legend"></div>
+      <div class="note" id="el-demo-note"></div>
+      <div class="note">Source: Infratest dimap exit poll for ARD (election day survey of voters, 23 Feb 2025).</div>
+    </div></div>
+    <div class="chart-card flow"><div class="sec">
+      <h3>Voter migration</h3>
+      <p class="subl">Where voters came from and where they went, compared with the 2021 election</p>
+      <div class="filters" id="el-mig-pick" style="padding:0 0 14px"></div>
+      <div id="el-mig"></div>
+      <div class="note">Source: Infratest dimap for ARD (voter migration estimate, 24 Feb 2025). Net flows between two parties; small movements are not shown.</div>
+    </div></div>
+    <div class="chart-card flow"><div id="el-poll-chart"></div></div>
+    <div class="chart-card flow">
+      <div class="sec">
+        <h3>Which pollster got it right?</h3>
+        <p class="subl">Every pollster's last poll before election day, compared with the result.</p>
+        <div class="filters" id="el-acc-pick" style="padding:0 0 4px"></div>
+      </div>
+      <div id="el-acc-chart"></div>
+      <div class="sec"><h3>Who under- and overestimated whom?</h3><p class="subl">Deviation = result minus last poll. <span class="under">Plus</span>: the pollster underestimated the party. <span class="over">Minus</span>: the pollster overestimated it.</p>
+        <div class="scroll" id="el-bias"></div>
+        <h3 style="margin-top:26px">All pollsters</h3><div class="scroll" id="el-acc-table"></div>
+      </div>
+    </div>
+    <div class="chart-card flow"><div class="sec">
+      <h3 id="el-map-title">Who won each state?</h3>
+      <p class="subl">Party-list votes by state</p>
+      <div class="filters" id="el-map-pick" style="padding:0 0 10px"></div>
+      <div id="el-map"></div><div class="pills" id="el-map-legend"></div>
+    </div></div>
+    <div class="foot">Results: Federal Returning Officer. Demographics: Infratest dimap exit poll, via Wikipedia. Voter migration: Infratest dimap.</div>
+  </section>
+
+  <div class="foot">Data: <a href="https://dawum.de">dawum.de</a>. This project is independent and not affiliated with dawum.de.</div>
+</main>
+<div id="tip" class="tip" hidden></div>
+<script data-goatcounter="https://efefury.goatcounter.com/count" data-goatcounter-settings='{"no_onload":true}' async src="//gc.zgo.at/count.js"></script>
+<script src="/js/app.js?v=perf45"></script>
+</body>
+</html>

@@ -18,7 +18,7 @@ let biasAdj={}; // Historical pollster bias to adjust 2025 projection in constit
 const CW=()=>matchMedia("(max-width:600px)").matches?500:1200; // chart canvas width: narrower on phones so text and lines render larger
 // zoom steps tried by fitOv (same sequence as before: 1.30, 1.28, ... down to ~0.45)
 const ZS=[];let ZEND=1.3;for(;ZEND>.45;ZEND-=.02)ZS.push(ZEND);
-function setDark(d){document.body.classList.toggle("dark",d);$("#dark-toggle").checked=d;const lg=$("#logo");if(lg)lg.src=d?"img/logo-dark.png":"img/logo.png";redraw.forEach(f=>f());}
+function setDark(d){document.body.classList.toggle("dark",d);$("#dark-toggle").checked=d;const lg=$("#logo");if(lg)lg.src=d?"/img/logo-dark.png":"/img/logo.png";redraw.forEach(f=>f());}
 // default = dark; the switch overrides it and the choice is remembered
 const schemeMQ=matchMedia("(prefers-color-scheme: dark)");
 let saved=null;try{saved=localStorage.getItem("theme");}catch(e){}
@@ -56,14 +56,14 @@ function parseDate(v){
 const findKey=(o,names)=>Object.keys(o).find(k=>names.includes(k.toLowerCase()));
 // one shared request per URL; "no-cache" = always revalidate (fresh data, but a 304 when nothing changed)
 const rawCache=new Map();
-function fetchRaw(url){let p=rawCache.get(url);if(!p){p=fetch(url,{cache:"no-cache"}).then(async r=>({ok:r.ok,status:r.status,text:r.ok?await r.text():""}));rawCache.set(url,p);}return p;}
+function fetchRaw(url){url=/^(\/|[a-z][a-z0-9+.-]*:)/i.test(url)?url:"/"+url;let p=rawCache.get(url);if(!p){p=fetch(url,{cache:"no-cache"}).then(async r=>({ok:r.ok,status:r.status,text:r.ok?await r.text():""}));rawCache.set(url,p);}return p;}
 async function load(path){const r=await fetchRaw(path);if(!r.ok)throw new Error("Could not load "+path+" ("+r.status+")");return parseCSV(r.text);}
 function showErr(m){const e=$("#error");e.hidden=false;e.textContent=m;const o=$("#tab-overview");if(o)o.classList.remove("loading");}
 
 
 let cfg;
 try{
-  const r=await fetch("config.json");
+  const r=await fetch("/config.json");
   if(!r.ok)throw new Error("HTTP "+r.status);
   cfg=await r.json();
 }catch(e){showErr("config.json could not be loaded ("+e.message+"). Serve the site over http(s) \u2014 opening index.html as a local file will not work \u2014 and make sure config.json sits next to index.html.");return;}
@@ -99,13 +99,25 @@ function track(path,title){
   send();
 }
 
+// ---------- URLs ----------
+// /  (overview), /polls, /parliament, /constituencies, /election, /state/<ID>;  view settings follow as a query string, e.g. /polls?range=1y&pst=INSA
+// (the old hash links, e.g. /#polls?range=1y or /#state-BY, are still understood and get rewritten to the new form)
+const tabPath=b=>b==="overview"?"/":/^state-/.test(b)?"/state/"+b.slice(6):"/"+b;
+function parseLoc(){ // current address -> {base: "polls" | "state-BY" | ..., q: query string without "?"}
+  const hs=location.hash.replace(/^#/,""),p=location.pathname.replace(/\/(index|404)\.html$/,"").replace(/\/+$/,"");
+  let base,q;
+  if(hs&&p===""){const i=hs.indexOf("?");base=i<0?hs:hs.slice(0,i);q=i<0?"":hs.slice(i+1);}
+  else{const m=/^\/state\/(\w+)$/.exec(p);base=m?"state-"+m[1].toUpperCase():p.replace(/^\//,"");q=location.search.replace(/^\?/,"");}
+  return{base:base||"overview",q};
+}
+
 // ---------- tabs ----------
 function goTab(t,target){
   const b=document.querySelector(`.tab-btn[data-tab="${t}"]`);if(!b)return;
   track("/"+t,b.textContent.trim());
   document.querySelectorAll(".tab-btn").forEach(x=>x.classList.toggle("active",x.dataset.tab===t));
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("active",p.id==="tab-"+t));
-  history.replaceState(null,"","#"+t);scrollTo(0,0);
+  history.replaceState(null,"",tabPath(t));scrollTo(0,0);
   if(typeof fitOv==="function")fitOv();
   if(target)requestAnimationFrame(()=>{const e=document.getElementById(target);if(e)e.scrollIntoView();});
 }
@@ -125,8 +137,68 @@ function sideSet(open){
   addEventListener("keydown",e=>{if(e.key==="Escape")sideSet(false);});
   try{matchMedia("(min-width:601px)").addEventListener("change",e=>{if(e.matches)sideSet(false);});}catch(e){}}
 document.querySelectorAll("[data-go]").forEach(b=>{b.onclick=e=>{e.stopPropagation();goTab(b.dataset.go,b.dataset.scroll);};if(b.classList.contains("clickable"))b.onkeydown=e=>{if(e.target!==b)return;if(e.key==="Enter"||e.key===" "){e.preventDefault();goTab(b.dataset.go,b.dataset.scroll);}};});
-if(location.hash)goTab(location.hash.slice(1));
-try{if(!document.querySelector(`.tab-btn[data-tab="${location.hash.slice(1)}"]`)&&!/^#state-/.test(location.hash))track("/overview","Overview");}catch(e){track("/overview","Overview");}
+const LOC0=parseLoc(); // the link the page was opened with: tab / state plus view settings (applied once everything has loaded, see HS.apply)
+if(LOC0.base!=="overview")goTab(LOC0.base);
+
+// ---------- shareable links: the address mirrors exactly what is on screen ----------
+// Format:  /<tab>  or  /state/<ID>,  then  ?key=value&key=value  (only settings that differ from the defaults), e.g.  /polls?range=1y&pst=INSA
+// Every view registers its settings with HS.reg(tab, key, get, set): get() returns the encoded value (null = default), set(raw) applies a value (raw = null: back to default).
+const HS=(()=>{
+  const regs=[];let applying=false,ready=false;
+  const enc=s=>encodeURIComponent(s).replace(/[!'()*.~]/g,c=>"%"+c.charCodeAt(0).toString(16).toUpperCase()).replace(/%2F/gi,"/").replace(/%3A/gi,":");
+  const dec=s=>{try{return decodeURIComponent(s);}catch(e){return s;}};
+  const list=a=>a.map(enc).join(","),items=s=>s?s.split(",").map(dec).filter(Boolean):[];
+  const reg=(tabs,key,get,set)=>[].concat(tabs).forEach(t=>regs.push({tab:t,key,get,set}));
+  function viewNow(){const p=document.querySelector(".pane.active");if(!p)return null;const t=p.id.replace(/^tab-/,"");
+    return t==="state"?(curState?{tab:"state",base:"state-"+curState}:null):{tab:t,base:t};}
+  function write(){ // called after every click / change / input: rewrite the address (no new history entry)
+    if(!ready||applying)return;
+    try{
+      const v=viewNow();if(!v)return;
+      const ps=[];regs.forEach(r=>{if(r.tab!==v.tab)return;const x=r.get();if(x!=null&&x!=="")ps.push(r.key+"="+x);});
+      const u=tabPath(v.base)+(ps.length?"?"+ps.join("&"):"");
+      if(u===location.pathname+location.search&&!location.hash)return;
+      history.replaceState(null,"",u);
+    }catch(e){}
+  }
+  async function apply(loc,initial){
+    const base=loc.base,map={};
+    (loc.q||"").split("&").forEach(kv=>{const i=kv.indexOf("=");if(i>0)map[kv.slice(0,i)]=kv.slice(i+1);});
+    const sm=/^state-(\w+)$/.exec(base);let tab=base;
+    applying=true;
+    try{
+      if(sm){
+        if(!stateData[sm[1]])return;tab="state";
+        if(initial||curState!==sm[1]||!document.getElementById("tab-state").classList.contains("active"))await openState(sm[1]);
+      }else if(document.querySelector(`.tab-btn[data-tab="${base}"]`)){
+        if(!initial&&!document.getElementById("tab-"+base).classList.contains("active"))goTab(base);
+      }else return;
+      for(const r of regs){
+        if(r.tab!==tab)continue;
+        try{
+          if(map[r.key]!=null)await r.set(map[r.key]);
+          else if(!initial&&r.get()!=null)await r.set(null); // a link without this setting: back to the default
+        }catch(e){console.error("link setting "+r.key+":",e);}
+      }
+    }finally{applying=false;ready=true;write();}
+  }
+  ["click","change","input"].forEach(t=>document.addEventListener(t,()=>setTimeout(write,0),true));
+  addEventListener("popstate",()=>{if(ready)apply(parseLoc(),false);});
+  // "Copy link" button in the top bar
+  const sb=document.getElementById("share-btn");
+  if(sb){
+    const lbl=sb.querySelector("span"),t0=lbl?lbl.textContent:"";let to=0;
+    const done=ok=>{if(!lbl)return;lbl.textContent=ok?"Link copied":"Copy failed";sb.classList.toggle("ok",ok);clearTimeout(to);to=setTimeout(()=>{lbl.textContent=t0;sb.classList.remove("ok");},1800);};
+    sb.onclick=async()=>{
+      write();const url=location.href;
+      if(navigator.share&&matchMedia("(pointer:coarse)").matches){try{await navigator.share({title:document.title,url});return;}catch(e){if(e&&e.name==="AbortError")return;}}
+      try{await navigator.clipboard.writeText(url);done(true);}
+      catch(e){try{const ta=document.createElement("textarea");ta.value=url;ta.setAttribute("readonly","");ta.style.cssText="position:fixed;top:0;opacity:0";document.body.appendChild(ta);ta.select();const ok=document.execCommand("copy");ta.remove();done(ok);}catch(_){done(false);}}
+    };
+  }
+  return{reg,apply,write,enc,dec,list,items};
+})();
+try{if(LOC0.base==="overview"||(!document.querySelector(`.tab-btn[data-tab="${LOC0.base}"]`)&&!/^state-/.test(LOC0.base)))track("/overview","Overview");}catch(e){track("/overview","Overview");}
 
 // ---------- SVG helpers ----------
 const LP={"BW":[188.4,642.9],"BY":[364.7,614.4],"BE":[457.6,248.3],"BB":[488.0,304.8],"HB":[176.9,189.3],"HH":[251.8,144.9],"HE":[196.3,430.7],"MV":[422.0,125.9],"NI":[242.7,215.8],"NW":[98.0,345.8],"RP":[78.9,490.2],"SL":[65.8,549.6],"ST":[352.8,312.9],"SN":[449.7,393.5],"SH":[239.9,100.1],"TH":[306.1,408.7]};
@@ -617,6 +689,25 @@ function bindFactions(){
   });
 }
 if(polls.length){loadFac();activeF=new Set(unitsOf());bindFactions();renderFacEditor();syncFacUI();}
+// shareable link: the custom coalition groups ("Group by coalitions") travel in the link as  fac=<flags>;<id>.<name>.<colour>.<members>;...  (flags: p = poll chart, l = Bundestag projection).
+// A link never overwrites the visitor's own saved groups; they are only saved once the visitor edits them.
+if(polls.length)HS.reg(["polls","parliament"],"fac",
+  ()=>(faOn.poll||faOn.parl)?(faOn.poll?"p":"")+(faOn.parl?"l":"")+";"+FAC.map(f=>[f.id,HS.enc(f.name),f.color.slice(1),f.members.map(HS.enc).join(",")].join(".")).join(";"):null,
+  v=>{
+    if(v==null){faOn={poll:false,parl:false};loadFac();}
+    else{
+      const parts=v.split(";"),fl=parts.shift()||"",seen=new Set(),fs=[];
+      parts.slice(0,8).forEach(g=>{
+        const a=g.split(".");if(a.length<4||!/^[A-Za-z0-9]{1,16}$/.test(a[0]))return;
+        const mem=HS.items(a[3]).filter(p=>{if(!parties.includes(p)||seen.has(p))return false;seen.add(p);return true;});
+        fs.push({id:a[0],name:HS.dec(a[1]).trim().slice(0,40)||"Faction",color:/^[0-9a-fA-F]{6}$/.test(a[2])?"#"+a[2]:"#888888",members:mem});
+      });
+      if(!fs.length)return;
+      FAC=fs;faOn={poll:fl.includes("p"),parl:fl.includes("l")};
+    }
+    facVer++;vpVer=-1;activeF=new Set(unitsOf());sel.clear();
+    renderFacEditor();syncFacUI();buildPM();drawParl();renderCoalitions();drawPolls();renderChips();
+  });
 
 // one pollster's own polls as a series: joined by a continuous line, broken where that pollster has a long gap
 function rawPoints(src,p,ts){
@@ -674,6 +765,13 @@ if(polls.length){
   $("#poll-table").addEventListener("click",e=>{const c=e.target.closest("[data-pst]");if(c)pollPick(c.dataset.pst,true);});
   $("#poll-table").addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!==" ")return;const c=e.target.closest("[data-pst]");if(c){e.preventDefault();pollPick(c.dataset.pst,true);}});
   {const bar=$("#poll-pf");if(bar)bar.addEventListener("click",e=>{if(e.target.closest("[data-clear]"))pollPick(null,false);});}
+  // shareable link settings of the Polls tab
+  HS.reg("polls","range",()=>pollRange!=="all"?pollRange:null,v=>{pollRange=RANGES.some(r=>r[0]===v)?v:"all";drawPolls();renderChips();});
+  HS.reg("polls","pst",()=>pollsterSel?HS.enc(pollsterSel):null,v=>{
+    const nm=v?HS.dec(v):null;if(nm===pollsterSel)return;if(nm&&!polls.some(r=>r.inst===nm))return;
+    pollsterSel=null;pollPick(nm,false);});
+  HS.reg("polls","hide",()=>!faOn.poll&&active.size<parties.length?HS.list(parties.filter(p=>!active.has(p))):null,v=>{
+    const hid=HS.items(v),vis=parties.filter(p=>!hid.includes(p));active.clear();(vis.length?vis:parties).forEach(p=>active.add(p));drawPolls();renderChips();});
 }
 
 // ---------- BUNDESTAG ----------
@@ -715,6 +813,52 @@ function drawSeats(svg,L,o){
   el("text",{class:"mut",x:o.cx,y:o.cy-(MB?14:18),"text-anchor":"middle","font-size":MB?16:15},svg,"Seats");
   el("text",{class:"mut",x:o.cx,y:o.cy+(MB?20:20),"text-anchor":"middle","font-size":MB?14:14,"font-weight":700,"letter-spacing":"0.02em"},svg,`${maj} needed for majority`);
 }
+// ---------- chance of a majority: Monte Carlo over polling error ----------
+// SIM_RUNS simulated elections: every party's vote share is multiplied by a random polling error (log-normal, independent per party, then scaled back to the
+// original total), then the same rules as the projection above are applied: 5% threshold, Sainte-Lague, 1 seat for the SSW. The size of the error is the one of the
+// Battleground map model (national error: natA / natB / widen in data/constituencies.json), so both parts of the site rest on the same assumption.
+const SIM_RUNS=5000,simPar={natA:.06,natB:1.45,widen:1.3};
+const simReady=(async()=>{try{const r=await fetchRaw("data/constituencies.json");if(r.ok){const M=JSON.parse(r.text).model;
+  if(M&&M.natA!=null){simPar.natA=M.natA;simPar.natB=M.natB;simPar.widen=(M.settings&&M.settings.widen)||1;}}}catch(e){}})();
+const simCache=new Map();let simBusy=null;
+const simKey=()=>(selPoll==null?"avg":"p"+selPoll)+"|"+(faOn.parl?"f"+facVer:"p");
+const mulberry=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+function simulate(){
+  const U=PM.order.filter(u=>u!=="SSW"),k=U.length,memb=U.map(u=>isFac(u)?((facById(u.slice(2))||{}).members||[]):[u]);
+  const start=selPoll!=null&&polls[selPoll]?polls[selPoll].v:pct;
+  const ps=parties.filter(p=>start[p]!=null&&start[p]>0),b=ps.map(p=>start[p]),S0=b.reduce((a,x)=>a+x,0),np=ps.length;
+  const sd=b.map(x=>simPar.widen*Math.sqrt(simPar.natA**2+(simPar.natB/Math.max(x,1))**2));
+  const unitOf=ps.map(p=>memb.findIndex(ms=>ms.includes(p)));
+  const rnd=mulberry(20261023),gauss=()=>Math.sqrt(-2*Math.log(rnd()||1e-12))*Math.cos(2*Math.PI*rnd());
+  const out=new Uint16Array(SIM_RUNS*k),sh=new Float64Array(k),q=new Int32Array(k),x=new Float64Array(np),el=new Int32Array(k);
+  for(let r=0;r<SIM_RUNS;r++){
+    let tot=0;for(let i=0;i<np;i++){x[i]=b[i]*Math.exp(sd[i]*gauss());tot+=x[i];}
+    const f=S0/tot;sh.fill(0);for(let i=0;i<np;i++)if(unitOf[i]>=0)sh[unitOf[i]]+=x[i]*f;
+    let ne=0;for(let u=0;u<k;u++)if(sh[u]>=thr&&!isOther(U[u]))el[ne++]=u;
+    q.fill(0);
+    for(let sN=0;sN<N-1&&ne;sN++){let best=el[0],bq=-1;for(let e=0;e<ne;e++){const u=el[e],v=sh[u]/(2*q[u]+1);if(v>bq){bq=v;best=u;}}q[best]++;}
+    for(let u=0;u<k;u++)out[r*k+u]=q[u];
+  }
+  return{U,k,out};
+}
+function simStart(key){
+  if(simBusy===key)return;simBusy=key;
+  simReady.then(()=>setTimeout(()=>{ // after the page has painted, so the first draw is never blocked
+    try{if(simKey()===key){simCache.set(key,simulate());if(simCache.size>12)simCache.delete(simCache.keys().next().value);}}catch(e){console.error(e);}
+    simBusy=null;
+    if(simCache.has(key)&&simKey()===key){renderCoalitions();renderCust();}
+  },0));
+}
+// chance that the given units (parties / factions) together hold at least `maj` seats, plus the range of seats in the middle 80% of the simulations; null while still calculating
+function simOdds(units){
+  const S=simCache.get(simKey());if(!S){simStart(simKey());return null;}
+  const idx=units.filter(u=>u!=="SSW").map(u=>S.U.indexOf(u));if(idx.some(i=>i<0))return null;
+  const extra=units.includes("SSW")?1:0,sums=new Uint16Array(SIM_RUNS);let hit=0;
+  for(let r=0;r<SIM_RUNS;r++){let t=extra;for(let j=0;j<idx.length;j++)t+=S.out[r*S.k+idx[j]];sums[r]=t;if(t>=maj)hit++;}
+  sums.sort();
+  return{p:hit/SIM_RUNS,lo:sums[Math.floor(.1*SIM_RUNS)],hi:sums[Math.floor(.9*SIM_RUNS)]};
+}
+const oddsPct=p=>p>=.995?">99%":p<.005?"<1%":Math.round(p*100)+"%";
 const members=()=>[...sel].filter(p=>PM.seats[p]>0).sort((a,b)=>spec(a)-spec(b));
 function drawParl(){
   const M=CW()<1000; // phones: narrower canvas (text renders larger), party boxes wrap onto several rows
@@ -774,7 +918,7 @@ function renderCust(){
   if(!m.length){box.innerHTML=`<span class="no">No parties selected yet. Click parties in the legend above or choose a coalition below.</span>`;return;}
   const s=m.reduce((a,p)=>a+PM.seats[p],0),ok=s>=maj;
   box.innerHTML=`<div class="sec-top"><b>${m.map(lab).join(" + ")}</b><button class="link" id="cust-clear" type="button">Clear</button></div>
-    <div class="res ${ok?"yes":"no"}">${s} of ${N} seats \u2014 ${ok?`majority (${s-maj} above the ${maj} needed)`:`no majority (${maj-s} short of the ${maj} needed)`} \u00B7 ${fmt(s/N*100)}% of seats</div>${barHtml(m)}`;
+    <div class="res ${ok?"yes":"no"}">${s} of ${N} seats \u2014 ${ok?`majority (${s-maj} above the ${maj} needed)`:`no majority (${maj-s} short of the ${maj} needed)`} \u00B7 ${fmt(s/N*100)}% of seats</div>${barHtml(m)}${(o=>o?`<div class="odds">Chance of a majority: <b>${oddsPct(o.p)}</b> <span>(in the middle 80% of simulations: ${o.lo}\u2013${o.hi} seats)</span></div>`:`<div class="odds"><span>Calculating the chance of a majority\u2026</span></div>`)(simOdds(m))}`;
   $("#cust-clear").onclick=()=>{sel.clear();drawParl();};
 }
 function renderCoalitions(){
@@ -784,11 +928,11 @@ function renderCoalitions(){
     .filter(c=>!faOn.parl||c.length>1)
     .filter((c,i,a)=>!faOn.parl||a.findIndex(d=>key(d)===key(c))===i);
   const rows=valid.map((c,i)=>{
-    const s=c.reduce((a,p)=>a+PM.seats[p],0),ok=s>=maj;
+    const s=c.reduce((a,p)=>a+PM.seats[p],0),ok=s>=maj,o=simOdds(c);
     const nm=c.map(x=>`<span class="cp"><i class="dotc ${dark(colorOf(x))?"dkb":""}" style="background:${colorOf(x)}"></i>${lab(x)}</span>`).join('<span class="pl"> + </span>');
-    return `<tr class="coal-row" data-c="${i}" title="Show in the coalition builder"><td>${nm}</td><td><b>${s}</b></td><td>${fmt(s/N*100)}%</td><td class="cb">${barHtml(c)}</td><td class="${ok?"yes":"no"}">${ok?`Majority (+${s-maj})`:`No majority (\u2212${maj-s})`}</td></tr>`;
+    return `<tr class="coal-row" data-c="${i}" title="Show in the coalition builder"><td>${nm}</td><td><b>${s}</b></td><td>${fmt(s/N*100)}%</td><td class="cb">${barHtml(c)}</td><td class="pr">${o?`<b>${oddsPct(o.p)}</b><div class="prb"><i style="width:${(o.p*100).toFixed(1)}%"></i></div><small>${o.lo}\u2013${o.hi} seats</small>`:`<span class="no">\u2026</span>`}</td><td class="${ok?"yes":"no"}">${ok?`Majority (+${s-maj})`:`No majority (\u2212${maj-s})`}</td></tr>`;
   }).join("");
-  $("#coalitions").innerHTML=rows?`<div class="scroll"><table class="coal-t"><thead><tr><th>Coalition</th><th>Seats</th><th>Share</th><th class="cb"></th><th>Majority of ${maj}</th></tr></thead><tbody>${rows}</tbody></table></div>`:"<span class='no'>No coalitions in config.json match the parties in the CSV.</span>";
+  $("#coalitions").innerHTML=rows?`<div class="scroll"><table class="coal-t"><thead><tr><th>Coalition</th><th>Seats</th><th>Share</th><th class="cb"></th><th title="Share of ${SIM_RUNS.toLocaleString("en-GB")} simulated elections in which the coalition wins at least ${maj} seats. Below it: the seat range of the middle 80% of the simulations.">Chance of majority</th><th>Majority of ${maj}</th></tr></thead><tbody>${rows}</tbody></table></div>`:"<span class='no'>No coalitions in config.json match the parties in the CSV.</span>";
   $("#coalitions").onclick=e=>{const r=e.target.closest(".coal-row");if(!r)return;sel.clear();valid[+r.dataset.c].forEach(p=>sel.add(p));drawParl();$("#cust").scrollIntoView({block:"center",behavior:"smooth"});};
 }
 if(polls.length){
@@ -828,6 +972,17 @@ if(polls.length){
     if(b.dataset.a==="more")ppShown=Math.min(polls.length,ppShown+PP_STEP);else ppShown=PP_FIRST;
     ppRender();});
   ppRender();
+  // shareable link settings of the Bundestag projection: which poll is shown (date_pollster) and the parties picked in the coalition builder
+  const isoD=t=>new Date(t).toISOString().slice(0,10);
+  HS.reg("parliament","poll",()=>selPoll!=null&&polls[selPoll]?isoD(polls[selPoll].t)+"_"+HS.enc(polls[selPoll].inst||""):null,v=>{
+    let i=null;
+    if(v){const k=v.indexOf("_"),d=k<0?v:v.slice(0,k),inst=k<0?null:HS.dec(v.slice(k+1));
+      for(let q=polls.length-1;q>=0;q--)if(isoD(polls[q].t)===d&&(inst==null||(polls[q].inst||"")===inst)){i=q;break;}}
+    if(i===selPoll)return;
+    selPoll=i;buildPM();drawParl();renderCoalitions();ppNoteRender();
+    if(i!=null)ppShown=Math.max(ppShown,polls.length-i);ppRender();});
+  HS.reg("parliament","sel",()=>sel.size?HS.list([...sel].sort((a,b)=>spec(a)-spec(b))):null,v=>{
+    sel.clear();HS.items(v).filter(p=>PM.seats[p]!=null).forEach(p=>sel.add(p));drawParl();});
 }
 
 // ---------- OVERVIEW ----------
@@ -935,7 +1090,7 @@ async function openState(id){
   const s=stateData[id];if(!s)return;
   document.querySelectorAll(".tab-btn").forEach(x=>x.classList.remove("active"));
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("active",p.id==="tab-state"));
-  history.replaceState(null,"","#state-"+id);scrollTo(0,0);
+  history.replaceState(null,"","/state/"+id);scrollTo(0,0);
   track("/state/"+id,stateGeo[id].en+" polls");
   curState=id;await drawState(id);
 }
@@ -964,6 +1119,7 @@ async function drawState(id){
 }
 $("#state-pick").onclick=e=>{const b=e.target.closest("[data-s]");if(b)openState(b.dataset.s);};
 $("#state-range").onclick=e=>{const b=e.target.closest("[data-r]");if(!b||!curState)return;stateRange=b.dataset.r;drawState(curState);};
+HS.reg("state","range",()=>stateRange!=="all"?stateRange:null,v=>{const r=RANGES.some(q=>q[0]===v)?v:"all";if(r===stateRange)return;stateRange=r;if(curState)return drawState(curState);});
 // state map from state_polls/<State>.csv (written by update_data.cmd)
 async function ovMap(){
   const host=$("#map"),note=$("#map-note");
@@ -1792,6 +1948,23 @@ async function drawConstituencies(){
   $("#co-search").oninput=e=>{q=e.target.value.trim().toLowerCase();list();};
   $("#co-sort").onclick=e=>{const b=e.target.closest("[data-k]");if(b){sortBy=b.dataset.k;list();}};
   $("#co-list").onclick=e=>{const b=e.target.closest("[data-n]");if(b)select(+b.dataset.n);};
+  // shareable link settings of the Battleground map: vote type, election year, map colouring, state zoom, selected constituency (and the date snapshot, once that feature is switched on)
+  {const sel0=sel;
+  HS.reg("constituencies","vote",()=>voteMode===1?"1":null,v=>{setVote(v==="1"?1:2);});
+  HS.reg("constituencies","asof",()=>CAL_ON&&SNAP?iso(SNAP.ms):null,v=>{if(!CAL_ON)return;const p=v?parseDate(v):null;return setAsOf(p?Math.max(minMs(),+p):null);});
+  HS.reg("constituencies","year",()=>yearView===PJ?null:String(yearView),v=>{const y=v==null?PJ:+v;if(y===yearView||(y!==PJ&&!availYears().includes(y)))return;setYear(y);});
+  HS.reg("constituencies","map",()=>mode!=null?"p:"+HS.enc(K[mode]):swings?"swing":certainty?null:metric!=null?"m"+metric:"lead",v=>{
+    mode=null;metric=null;certainty=false;swings=false;
+    if(v==null)certainty=true;
+    else if(v==="swing")swings=true;
+    else if(v==="lead"){}
+    else if(v.slice(0,2)==="p:"){const j=K.indexOf(HS.dec(v.slice(2)));if(j>=0&&j<m-1)mode=j;else certainty=true;}
+    else if(/^m\d+$/.test(v)&&+v.slice(1)<C.demo.length)metric=+v.slice(1);
+    else certainty=true;
+    if(yearView!==PJ){certainty=false;swings=false;}
+    coChips();renderViewButtons();drawMap();detail();list();});
+  HS.reg("constituencies","st",()=>stF||null,v=>{const nm=v?HS.dec(v):"";const t=lands.includes(nm)?nm:"";if(t===stF)return;stF=t;cityF="";$("#co-state").value=t;drawMap();list();if(hasMap)animateTo(stView(stF));});
+  HS.reg("constituencies","wk",()=>sel!==sel0?String(sel):null,v=>{const nn=v==null?sel0:+v;if(nn===sel||!W.some(w=>w.n===nn))return;select(nn,false);});}
   coChips();list();select(sel);redraw.push(()=>{drawMap();list();});
   // warm the cache: the first-vote projection is computed once the browser is idle after load, so clicking "First vote" is instant
   if(hasFirst){const warm=()=>{if(!projCache["live|1"]&&GY===2025)try{projCache["live|1"]=runProjection(1);}catch(e){console.error(e);}};
@@ -2021,7 +2194,7 @@ fitOv();
 {const done=()=>{fitOv();const o=$("#tab-overview");if(o)requestAnimationFrame(()=>o.classList.remove("loading"));};
   (document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(done,done);}
 
-{const m=location.hash.match(/^#state-(\w+)/);if(m)openState(m[1]);}
+await HS.apply(LOC0,true);
 // ---------- little scroll fade-ins ----------
 try{
   if("IntersectionObserver" in window&&!matchMedia("(prefers-reduced-motion: reduce)").matches){

@@ -626,3 +626,16 @@ tr.pst-on td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
 .pf-bar[hidden]{display:none}
 .pf-bar .link{min-height:32px}
 @media(max-width:600px){.pf-bar{margin:12px 14px 0}}
+/* chance of a majority (Bundestag projection) */
+.coal-t td.pr{white-space:nowrap;min-width:96px}
+.coal-t td.pr b{font-variant-numeric:tabular-nums}
+.coal-t .prb{height:4px;background:var(--track);border-radius:2px;margin-top:5px;overflow:hidden}
+.coal-t .prb i{display:block;height:100%;background:var(--accent)}
+.coal-t td.pr small{display:block;color:var(--cmut);font-size:11px;margin-top:3px}
+.odds{margin-top:12px;font-size:13.5px}.odds span{color:var(--cmut)}
+/* copy-link button (top bar) */
+.share-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink);font:inherit;font-size:12.5px;line-height:1.2;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;white-space:nowrap}
+.share-btn:hover{border-color:var(--accent)}
+.share-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.share-btn.ok{border-color:var(--ok);color:var(--ok)}
+@media(max-width:600px){.share-btn{padding:7px}.share-btn:not(.ok) span{display:none}}
