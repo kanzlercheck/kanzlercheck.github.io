@@ -99,7 +99,7 @@ def _font(w, s):
     return ImageFont.truetype(p, int(s * S))
 
 class Card:
-    """1200x630 dark canvas: logo centred at the top, heading + one muted line, brand stripe along the bottom."""
+    """1200x630 dark canvas: logo centred at the top, heading + one muted line."""
     def __init__(self, title, sub):
         self.img = Image.new("RGB", (W * S, H * S), BG); self.d = ImageDraw.Draw(self.img)
         logo = Image.open(os.path.join(HERE, "img", "logo-dark.png")).convert("RGBA")
@@ -128,8 +128,6 @@ class Card:
     def rrect(self, x0, y0, x1, y1, r, fill):
         self.d.rounded_rectangle([x0 * S, y0 * S, x1 * S, y1 * S], radius=r * S, fill=fill)
     def save(self, path):
-        for k, col in enumerate(("#15181C", "#C62828", "#F9A825")):   # brand stripe
-            self.d.rectangle([k * W // 3 * S, (H - 14) * S, ((k + 1) * W // 3) * S, H * S], fill=hexrgb(col))
         os.makedirs(os.path.dirname(path), exist_ok=True)
         self.img.resize((W, H), Image.LANCZOS).save(path, optimize=True)
 
@@ -243,9 +241,9 @@ def card_polls(cfg, polls, parties):
     series = [dict(label=labels.get(p, p), color=party_color(cfg, p),
                    pts=[(t0 + timedelta(days=round(days * k / 100)), smoothed(polls, p, t0 + timedelta(days=round(days * k / 100)), bw)) for k in range(101)]) for p in ps]
     top = max(v for s in series for _, v in s["pts"] if v is not None)
-    c = Card("Election polls & government approval", "Federal voting intention, last 12 months  \u00b7  latest %s" % t_max.strftime("%d %b %Y").lstrip("0"))
+    c = Card("Election polls & approval", "Federal voting intention, last 12 months  \u00b7  latest %s" % t_max.strftime("%d %b %Y").lstrip("0"))
     c.text(64, 204, "Poll average", 700, 15, MUT)
-    line_panel(c, (64, 226, 790, 598), series, t0, t_max, 0, math.ceil(top / 5) * 5, 5, lab_w=104)
+    line_panel(c, (64, 226, 770, 598), series, t0, t_max, 0, math.ceil(top / 5) * 5, 5, lab_w=104)
     # government approval (right)
     try:
         with open(os.path.join(HERE, cfg.get("approvalCsv", "data/government_approval.csv")), encoding="utf-8-sig", newline="") as f:
@@ -261,10 +259,21 @@ def card_polls(cfg, polls, parties):
             if not any(v[key] is not None for _, v in ap): continue
             ser.append(dict(label=nm, color="#%02X%02X%02X" % lighten(hexrgb(col), .32),
                             pts=[(a0 + timedelta(days=round(ad * k / 60)), smoothed(ap, key, a0 + timedelta(days=round(ad * k / 60)), 15)) for k in range(61)]))
+        try:  # chancellor approval: drawn on the same axis, in the overview page's colours (#B0FA20 / #F49AA9 on dark)
+            with open(os.path.join(HERE, "data", "chancellor_approval.csv"), encoding="utf-8-sig", newline="") as f:
+                cr = list(csv.DictReader(f))
+            ch = sorted(((pdate(r["Date"]), {"a": num(r.get("Approve")), "b": num(r.get("Disapprove"))}) for r in cr if pdate(r["Date"])), key=lambda x: x[0])
+            for key, nm, col in (("a", "Chanc. approve", "#B0FA20"), ("b", "Chanc. disapprove", "#F49AA9")):
+                if any(v[key] is not None for _, v in ch):
+                    ser.append(dict(label=nm, color=col, pts=[(a0 + timedelta(days=round(ad * k / 60)), smoothed(ch, key, a0 + timedelta(days=round(ad * k / 60)), 15)) for k in range(61)]))
+        except Exception as e:
+            print("  (chancellor approval skipped: %s)" % e)
+        for x in ser:
+            if x["label"] in ("Approve", "Disapprove"): x["label"] = "Gov. " + x["label"].lower()
         vals = [v for s in ser for _, v in s["pts"] if v is not None]
         lo, hi = math.floor(min(vals) / 10) * 10, math.ceil(max(vals) / 10) * 10
-        c.text(850, 204, "Government approval", 700, 15, MUT)
-        line_panel(c, (850, 226, 1160, 598), ser, a0, a_max, lo, hi, 10, lab_w=108, month_step=4, ylab_w=40)
+        c.text(810, 204, "Government & chancellor approval", 700, 15, MUT)
+        line_panel(c, (810, 226, 1170, 598), ser, a0, a_max, lo, hi, 10, lab_w=150, month_step=4, ylab_w=40)
     except Exception as e:
         print("  (approval panel skipped: %s)" % e)
     return c, t_max
