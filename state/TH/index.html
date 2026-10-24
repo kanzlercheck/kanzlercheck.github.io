@@ -26,7 +26,8 @@
 <meta name="twitter:description" content="German federal election polling average, Bundestag seat projection and government approval. Source: dawum.de">
 <meta name="twitter:image" content="https://kanzlercheck.github.io/img/og/state-TH.png?v=20260702">
 <link rel="canonical" href="https://kanzlercheck.github.io/state/TH/">
-<link rel="stylesheet" href="/css/style.css?v=perf32">
+<link rel="stylesheet" href="/css/style.css?v=bc6af7a99">
+<script>/* new deploy? the page itself may come from the browser cache (GitHub Pages: 10 min) - compare with /version.json and reload once, like Ctrl+R */(function(){var l=document.querySelector('link[href*="/css/style.css"]'),cur=l?(l.getAttribute("href").split("?v=")[1]||""):"";if(!cur)return;fetch("/version.json",{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){if(!j||!j.v||j.v===cur)return;var k="kc-build";try{if(sessionStorage.getItem(k)===j.v)return;sessionStorage.setItem(k,j.v)}catch(e){return}location.reload()}).catch(function(){})})()</script>
 </head>
 <body>
 <script>setTimeout(function(){var o=document.getElementById("tab-overview");if(o)o.classList.remove("loading")},12000)</script>
@@ -39,13 +40,13 @@
   </div>
   <nav class="tabs" role="tablist">
     <button class="tab-btn active" data-tab="overview" role="tab" type="button">Overview</button>
-    <button class="tab-btn" data-tab="constituencies" role="tab" type="button">Battleground map</button>
+    <button class="tab-btn" data-tab="constituencies" role="tab" type="button">Battleground Map</button>
     <button class="tab-btn" data-tab="polls" role="tab" type="button">Polls &amp; Approval</button>
     <button class="tab-btn" data-tab="parliament" role="tab" type="button">Bundestag Projection</button>
     <button class="tab-btn" data-tab="election" role="tab" type="button">2025 Election</button>
   </nav>
   <div id="theme-zone">
-    <button type="button" id="share-btn" class="share-btn" title="Copy a link to exactly this view" aria-label="Copy a link to this view"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg><span aria-live="polite">Copy link</span></button>
+    <a class="x-link" href="https://x.com/KanzlerCheckDE" target="_blank" rel="noopener noreferrer me" title="Opens KanzlerCheck on X (Twitter), a different provider (x.com)" aria-label="KanzlerCheck on X (Twitter) – opens x.com, a different provider, in a new tab"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span>X</span><svg class="x-ext" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></a><button type="button" id="share-btn" class="share-btn" title="Copy a link to exactly this view" aria-label="Copy a link to this view"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg><span aria-live="polite">Copy link</span></button>
     <label class="switch" aria-label="Dark mode"><input type="checkbox" id="dark-toggle"><span class="slider"></span></label>
     <span>Dark mode</span>
   </div>
@@ -55,7 +56,7 @@
   <div class="side-head"><span>Menu</span><button type="button" id="side-close" class="side-close" aria-label="Hide menu">&times;</button></div>
   <nav class="side-nav" role="tablist">
     <button class="tab-btn active" data-tab="overview" role="tab" type="button">Overview</button>
-    <button class="tab-btn" data-tab="constituencies" role="tab" type="button">Battleground map</button>
+    <button class="tab-btn" data-tab="constituencies" role="tab" type="button">Battleground Map</button>
     <button class="tab-btn" data-tab="polls" role="tab" type="button">Polls &amp; Approval</button>
     <button class="tab-btn" data-tab="parliament" role="tab" type="button">Bundestag Projection</button>
     <button class="tab-btn" data-tab="election" role="tab" type="button">2025 Election</button>
@@ -124,7 +125,7 @@
       <div class="fac-panel" id="fac-panel" hidden><div id="fac-editor" class="fac-ed"></div></div>
       <div class="pf-bar" id="poll-pf" hidden></div>
       <div id="poll-chart"></div>
-      <details class="sec fold"><summary><h3>Latest polls</h3></summary><div class="scroll" id="poll-table"></div></details>
+      <details class="sec fold"><summary><h3>Latest polls</h3></summary><div class="pt-bar" id="poll-tbl-bar"></div><div class="scroll" id="poll-table"></div><div class="pp-more" id="poll-more"></div></details>
     </div>
     <div class="chart-card flow" id="approval-card"><div id="approval-chart"></div><details class="sec fold" id="approval-fold"><summary><h3>Latest polls</h3></summary><div class="scroll" id="approval-table"></div></details></div>
     <div class="chart-card flow" id="chancellor-card"><div id="chancellor-chart"></div><details class="sec fold" id="chancellor-fold"><summary><h3>Latest polls</h3></summary><div class="scroll" id="chancellor-table"></div></details></div>
@@ -197,6 +198,7 @@
       </div></div>
       <div class="chart-card flow"><div class="sec" id="co-detail"></div></div>
     </div>
+    <div class="chart-card flow" id="co-pollcard" hidden></div>
     <div class="chart-card flow"><div class="sec">
       <h3>All 299 constituencies</h3>
       <p class="subl" id="co-list-sub">Select one to see its projection and demographics</p>
@@ -263,6 +265,6 @@
 </main>
 <div id="tip" class="tip" hidden></div>
 <script data-goatcounter="https://efefury.goatcounter.com/count" data-goatcounter-settings='{"no_onload":true}' async src="//gc.zgo.at/count.js"></script>
-<script src="/js/app.js?v=perf48"></script>
+<script src="/js/app.js?v=bc6af7a99"></script>
 </body>
 </html>

@@ -10,14 +10,14 @@ texts + image (img/og/<page>.png, made by make_og.py) differ. The app itself rea
 Run automatically by make_og.py (so also by update_data.py and the GitHub workflow). By hand:  python py/build_pages.py
 After editing index.html, run it once so the copies follow.
 """
-import json, os, re
+import hashlib, json, os, re
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # repo root (this script lives in py/)
 SITE = "https://kanzlercheck.github.io"
 TABS = {
     "polls": "Polls & Approval",
     "parliament": "Bundestag Projection",
-    "constituencies": "Battleground map",
+    "constituencies": "Battleground Map",
     "election": "2025 Election",
 }
 
@@ -57,7 +57,27 @@ def write(path, text):
     with open(path, "w", encoding="utf-8", newline="") as f:
         f.write(text)
 
+def stamp():
+    """Cache-busting without hand-edited numbers: the ?v= of css/style.css and js/app.js (and /version.json, which open pages compare with
+    to reload themselves once after a deploy) is a fingerprint of index.html + style.css + app.js. Any change to one of them = new id."""
+    ip = os.path.join(HERE, "index.html")
+    with open(ip, encoding="utf-8", newline="") as f:
+        src = f.read()
+    norm = lambda t: t.replace("\r\n", "\n")
+    h = hashlib.sha1()
+    h.update(norm(re.sub(r"(style\.css|app\.js)\?v=[\w.-]+", r"\1?v=X", src)).encode("utf-8"))
+    for rel in ("css/style.css", "js/app.js"):
+        with open(os.path.join(HERE, *rel.split("/")), encoding="utf-8", newline="") as f:
+            h.update(norm(f.read()).encode("utf-8"))
+    vid = "b" + h.hexdigest()[:8]
+    new = re.sub(r"((?:style\.css|app\.js)\?v=)[\w.-]+", lambda m: m.group(1) + vid, src)
+    if new != src:
+        write(ip, new)
+    write(os.path.join(HERE, "version.json"), '{"v":"%s"}\n' % vid)
+    return vid
+
 def main():
+    vid = stamp()
     with open(os.path.join(HERE, "index.html"), encoding="utf-8", newline="") as f:
         src = f.read()
     with open(os.path.join(HERE, "data", "germany-states.json"), encoding="utf-8") as f:

@@ -357,7 +357,7 @@ def card_constituencies(cfg, polls, parties):
     for p in lead.values(): counts[p] = counts.get(p, 0) + 1
     rows = sorted(counts.items(), key=lambda kv: -kv[1]); lw = 430; gap = 70
     mx = (W - (mw + gap + lw)) / 2; my = 200
-    c = Card("Battleground map", "Who leads in each of the %d constituencies  \u00b7  poll average of %s" % (len(lead), t_max.strftime("%d %b %Y").lstrip("0")))
+    c = Card("Battleground Map", "Who leads in each of the %d constituencies  \u00b7  poll average of %s" % (len(lead), t_max.strftime("%d %b %Y").lstrip("0")))
     pr = lambda p: ((mx + (p[0] - lo0) * kx * sc) * S, (my + (la1 - p[1]) * sc) * S)
     for ft in g["features"]:
         col = bar_color(party_color(cfg, lead.get(ft["properties"]["n"], "Sonstige")))

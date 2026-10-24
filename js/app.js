@@ -1740,14 +1740,14 @@ async function drawConstituencies(){
     let rs=null,name="";
     if(cityF&&CITIES[cityF]){rs=R.filter(r=>CITIES[cityF].includes(r.w.n));name=cityF;}
     else if(stF){rs=R.filter(r=>r.w.land===stF);name=stF;}
-    if(!rs||rs.length<REG_MIN||voteMode!==2||yearView!==PJ||SNAP){host.hidden=true;host.innerHTML="";return;}
-    const t=rs.reduce((a,r)=>a+r.w.v,0),P=K.map((k,j)=>rs.reduce((a,r)=>a+r.w.v*r.x[j],0)/t),B=K.map((k,j)=>rs.reduce((a,r)=>a+r.w.v*r.w.s25[j],0)/t);
+    if(!rs||rs.length<REG_MIN||voteMode!==2||yearView!==PJ||(SNAP&&!SNAP.poll)){host.hidden=true;host.innerHTML="";return;} // single-poll maps work too (the projection is run on that poll, with the state polls up to its date); date snapshots stay off
+    const t=rs.reduce((a,r)=>a+r.w.v,0),P=K.map((k,j)=>rs.reduce((a,r)=>a+r.w.v*r.x[j],0)/t),B=K.map((k,j)=>rs.reduce((a,r)=>a+r.w.v*(SNAP?SNAP.Sd[r.i][j]:r.w.s25[j]),0)/t);
     const lead=K.map((k,j)=>rs.filter(r=>r.lead===j).length),mx=Math.max(...P);
     const ord=[...K.keys()].sort((a,b)=>(a===m-1)-(b===m-1)||P[b]-P[a]);
     const top=ord.find(j=>lead[j]>0&&j!==m-1),ld=top!=null?`${lab(K[top])} leads ${lead[top]} of ${rs.length}`:"";
     const sg=d=>{const v=Math.round(d*10)/10;return v===0?"\u00B10.0":(v>0?"+":"\u2212")+Math.abs(v).toFixed(1);};
-    host.innerHTML=`<div class="rg-head"><h4>${name}</h4><span>projected second votes</span></div>
-      <p class="subl">${rs.length} constituencies${ld?" \u00B7 "+ld:""} \u00B7 change vs ${GY}</p>
+    host.innerHTML=`<div class="rg-head"><h4>${name}</h4><span>${SNAP&&SNAP.poll?"second votes if this poll were the election result":"projected second votes"}</span></div>
+      <p class="subl">${rs.length} constituencies${ld?" \u00B7 "+ld:""} \u00B7 change vs ${BY()}${SNAP&&SNAP.poll?` \u00B7 ${escF(SNAP.poll.inst||"poll")}, ${fmtDate(SNAP.poll.t)}`:""}</p>
       <div class="rg-rows">${ord.map(j=>{const col=colorOf(K[j]),d=P[j]-B[j];
         return `<div class="rg-row"><span class="rg-n"><i class="${dark(col)?"dk":""}" style="background:${col}"></i>${lab(K[j])}</span><span class="rg-bar"><b class="${dark(col)?"dk":""}" style="width:${Math.max(1.5,P[j]/mx*100).toFixed(1)}%;background:${col}"></b></span><span class="rg-v">${P[j].toFixed(1)}%</span><span class="rg-d ${d>0.05?"up":d<-0.05?"dn":""}">${sg(d)}</span></div>`;}).join("")}</div>`;
     host.hidden=false;
