@@ -639,3 +639,21 @@ tr.pst-on td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
 .share-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .share-btn.ok{border-color:var(--ok);color:var(--ok)}
 @media(max-width:600px){.share-btn{padding:7px}.share-btn:not(.ok) span{display:none}}
+
+/* Polls tab: year dropdown next to the range chips */
+.yr-sel{appearance:none;-webkit-appearance:none;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:12px;font-family:inherit;font-size:11.5px;padding:3px 22px 3px 9px;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 12px) 55%,calc(100% - 8px) 55%;background-size:4px 4px;background-repeat:no-repeat}
+.yr-sel.on{background-color:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+/* Polls tab: sortable "Latest polls" headers */
+th.srt{cursor:pointer;user-select:none;white-space:nowrap}th.srt:hover{color:var(--accent)}th.srt .srta{font-style:normal;font-size:9px;margin-left:3px;display:inline-block;min-width:9px}
+
+/* Battleground map: single-poll table */
+#co-mapcard{scroll-margin-top:62px}
+#co-pollcard .pt-bar{display:flex;gap:8px;margin:2px 0 10px}
+#co-pollcard .pt-note{padding:0 0 10px}
+#co-pollcard table.pp tbody tr.used td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+#co-pollcard table.pp tbody tr.used td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+#co-pollcard table.pp tbody tr.sel td{background:color-mix(in srgb,var(--accent) 18%,transparent)}
+#co-pollcard .pt-w{text-align:right;white-space:nowrap}
+#co-pollcard .pt-chip{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--ink)}
+#poll-tbl-bar{display:flex;gap:8px;margin:2px 0 10px}

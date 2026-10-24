@@ -1,5 +1,6 @@
 (async function(){
 "use strict";
+const yieldUi=()=>new Promise(r=>setTimeout(r,0)); // give the browser a moment between the heavy start-up steps so the page stays responsive
 const $=s=>document.querySelector(s),NS="http://www.w3.org/2000/svg",DAY=864e5;
 const fmt=(n,d=1)=>(Math.round(n*10**d)/10**d).toFixed(d);
 // text measuring so labels can size their box to the text (no squeezed/stretched glyphs): shrink the font a little, then truncate with an ellipsis as a last resort
@@ -67,7 +68,7 @@ try{
   if(!r.ok)throw new Error("HTTP "+r.status);
   cfg=await r.json();
 }catch(e){showErr("config.json could not be loaded ("+e.message+"). Serve the site over http(s) \u2014 opening index.html as a local file will not work \u2014 and make sure config.json sits next to index.html.");return;}
-[cfg.pollsCsv,cfg.approvalCsv,"data/chancellor_approval.csv",cfg.negativeCsv,...(cfg.pollTabs||[]).map(t=>t.csv),cfg.statesMap,"data/election2025.json",
+[cfg.pollsCsv,cfg.approvalCsv,"data/chancellor_approval.csv",cfg.negativeCsv,...(cfg.pollTabs||[]).map(t=>t.csv),cfg.statesMap,"data/election2025.json","data/constituencies.json","data/wahlkreise.geojson",cfg.politiciansJson||"data/politicians_approval.json",
   ...Object.values(cfg.stateFiles||{}).map(slug=>`${cfg.stateFolder}/${slug}.csv`)].forEach(u=>{if(u)fetchRaw(u).catch(()=>{});});
 document.title=cfg.siteTitle;$("#site-title").textContent=cfg.siteTitle;
 // faction keys look like "F:<id>" so they can stand in for a party key anywhere a party key is used
@@ -569,9 +570,12 @@ function approvalChart(opt){
 }
 if(apData.length){approvalChart();redraw.push(approvalChart);}
 
-function pollTableHtml(recs,plist,pick){
-  const recent=recs.slice(-15).reverse(),cand=plist.filter(p=>!isOther(p));
-  return `<table><thead><tr><th>Date</th><th>Pollster</th>${plist.map(p=>`<th class="${dark(colorOf(p))?"dk":""}" style="border-bottom-color:${colorOf(p,parties.indexOf(p))}">${lab(p)}</th>`).join("")}</tr></thead><tbody>`+
+function pollTableHtml(recs,plist,pick,srt,limit=15){ // srt (optional) = {k:"t"|"inst"|party, d:1|-1}: makes the column headers click-to-sort (only the latest 15 polls shown are sorted)
+  let recent=recs.slice(-limit).reverse();const cand=plist.filter(p=>!isOther(p));
+  if(srt&&srt.k){const g=r=>srt.k==="t"?r.t:srt.k==="inst"?(r.inst||"").toLowerCase():(r.v[srt.k]==null?-Infinity:r.v[srt.k]);
+    recent=recent.map((r,i)=>[r,i]).sort((a,b)=>{const x=g(a[0]),y=g(b[0]);return(x<y?-1:x>y?1:0)*srt.d||a[1]-b[1];}).map(o=>o[0]);}
+  const th=(k,html,style,cls)=>srt?`<th class="srt ${cls||""}" data-sort="${escF(k)}" tabindex="0" role="button" aria-sort="${srt.k===k?(srt.d>0?"ascending":"descending"):"none"}" title="Sort by this column"${style?` style="${style}"`:""}>${html}<i class="srta">${srt.k===k?(srt.d>0?"\u25B2":"\u25BC"):""}</i></th>`:`<th${cls?` class="${cls}"`:""}${style?` style="${style}"`:""}>${html}</th>`;
+  return `<table><thead><tr>${th("t","Date")}${th("inst","Pollster")}${plist.map(p=>th(p,lab(p),`border-bottom-color:${colorOf(p,parties.indexOf(p))}`,dark(colorOf(p))?"dk":"")).join("")}</tr></thead><tbody>`+
     recent.map(r=>{const top=Math.max(...cand.map(p=>r.v[p]??-1));
       const nm=r.inst||r.i||"";return `<tr${pick!==undefined&&nm&&pick===nm?' class="pst-on"':""}><td>${fmtDate(r.t)}</td>${pick!==undefined&&nm?`<td class="pst${pick===nm?" on":""}" data-pst="${escF(nm)}" tabindex="0" role="button" aria-pressed="${pick===nm}" title="Show only polls by ${escF(nm)}">${escF(nm)}</td>`:`<td>${nm}</td>`}${plist.map(p=>`<td class="${r.v[p]===top&&!isOther(p)?"lead":""}">${r.v[p]!=null?fmt(r.v[p])+"%":"\u2013"}</td>`).join("")}</tr>`;}).join("")+`</tbody></table>`;
 }
@@ -580,9 +584,11 @@ let tMin=0,tMax=0,BW=cfg.smoothingDays||30;
 const active=new Set(parties);
 const RANGES=[["6m","6 months",6],["1y","1 year",12],["2y","2 years",24],["5y","5 years",60],["10y","10 years",120],["all","All time",0]];
 let pollRange="all",pollsterSel=null; // pollsterSel: show only this pollster in the poll chart (null = all)
-function rangeStart(){if(pollRange==="all")return tMin;const m=RANGES.find(r=>r[0]===pollRange)[2],d=new Date(tMax);d.setUTCMonth(d.getUTCMonth()-m);return Math.max(tMin,+d);}
+const yrOf=r=>/^y\d{4}$/.test(r)?+r.slice(1):null; // pollRange "y2019" = one calendar year (dropdown)
+function rangeEnd(){const y=yrOf(pollRange);return y==null?tMax:Math.min(tMax,Date.UTC(y,11,31,23,59,59));}
+function rangeStart(){const y=yrOf(pollRange);if(y!=null)return Math.max(tMin,Date.UTC(y,0,1));if(pollRange==="all")return tMin;const m=RANGES.find(r=>r[0]===pollRange)[2],d=new Date(tMax);d.setUTCMonth(d.getUTCMonth()-m);return Math.max(tMin,+d);}
 const smoothCache=new Map(),viewCache=new Map();
-function smoothedPoints(p,ts,N,src=polls,tag=""){const k=pollRange+"|"+tag+p;let pts=smoothCache.get(k);if(!pts){pts=Array.from({length:N+1},(_,i)=>{const t=ts+(tMax-ts)*i/N;return{t,v:smoothedValueAt(src,p,t,BW)};});smoothCache.set(k,pts);}return pts;}
+function smoothedPoints(p,ts,N,src=polls,tag=""){const te=rangeEnd(),k=pollRange+"|"+tag+p;let pts=smoothCache.get(k);if(!pts){pts=Array.from({length:N+1},(_,i)=>{const t=ts+(te-ts)*i/N;return{t,v:smoothedValueAt(src,p,t,BW)};});smoothCache.set(k,pts);}return pts;}
 
 // ---------- factions (poll average + Bundestag projection; off by default, editable in the Polls tab) ----------
 const escF=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -710,35 +716,37 @@ if(polls.length)HS.reg(["polls","parliament"],"fac",
   });
 
 // one pollster's own polls as a series: joined by a continuous line, broken where that pollster has a long gap
-function rawPoints(src,p,ts){
+function rawPoints(src,p,ts){const te=rangeEnd();
   const out=[];let prev=null;
-  src.forEach(r=>{if(r.t<ts||r.v[p]==null)return;
+  src.forEach(r=>{if(r.t<ts||r.t>te||r.v[p]==null)return;
     if(prev!=null&&r.t-prev>120*DAY)out.push({t:(r.t+prev)/2,v:null});
     out.push({t:r.t,v:r.v[p]});prev=r.t;});
   return out;
 }
 function drawPolls(){
-  const N=220,host=$("#poll-chart"),ts=rangeStart(),fm=faOn.poll;
+  const N=220,host=$("#poll-chart"),ts=rangeStart(),te=rangeEnd(),yrSel=yrOf(pollRange)!=null,fm=faOn.poll;
   const src0=fm?viewPolls():polls,src=pollsterSel?src0.filter(r=>r.inst===pollsterSel):src0,tag=(fm?"F"+facVer+"|":"")+(pollsterSel?"P:"+pollsterSel+"|":"");
   const units=fm?unitsOf():parties,vset=fm?activeF:active;
   const vis=units.filter(p=>vset.has(p));
   const viewKey=tag+pollRange+"|"+vis.join(",")+"|"+(isDarkMode()?"d":"l")+"|"+CW(),cachedView=viewCache.get(viewKey);
   if(cachedView){viewCache.delete(viewKey);viewCache.set(viewKey,cachedView);host.replaceChildren(...cachedView);return;}
   const series=vis.map(p=>({name:lab(p),color:colorOf(p,parties.indexOf(p)),points:pollsterSel?rawPoints(src,p,ts):smoothedPoints(p,ts,N,src,tag)}));
-  const dots=[];vis.forEach(p=>src.forEach(r=>{if(r.t>=ts&&r.v[p]!=null)dots.push({t:r.t,v:r.v[p],color:colorOf(p,parties.indexOf(p))});}));
+  const dots=[];vis.forEach(p=>src.forEach(r=>{if(r.t>=ts&&r.t<=te&&r.v[p]!=null)dots.push({t:r.t,v:r.v[p],color:colorOf(p,parties.indexOf(p))});}));
   // actual federal election results (rings), with the final polls for comparison in the tooltip - same as on the state charts
   const preAvg=(p,t)=>{let w=src.filter(q=>q.t<t&&q.t>=t-30*DAY&&q.v[p]!=null);if(!w.length)w=src.filter(q=>q.t<t&&q.v[p]!=null).slice(-3);return w.length?{v:w.reduce((a,q)=>a+q.v[p],0)/w.length,n:w.length}:null;};
-  const results=[];if(FED&&!fm)Object.entries(FED).forEach(([dt,r])=>{const t=Date.parse(dt+"T00:00:00Z");if(isNaN(t)||t<ts||t>tMax)return;
+  const results=[];if(FED&&!fm)Object.entries(FED).forEach(([dt,r])=>{const t=Date.parse(dt+"T00:00:00Z");if(isNaN(t)||t<ts||t>te)return;
     vis.forEach(p=>{if(r[p]==null)return;const pa=preAvg(p,t);if(pa)results.push({t,v:r[p],name:lab(p),pre:pa.v,preN:pa.n,color:colorOf(p,parties.indexOf(p))});});});
   const mx=Math.max(0,...dots.map(d=>d.v),...results.map(r=>r.v)),yMax=Math.ceil(Math.max(10,mx*1.12)/5)*5;
   let step=1;[1,2,5,10,20,25,50,100].forEach(s=>{if(s<=yMax/6*1.4)step=s;});
-  lineChart(host,{H:720,rasterDots:true,t0:pollsterSel?ts:undefined,t1:pollsterSel?tMax:undefined,events:true,months:pollRange==="6m"||pollRange==="1y"?[1,2,3,4,5,6,7,8,9,10,11]:pollRange==="2y"||undefined,title:cfg.pollHeadline,sub:cfg.pollSubline+(pollsterSel?" \u00B7 only "+pollsterSel:"")+(results.length?" \u00B7 rings = actual federal election results":""),source:"Source: "+cfg.sourceName,series,dots,results,yMin:0,yMax,step,threshold:cfg.threshold,endLabel:(v,n)=>`${fmt(v)} % ${n}`});
+  lineChart(host,{H:720,rasterDots:true,t0:pollsterSel||yrSel?ts:undefined,t1:pollsterSel||yrSel?te:undefined,events:true,months:pollRange==="6m"||pollRange==="1y"||yrSel?[1,2,3,4,5,6,7,8,9,10,11]:pollRange==="2y"||undefined,title:cfg.pollHeadline,sub:cfg.pollSubline+(pollsterSel?" \u00B7 only "+pollsterSel:"")+(results.length?" \u00B7 rings = actual federal election results":""),source:"Source: "+cfg.sourceName,series,dots,results,yMin:0,yMax,step,threshold:cfg.threshold,endLabel:(v,n)=>`${fmt(v)} % ${n}`});
   viewCache.set(viewKey,Array.from(host.childNodes));if(viewCache.size>14)viewCache.delete(viewCache.keys().next().value);
 }
 function renderChips(){
   $("#party-filters").innerHTML=(faOn.poll?unitsOf():parties).map(p=>{const c=colorOf(p,parties.indexOf(p)),on=(faOn.poll?activeF:active).has(p);return`<button type="button" class="faction-chip pc${dark(c)?" dkb":""} ${on?"on":""}" data-p="${p}" style="border-color:${c};${on?`background:${c};color:${contrast(c)}`:""}">${lab(p)}</button>`;}).join("")
 ;
-  $("#range-filters").innerHTML=RANGES.map(r=>`<button type="button" class="faction-chip ${pollRange===r[0]?"on":""}" data-r="${r[0]}">${r[1]}</button>`).join("");
+  const yy=yrOf(pollRange),y0=new Date(tMin).getUTCFullYear(),y1=new Date(tMax).getUTCFullYear();
+  $("#range-filters").innerHTML=RANGES.map(r=>`<button type="button" class="faction-chip ${pollRange===r[0]?"on":""}" data-r="${r[0]}">${r[1]}</button>`).join("")
+;
 }
 let FED=null;try{const r=await fetchRaw("data/federal_results.json");if(r.ok)FED=JSON.parse(r.text);}catch(e){} // final federal election results (rings + tooltips in the poll chart)
 if(polls.length){
@@ -753,20 +761,33 @@ if(polls.length){
   };
   drawPolls();renderChips();redraw.push(drawPolls);
 
+  let pollSort=null; // sort of the "Latest polls" table (the chart is not affected)
+  let tblYear="",tblShown=15;const TBL_FIRST=15,TBL_STEP=25; // "Latest polls" table only: year filter + "See more" (the chart is not affected)
+  const renderPollTable=()=>{
+    const pool=tblYear===""?polls:polls.filter(r=>new Date(r.t).getUTCFullYear()===+tblYear),yrs=[...new Set(polls.map(r=>new Date(r.t).getUTCFullYear()))].sort((a,b)=>b-a);
+    $("#poll-table").innerHTML=pollTableHtml(pool,parties,pollsterSel,pollSort||{k:null,d:-1},tblShown);
+    const bar=$("#poll-tbl-bar");if(bar&&!bar.dataset.k){bar.dataset.k="1";bar.innerHTML=`<select class="yr-sel" id="poll-tbl-year" aria-label="Show polls of one year"><option value="">All years</option>${yrs.map(y=>`<option value="${y}">${y}</option>`).join("")}</select>`;}
+    const ys=$("#poll-tbl-year");if(ys){ys.value=tblYear;ys.classList.toggle("on",tblYear!=="");}
+    const left=pool.length-tblShown,mo=$("#poll-more");
+    if(mo)mo.innerHTML=(left>0?`<button type="button" class="faction-chip" data-a="more">See more${left>TBL_STEP?"":" ("+left+")"}</button>`:"")+(tblShown>TBL_FIRST?`<button type="button" class="faction-chip" data-a="hide">Hide</button>`:"");
+  };
+  const sortPollTable=k=>{pollSort=pollSort&&pollSort.k===k?{k,d:-pollSort.d}:{k,d:k==="inst"?1:-1};renderPollTable();const h=$(`#poll-table th[data-sort="${k}"]`);if(h)h.focus();};
   const pollPick=(nm,scroll)=>{
     pollsterSel=nm&&nm!==pollsterSel?nm:null;
-    $("#poll-table").innerHTML=pollTableHtml(polls,parties,pollsterSel);
+    renderPollTable();
     const bar=$("#poll-pf");
     if(bar){bar.hidden=!pollsterSel;bar.innerHTML=pollsterSel?`<span>Showing only polls by <b>${escF(pollsterSel)}</b></span><button type="button" class="link" data-clear="1">Show all pollsters &times;</button>`:"";}
     drawPolls();
     if(pollsterSel&&scroll&&bar)bar.scrollIntoView({block:"start",behavior:"smooth"});
   };
-  $("#poll-table").innerHTML=pollTableHtml(polls,parties,pollsterSel);
-  $("#poll-table").addEventListener("click",e=>{const c=e.target.closest("[data-pst]");if(c)pollPick(c.dataset.pst,true);});
-  $("#poll-table").addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!==" ")return;const c=e.target.closest("[data-pst]");if(c){e.preventDefault();pollPick(c.dataset.pst,true);}});
+  renderPollTable();
+  {const ys=$("#poll-tbl-bar");if(ys)ys.addEventListener("change",e=>{if(e.target.id!=="poll-tbl-year")return;tblYear=e.target.value;tblShown=TBL_FIRST;renderPollTable();});
+   const mo=$("#poll-more");if(mo)mo.addEventListener("click",e=>{const b=e.target.closest("button[data-a]");if(!b)return;tblShown=b.dataset.a==="more"?tblShown+TBL_STEP:TBL_FIRST;renderPollTable();});}
+  $("#poll-table").addEventListener("click",e=>{const h=e.target.closest("th[data-sort]");if(h){sortPollTable(h.dataset.sort);return;}const c=e.target.closest("[data-pst]");if(c)pollPick(c.dataset.pst,true);});
+  $("#poll-table").addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!==" ")return;const h=e.target.closest("th[data-sort]");if(h){e.preventDefault();sortPollTable(h.dataset.sort);return;}const c=e.target.closest("[data-pst]");if(c){e.preventDefault();pollPick(c.dataset.pst,true);}});
   {const bar=$("#poll-pf");if(bar)bar.addEventListener("click",e=>{if(e.target.closest("[data-clear]"))pollPick(null,false);});}
   // shareable link settings of the Polls tab
-  HS.reg("polls","range",()=>pollRange!=="all"?pollRange:null,v=>{pollRange=RANGES.some(r=>r[0]===v)?v:"all";drawPolls();renderChips();});
+  HS.reg("polls","range",()=>pollRange!=="all"?pollRange:null,v=>{pollRange=RANGES.some(r=>r[0]===v)||(yrOf(v)!=null&&yrOf(v)>=new Date(tMin).getUTCFullYear()&&yrOf(v)<=new Date(tMax).getUTCFullYear())?v:"all";drawPolls();renderChips();});
   HS.reg("polls","pst",()=>pollsterSel?HS.enc(pollsterSel):null,v=>{
     const nm=v?HS.dec(v):null;if(nm===pollsterSel)return;if(nm&&!polls.some(r=>r.inst===nm))return;
     pollsterSel=null;pollPick(nm,false);});
@@ -1192,6 +1213,10 @@ async function ovMap(){
   draw();
 }
 await ovMap();
+// show the overview as soon as it is complete (maps drawn, fonts ready, fitted to the screen); the other tabs are built afterwards while the page is already visible
+await new Promise(res=>{const go=()=>{try{fitOv();}catch(e){}const o=$("#tab-overview");if(o)requestAnimationFrame(()=>{o.classList.remove("loading");setTimeout(res,0);});else res();};
+  (document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(go,go);});
+await yieldUi();
 // ---------- 2025 ELECTION TAB ----------
 async function drawElection(){
   let E;
@@ -1404,6 +1429,7 @@ async function drawElection(){
     drawMig();
   }
 }
+await yieldUi();
 try{await drawElection();}catch(e){console.error(e);showErr("2025 Election tab failed to load: "+e.message);}
 
 // ---------- CONSTITUENCIES TAB: the 2025 result of every Wahlkreis, moved to today's poll average ----------
@@ -1521,14 +1547,15 @@ async function drawConstituencies(){
   const mixc=(h,t,a)=>{const f=x=>parseInt(x.replace("#",""),16),A=f(h),B=f(t),ch=sh=>Math.round(((A>>sh)&255)*(1-a)+((B>>sh)&255)*a).toString(16).padStart(2,"0");return"#"+ch(16)+ch(8)+ch(0);};
   const cbg=()=>dm()?"#D5D8DE":"#F6F5F1",sg=v=>(v>0?"+":v<0?"−":"")+fmt(Math.abs(v));
   const vn=()=>voteMode===1?"first":"second";let hasFirst=!!(MD&&MD.first&&W.every(w=>w.f25&&w.f21)),FB=hasFirst?MD.first.backtest:null;
-  const BY=()=>SNAP?SNAP.year:2025,projLbl=()=>SNAP?`Projected from the poll average of ${fmtDate(SNAP.ms)} (built on the ${SNAP.year} result)`:"Projected from the current poll average";
+  const BY=()=>SNAP?SNAP.year:2025,projLbl=()=>SNAP&&SNAP.poll?`Projected from a single poll: ${SNAP.poll.inst||"poll"}, ${fmtDate(SNAP.poll.t)}`:SNAP?`Projected from the poll average of ${fmtDate(SNAP.ms)} (built on the ${SNAP.year} result)`:"Projected from the current poll average";
   const setTexts=()=>{
-    if(SNAP)$("#co-sub").textContent=`How the map looked on ${fmtDate(SNAP.ms)}: the ${SNAP.year} election result moved to the poll average of that day (${voteMode===1?"first":"second"} votes). Only polls published up to that date are used. A reconstruction, not what was published then.`;
+    if(SNAP&&SNAP.poll)$("#co-sub").textContent=`What the single ${SNAP.poll.inst||""} poll of ${fmtDate(SNAP.poll.t)} would mean in each of the 299 constituencies (${voteMode===1?"first":"second"} votes) if it were the election result. Only this poll sets the national level; state polls published up to that day still tilt the states.`;
+    else if(SNAP)$("#co-sub").textContent=`How the map looked on ${fmtDate(SNAP.ms)}: the ${SNAP.year} election result moved to the poll average of that day (${voteMode===1?"first":"second"} votes). Only polls published up to that date are used. A reconstruction, not what was published then.`;
     else $("#co-sub").textContent=voteMode===1?`Who would lead each of the 299 constituencies on first votes (the direct-mandate race) if the poll average of ${fmtDate(tMax)} were the election result. A projection from today\u2019s polls.`
       :`What the poll average of ${fmtDate(tMax)} would mean in each of the 299 constituencies (second votes). A projection from today\u2019s polls, not a forecast for 2029.`;
     const gt=$("#co-gt-vote");if(gt)gt.textContent=vn()+" votes";
     const nt=$("#co-vote-note");
-    if(nt)nt.innerHTML=SNAP?`<b>Snapshot: ${fmtDate(SNAP.ms)}</b> · built on the ${SNAP.year} election result${SNAP.filled?` (${SNAP.filled} of ${n} constituencies had no comparable ${SNAP.year} result and were estimated from the next election)`:""}${GY===2025?"":` · ${GY} constituency boundaries`}${SNAP.F?"":" · first votes not available for this period"} · <button type="button" class="co-back" data-back="1">Back to today</button>`:"";};
+    if(nt)nt.innerHTML=SNAP&&SNAP.poll?`<b>Single poll: ${SNAP.poll.inst||"poll"} \u00b7 ${fmtDate(SNAP.poll.t)}</b> · built on the 2025 election result · <button type="button" class="co-back" data-back="1">Back to poll average</button>`:SNAP?`<b>Snapshot: ${fmtDate(SNAP.ms)}</b> · built on the ${SNAP.year} election result${SNAP.filled?` (${SNAP.filled} of ${n} constituencies had no comparable ${SNAP.year} result and were estimated from the next election)`:""}${GY===2025?"":` · ${GY} constituency boundaries`}${SNAP.F?"":" · first votes not available for this period"} · <button type="button" class="co-back" data-back="1">Back to today</button>`:"";};
   setTexts();
   // chips: constituencies led per party; click one to map where that party is strongest (click again to go back)
   const coChips=()=>{
@@ -1832,6 +1859,7 @@ async function drawConstituencies(){
       <h4 class="co-h4">About this constituency${yearView===PJ?"":` <span class="co-h4y">· ${keyYear}</span>`}</h4><p class="co-fyear">${metric==null?"Click a figure to colour the map by it (darker = higher in the ranking).":"Map coloured by "+demoName(metric).toLowerCase()+". Click it again to go back."}</p>${yrNote}<div class="co-facts">${demo}</div>
       ${w[key]?`<p class="co-fnote"><span class="lg"><span class="dot"></span>This constituency</span><span class="lg"><span class="tick"></span>Germany overall</span><span>Bar = rank among all ${np_}</span></p>`:""}
       <div class="note">${isY?`${yearView} election result (${vn()} votes) within the ${GY} constituency boundaries. ${yearView===GY?`Δ = change vs the ${GY-4} result.`:yearView===GY-4&&GY===2025?"Δ = change vs the 2017 result.":"Δ is empty because there is no earlier result to compare with."} The ${GY}, ${GY-4}${hq?" and "+(GY-8):""} columns are ${vn()}-vote shares (%).`
+        :SNAP&&SNAP.poll?`Projection from the single ${SNAP.poll.inst||""} poll of ${fmtDate(SNAP.poll.t)}, built on the 2025 result. Δ = projected share minus the 2025 ${vn()}-vote result. The ${yA} and ${yB} columns are ${vn()}-vote shares (%). Pollster bias is not adjusted for a single poll. The structure data below is from ${GY}.`
         :SNAP?`Projection from the poll average of ${fmtDate(SNAP.ms)}, built on the ${SNAP.year} result. Δ = projected share minus the ${SNAP.year} ${vn()}-vote result. The ${yA} and ${yB} columns are ${vn()}-vote shares (%).${SNAP.filled&&SNAP.Sd[r.i]&&SNAP.est[r.i]?` The ${SNAP.year} figures for this constituency are estimated (no comparable result for these boundaries).`:""} Pollster bias is not adjusted in snapshots. The structure data below is from ${GY}.`
         :`Projection from the poll average of ${fmtDate(tMax)}. Δ = projected share minus the 2025 ${vn()}-vote result. 2025, 2021${hq?" and 2017":""} are ${vn()}-vote shares (%). 2025 projection includes historical pollster bias adjustment.`}</div>`;
   }
@@ -1884,17 +1912,21 @@ async function drawConstituencies(){
     else{const b17=baseSet(2017).S,f=fillFrom(W.map(w=>R13&&R13[w.n]?R13[w.n].s13:null),b17);o={S:f.out,F:null,est:f.flag,filled:f.est,prevYear:null,prev:()=>null};}
     o.year=year;o.nat=nat(o.S);return baseCache[ck]=o;
   }
-  function buildSnap(ms){
+  function buildSnap(ms,poll){
     const year=eraOf(ms)[0],B=baseSet(year),refMs=(ELD.find(e=>e[0]===year)||ELD[3])[1],pl=polls.filter(r=>r.t<=ms);
     const av=k=>smoothedValueAt(pl,k,ms,BW);
     let Tn=K.map((k,j)=>{if(k==="Sonstige"){const a=av("Sonstige"),b=av("Freie Wähler");return a==null&&b==null?B.nat[j]:(a||0)+(b||0);}const v=av(k);return v!=null?v:B.nat[j];});
+    if(poll){ // one single poll sets the national level: a party the poll does not list is 0.1 %, "Others" = the poll's Sonstige (+ Freie Wähler), or whatever is left over
+      const o=m-1;Tn=K.map((k,j)=>{if(j===o)return null;const v=poll.v[k];return v!=null?v:.1;});
+      const a=poll.v["Sonstige"],b=poll.v["Freie Wähler"],rest=100-Tn.reduce((x,y)=>x+(y||0),0);
+      Tn[o]=a==null&&b==null?Math.max(rest,.5):(a||0)+(b||0);}
     const ts=Tn.reduce((a,b)=>a+b,0);Tn=Tn.map(v=>v/ts*100);
     // a party that did not exist at the last election (BSW) has no result to start from: its starting pattern is borrowed from the Left (its main source of voters), the national level comes from the polls
     const Sm=B.S.map(r=>r.slice());if(B.nat[5]<.05&&Tn[5]>.3)Sm.forEach((r,i)=>{r[5]=Math.max(r[4],.5)*.3;});
     const Us={},PVs={};
     stLands.forEach(land=>{const id=idOf[nz(land)],sd=id&&stateData[id],recs=sd?sd.rec.filter(r=>r.t<=ms):[];Us[land]=new Array(m).fill(0);PVs[land]=new Array(m).fill(0);
       for(let j=0;j<m-1;j++){if(MD){const r=stateSignal(recs,j,ms,refMs,pl);Us[land][j]=r.u;PVs[land][j]=r.pv;}}});
-    return{key:"s"+ms,ms,year,S:Sm,Sd:B.S,F:B.F,est:B.est,filled:B.filled,prevYear:B.prevYear,prev:B.prev,T:Tn,nat:B.nat,U:Us,PV:PVs};
+    return{key:poll?"p"+poll.t+"|"+(poll.inst||""):"s"+ms,poll:poll||null,ms,year,S:Sm,Sd:B.S,F:B.F,est:B.est,filled:B.filled,prevYear:B.prevYear,prev:B.prev,T:Tn,nat:B.nat,U:Us,PV:PVs};
   }
   // Which boundaries a date uses = those of the election the map projects: before the 2017 election -> 2025 map (no earlier map available), 2017 up to the day after the 2021 election -> 2021 map, after that and today -> 2025 map.
   const geoYearOf=ms=>ms!=null&&eraOf(ms)[0]===2017?2021:2025;
@@ -1916,6 +1948,7 @@ async function drawConstituencies(){
     const tok=++asOfTok;
     if(geoYearOf(ms)===2021&&!SETS[2021]){await loadSet21();if(tok!==asOfTok)return;} // a newer date was picked while loading
     const prevW=byN[sel]?byN[sel].w:null,switched=useSet(ms!=null&&geoYearOf(ms)===2021&&SETS[2021]?2021:2025);
+    selPollMap=null;renderPT();
     SNAP=ms==null?null:buildSnap(ms);
     if(SNAP&&voteMode===1&&!SNAP.F)voteMode=2;
     applyProj(voteMode);miCache=null;
@@ -1923,6 +1956,60 @@ async function drawConstituencies(){
     if(!availYears().includes(yearView))yearView=PJ;yearData=getYearData(yearView);if(yearView!==PJ){certainty=false;swings=false;}
     setTexts();renderVoteButtons();renderYearButtons();renderViewButtons();coChips();drawMap();detail();list();if(ovView==="wk")paintOv();
   };
+  // ---- single poll: the map as if ONE chosen poll (published after the 2025 election) were the election result ----
+  const POLL_ON=GY===2025&&polls.some(r=>r.t>ELD[0][1]);
+  const poolPolls=()=>polls.map((r,i)=>({r,i})).filter(o=>o.r.t>ELD[0][1]).reverse(); // newest first
+  const pollKey=r=>iso(r.t)+"_"+HS.enc(r.inst||"");
+  let selPollMap=null;
+  const setPoll=async idx=>{
+    const tok=++asOfTok;
+    const prevW=byN[sel]?byN[sel].w:null,switched=useSet(2025);
+    selPollMap=idx;
+    SNAP=idx==null?null:buildSnap(polls[idx].t,polls[idx]);
+    if(SNAP&&voteMode===1&&!SNAP.F)voteMode=2;
+    applyProj(voteMode);miCache=null;
+    if(switched){const same=prevW&&R.find(r=>r.w.name===prevW.name&&r.w.land===prevW.land);sel=same?same.w.n:[...R].sort((a,b)=>a.prob-b.prob)[0].w.n;}
+    if(!availYears().includes(yearView))yearView=PJ;yearData=getYearData(yearView);if(yearView!==PJ){certainty=false;swings=false;}
+    if(idx!=null){const f=$("#co-pt-fold");if(f&&!f.open)f.open=true;}
+    renderPT();
+    setTexts();renderVoteButtons();renderYearButtons();renderViewButtons();coChips();drawMap();detail();list();if(ovView==="wk")paintOv();
+  };
+  // poll table under the map: the same "Latest polls" table as in the Polls tab; click a poll to model the map on it. Polls that currently feed the poll average are highlighted.
+  const ptHost=$("#co-pollcard"),PT_FIRST=15,PT_STEP=25;let ptShown=PT_FIRST,ptYear="",ptSort={k:null,d:-1};
+  const usedFrom=()=>tMax-3*BW*DAY; // the average (smoothedValueAt) uses polls within 3 smoothing widths before the latest poll, each weighted by a bell curve
+  const wOf=r=>{const dx=(r.t-tMax)/(BW*DAY);return Math.abs(dx)>3?0:Math.exp(-.5*dx*dx);};
+  function renderPT(){
+    if(!ptHost||!POLL_ON)return;
+    const cand=parties.filter(p=>!isOther(p)),pool=poolPolls().filter(o=>ptYear===""||new Date(o.r.t).getUTCFullYear()===+ptYear);
+    const wt=polls.reduce((a,r)=>a+wOf(r),0)||1;let shown=pool.slice(0,ptShown);
+    if(ptSort.k){const g=({r})=>ptSort.k==="t"?r.t:ptSort.k==="inst"?(r.inst||"").toLowerCase():ptSort.k==="w"?wOf(r):(r.v[ptSort.k]==null?-Infinity:r.v[ptSort.k]);
+      shown=shown.map((o,i)=>[o,i]).sort((a,b)=>{const x=g(a[0]),y=g(b[0]);return(x<y?-1:x>y?1:0)*ptSort.d||a[1]-b[1];}).map(o=>o[0]);}
+    const th=(k,html,style,cls,title)=>`<th class="srt ${cls||""}" data-sort="${escF(k)}" tabindex="0" role="button" aria-sort="${ptSort.k===k?(ptSort.d>0?"ascending":"descending"):"none"}" title="${title||"Sort by this column"}"${style?` style="${style}"`:""}>${html}<i class="srta">${ptSort.k===k?(ptSort.d>0?"\u25B2":"\u25BC"):""}</i></th>`;
+    const rows=shown.map(({r,i})=>{const top=Math.max(...cand.map(p=>r.v[p]??-1)),w=wOf(r),used=w>0;
+      return `<tr class="${selPollMap===i?"sel":""}${used?" used":""}" data-i="${i}" tabindex="0" role="button" aria-pressed="${selPollMap===i}" title="Model the map on this poll"><td>${fmtDate(r.t)}</td><td>${escF(r.inst||"")}</td>${parties.map(p=>`<td class="${r.v[p]===top&&!isOther(p)?"lead":""}">${r.v[p]!=null?fmt(r.v[p])+"%":"\u2013"}</td>`).join("")}<td class="pt-w">${used?`<span class="pt-chip" title="This poll is part of the poll average the default map is based on">${(w/wt*100).toFixed(1)}%</span>`:""}</td></tr>`;}).join("");
+    const left=pool.length-ptShown,yrs=[...new Set(poolPolls().map(o=>new Date(o.r.t).getUTCFullYear()))].sort((a,b)=>b-a);
+    const note=selPollMap!=null&&polls[selPollMap]?`<div class="sec-top"><span>Map modelled on the <b>${escF(polls[selPollMap].inst||"selected")}</b> poll of <b>${fmtDate(polls[selPollMap].t)}</b></span><button class="link" data-back="1" type="button">Back to poll average</button></div>`:"";
+    const fold=$("#co-pt-fold");
+    if(!fold){ptHost.innerHTML=`<details class="sec fold" id="co-pt-fold"><summary><h3>Latest federal polls</h3></summary><div id="co-pt-body"></div></details>`;
+      $("#co-pt-fold").addEventListener("toggle",()=>{if($("#co-pt-fold").open)renderPT();});}
+    if(!$("#co-pt-fold").open)return; // the table is only built when the section is opened
+    $("#co-pt-body").innerHTML=`<div><p class="subl">Click a poll to see the map as if that one poll were the election result. Highlighted polls are the ones that make up the current poll average; the percentage is each poll\u2019s weight in it.</p>
+      <div class="pt-bar"><select class="yr-sel${ptYear!==""?" on":""}" id="co-poll-year" aria-label="Show polls of one year"><option value="">All years</option>${yrs.map(y=>`<option value="${y}"${+ptYear===y?" selected":""}>${y}</option>`).join("")}</select></div>
+      ${note?`<div class="pp-note pt-note">${note}</div>`:""}
+      <div class="scroll"><table class="pp"><thead><tr>${th("t","Date")}${th("inst","Pollster")}${parties.map(p=>th(p,lab(p),`border-bottom-color:${colorOf(p,parties.indexOf(p))}`,dark(colorOf(p))?"dk":"")).join("")}${th("w","In average","","","Sort by weight in the current poll average")}</tr></thead><tbody>${rows||`<tr><td colspan="${parties.length+3}">No polls in this year.</td></tr>`}</tbody></table></div>
+      <div class="pp-more">${left>0?`<button type="button" class="faction-chip" data-a="more">See more${left>PT_STEP?"":" ("+left+")"}</button>`:""}${ptShown>PT_FIRST?`<button type="button" class="faction-chip" data-a="hide">Hide</button>`:""}</div></div>`;
+  }
+  if(ptHost&&POLL_ON){
+    ptHost.hidden=false;renderPT();if(selPollMap!=null){const f=$("#co-pt-fold");if(f)f.open=true;}
+    const pick=i=>{const f=selPollMap===i?null:i;setPoll(f);if(f!=null)$("#co-mapcard").scrollIntoView({block:"start",behavior:"smooth"});};
+    ptHost.addEventListener("click",e=>{
+      if(e.target.closest("[data-back]")){setPoll(null);return;}
+      const h=e.target.closest("th[data-sort]");if(h){const k=h.dataset.sort;ptSort=ptSort.k===k?{k,d:-ptSort.d}:{k,d:k==="inst"?1:-1};renderPT();const n=$(`#co-pollcard th[data-sort="${k}"]`);if(n)n.focus();return;}
+      const m=e.target.closest("button[data-a]");if(m){ptShown=m.dataset.a==="more"?ptShown+PT_STEP:PT_FIRST;renderPT();return;}
+      const tr=e.target.closest("tr[data-i]");if(tr)pick(+tr.dataset.i);});
+    ptHost.addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!==" ")return;const h=e.target.closest("th[data-sort]");if(h){e.preventDefault();h.click();return;}const tr=e.target.closest("tr[data-i]");if(tr){e.preventDefault();pick(+tr.dataset.i);}});
+    ptHost.addEventListener("change",e=>{if(e.target.id==="co-poll-year"){ptYear=e.target.value;ptShown=PT_FIRST;renderPT();}});
+  }
   function openCal(){
     const inp=$("#co-date"),b=$("#co-cal");if(!inp||!b)return;
     inp.min=iso(minMs());inp.max=iso(tMax);inp.value=SNAP?iso(SNAP.ms):iso(tMax);
@@ -1932,7 +2019,7 @@ async function drawConstituencies(){
   }
   const dEl=$("#co-date");
   if(CAL_ON&&dEl)dEl.onchange=()=>{const v=dEl.value;if(!v){setAsOf(null);return;}const p=parseDate(v);if(!p)return;let t=Math.max(minMs(),+p);setAsOf(t);};
-  if(CAL_ON)$("#co-vote-note").onclick=e=>{if(e.target.closest("[data-back]"))setAsOf(null);};
+  $("#co-vote-note").onclick=e=>{if(e.target.closest("[data-back]")){if(selPollMap!=null)setPoll(null);else if(CAL_ON)setAsOf(null);}};
   const setMode=j=>{mode=mode===j?null:j;if(mode!=null){metric=null;certainty=false;swings=false;}coChips();renderViewButtons();drawMap();detail();list();};
   const setSwing=on=>{swings=on;if(on){mode=null;metric=null;certainty=false;}coChips();renderViewButtons();drawMap();detail();list();};
   const setCert=on=>{certainty=on;if(on){mode=null;metric=null;swings=false;}coChips();renderViewButtons();drawMap();detail();list();};
@@ -1951,6 +2038,10 @@ async function drawConstituencies(){
   // shareable link settings of the Battleground map: vote type, election year, map colouring, state zoom, selected constituency (and the date snapshot, once that feature is switched on)
   {const sel0=sel;
   HS.reg("constituencies","vote",()=>voteMode===1?"1":null,v=>{setVote(v==="1"?1:2);});
+  HS.reg("constituencies","poll",()=>selPollMap!=null&&polls[selPollMap]?pollKey(polls[selPollMap]):null,v=>{
+    let i=null;if(v){const k=v.indexOf("_"),d=k<0?v:v.slice(0,k),inst=k<0?null:HS.dec(v.slice(k+1));
+      for(let q2=polls.length-1;q2>=0;q2--)if(polls[q2].t>ELD[0][1]&&iso(polls[q2].t)===d&&(inst==null||(polls[q2].inst||"")===inst)){i=q2;break;}}
+    if(i===selPollMap)return;return setPoll(i);});
   HS.reg("constituencies","asof",()=>CAL_ON&&SNAP?iso(SNAP.ms):null,v=>{if(!CAL_ON)return;const p=v?parseDate(v):null;return setAsOf(p?Math.max(minMs(),+p):null);});
   HS.reg("constituencies","year",()=>yearView===PJ?null:String(yearView),v=>{const y=v==null?PJ:+v;if(y===yearView||(y!==PJ&&!availYears().includes(y)))return;setYear(y);});
   HS.reg("constituencies","map",()=>mode!=null?"p:"+HS.enc(K[mode]):swings?"swing":certainty?null:metric!=null?"m"+metric:"lead",v=>{
@@ -1970,9 +2061,11 @@ async function drawConstituencies(){
   if(hasFirst){const warm=()=>{if(!projCache["live|1"]&&GY===2025)try{projCache["live|1"]=runProjection(1);}catch(e){console.error(e);}};
     if(window.requestIdleCallback)requestIdleCallback(warm,{timeout:4000});else setTimeout(warm,800);}
 }
+await yieldUi();
 try{await drawConstituencies();}catch(e){console.error(e);showErr("Constituencies tab failed to load: "+e.message);}
 
 
+await yieldUi();
 // ---------- POLL TABS (parties ruled out, maximum voter potential, ...) ----------
 // every tab = one entry in config.json "pollTabs" + one CSV (Datum,Institut,<party columns>). Add an entry to add a tab.
 // With several polls, the bars show the average of the last cfg.pollTabAverage polls (default 5).
@@ -2054,6 +2147,7 @@ function negTable(){
 function negDraw(){negChart();negTable();}
 negTabs();negDraw();redraw.push(negChart);
 
+await yieldUi();
 // ---------- POLITICIAN SATISFACTION (Poll Average tab) ----------
 // data/politicians_approval.json = ARD-DeutschlandTREND by Infratest dimap. Every politician's line is a shade of his or her party's colour.
 const POLS={polls:[],people:[],act:new Set(),metric:"sat",range:"all",estMax:null};
